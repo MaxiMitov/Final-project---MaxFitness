@@ -1,3 +1,5 @@
+using Final_project___MaxFitness.Services; // Ensure this matches your project's new folder name
+
 namespace Final_project___MaxFitness
 {
     public class Program
@@ -8,6 +10,10 @@ namespace Final_project___MaxFitness
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+
+            // --- REGISTER YOUR NEW ASYNC SERVICE HERE ---
+            // AddScoped creates a new instance of the service for every HTTP request
+            builder.Services.AddScoped<IMuscleService, MuscleService>();
 
             var app = builder.Build();
 
