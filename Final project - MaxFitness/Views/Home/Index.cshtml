@@ -6,7 +6,7 @@
     :root {
         --dark-bg: #0f111a;
         --card-bg: #1e2130;
-        --accent-color: #00f2ff; /* Electric Cyan */
+        --accent-color: #00f2ff;
         --text-main: #ffffff;
         --text-muted: #a0a0a0;
         --progress-empty: #333644;
@@ -26,12 +26,6 @@
         margin-bottom: 2.5rem;
     }
 
-    .welcome-section h1 {
-        font-weight: 700;
-        letter-spacing: -1px;
-    }
-
-    /* Progress Card Styling */
     .muscle-card {
         background: var(--card-bg);
         border: 1px solid rgba(255, 255, 255, 0.05);
@@ -39,13 +33,16 @@
         padding: 1.5rem;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
 
-    .muscle-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-        border-color: var(--accent-color);
-    }
+        .muscle-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+            border-color: var(--accent-color);
+        }
 
     .muscle-icon {
         font-size: 1.5rem;
@@ -65,19 +62,18 @@
         height: 8px;
         border-radius: 10px;
         overflow: hidden;
+        margin-bottom: 1rem;
     }
 
     .progress-fill {
         background: linear-gradient(90deg, #00f2ff, #0077ff);
         height: 100%;
         border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
     }
 
     .stat-value {
         font-size: 1.25rem;
         font-weight: 600;
-        margin-top: 1rem;
     }
 
     .stat-desc {
@@ -93,30 +89,15 @@
     </div>
 
     <div class="row mb-5">
-        <div class="col-md-3">
-            <div class="muscle-card text-center">
-                <div class="stat-desc">Weekly Workouts</div>
-                <div class="stat-value">5 / 6</div>
+        @foreach (var stat in new[] { ("Workouts", "5/6"), ("Streak", "12 Days"), ("Burned", "1,240"), ("Intensity", "84%") })
+        {
+            <div class="col-md-3">
+                <div class="muscle-card text-center">
+                    <div class="stat-desc">@stat.Item1</div>
+                    <div class="stat-value">@stat.Item2</div>
+                </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="muscle-card text-center">
-                <div class="stat-desc">Active Streak</div>
-                <div class="stat-value">12 Days</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="muscle-card text-center">
-                <div class="stat-desc">Calories Burned</div>
-                <div class="stat-value">1,240 kcal</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="muscle-card text-center">
-                <div class="stat-desc">Avg. Intensity</div>
-                <div class="stat-value">84%</div>
-            </div>
-        </div>
+        }
     </div>
 
     <h3 class="mb-4">Body Part Progress</h3>
@@ -124,63 +105,53 @@
     <div class="row g-4">
         <div class="col-md-4 col-lg-3">
             <div class="muscle-card">
-                <div class="mt-3">
-                    <a asp-action="Chest" asp-controller="Home" class="btn btn-outline-info btn-sm w-100">View Details</a>
+                <div>
+                    <div class="muscle-icon">⚡ Chest</div>
+                    <div class="progress-label"><span>Growth</span><span>75%</span></div>
+                    <div class="progress-bar-container"><div class="progress-fill" style="width: 75%;"></div></div>
+                    <div class="stat-value">225 lbs</div>
+                    <div class="stat-desc">Last PR: Bench Press</div>
                 </div>
-                <div class="progress-label">
-                    <span>Target Growth</span>
-                    <span>75%</span>
-                </div>
-                <div class="progress-bar-container">
-                    <div class="progress-fill" style="width: 75%;"></div>
-                </div>
-                <div class="stat-value">225 lbs</div>
-                <div class="stat-desc">Last PR: Bench Press</div>
+                <a asp-action="Chest" class="btn btn-outline-info btn-sm w-100 mt-3">View Details</a>
             </div>
         </div>
 
         <div class="col-md-4 col-lg-3">
             <div class="muscle-card">
-                <div class="muscle-icon">📐 Back</div>
-                <div class="progress-label">
-                    <span>Target Growth</span>
-                    <span>60%</span>
+                <div>
+                    <div class="muscle-icon">📐 Back</div>
+                    <div class="progress-label"><span>Growth</span><span>60%</span></div>
+                    <div class="progress-bar-container"><div class="progress-fill" style="width: 60%;"></div></div>
+                    <div class="stat-value">180 lbs</div>
+                    <div class="stat-desc">Last PR: Lat Pulldown</div>
                 </div>
-                <div class="progress-bar-container">
-                    <div class="progress-fill" style="width: 60%;"></div>
-                </div>
-                <div class="stat-value">180 lbs</div>
-                <div class="stat-desc">Last PR: Lat Pulldown</div>
+                <a asp-action="Back" class="btn btn-outline-info btn-sm w-100 mt-3">View Details</a>
             </div>
         </div>
 
         <div class="col-md-4 col-lg-3">
             <div class="muscle-card">
-                <div class="muscle-icon">🦵 Legs</div>
-                <div class="progress-label">
-                    <span>Target Growth</span>
-                    <span>45%</span>
+                <div>
+                    <div class="muscle-icon">🦵 Legs</div>
+                    <div class="progress-label"><span>Growth</span><span>45%</span></div>
+                    <div class="progress-bar-container"><div class="progress-fill" style="width: 45%;"></div></div>
+                    <div class="stat-value">315 lbs</div>
+                    <div class="stat-desc">Last PR: Squat</div>
                 </div>
-                <div class="progress-bar-container">
-                    <div class="progress-fill" style="width: 45%;"></div>
-                </div>
-                <div class="stat-value">315 lbs</div>
-                <div class="stat-desc">Last PR: Squat</div>
+                <a asp-action="Legs" class="btn btn-outline-info btn-sm w-100 mt-3">View Details</a>
             </div>
         </div>
 
         <div class="col-md-4 col-lg-3">
             <div class="muscle-card">
-                <div class="muscle-icon">💪 Arms</div>
-                <div class="progress-label">
-                    <span>Target Growth</span>
-                    <span>90%</span>
+                <div>
+                    <div class="muscle-icon">💪 Arms</div>
+                    <div class="progress-label"><span>Growth</span><span>90%</span></div>
+                    <div class="progress-bar-container"><div class="progress-fill" style="width: 90%;"></div></div>
+                    <div class="stat-value">45 lbs</div>
+                    <div class="stat-desc">Last PR: Hammer Curls</div>
                 </div>
-                <div class="progress-bar-container">
-                    <div class="progress-fill" style="width: 90%;"></div>
-                </div>
-                <div class="stat-value">45 lbs</div>
-                <div class="stat-desc">Last PR: Hammer Curls</div>
+                <a asp-action="Arms" class="btn btn-outline-info btn-sm w-100 mt-3">View Details</a>
             </div>
         </div>
     </div>
