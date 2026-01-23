@@ -1,4 +1,5 @@
 using Final_project___MaxFitness.Models;
+using Final_project___MaxFitness.Services; // Add this using for the service
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,21 +11,22 @@ namespace Final_project___MaxFitness.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IMuscleService _muscleService; // Add the service field
 
-        public HomeController(ILogger<HomeController> logger)
+        // Inject the service through the constructor
+        public HomeController(ILogger<HomeController> logger, IMuscleService muscleService)
         {
             _logger = logger;
+            _muscleService = muscleService;
         }
 
-        // Dashboard Home Page
         public async Task<IActionResult> Index()
         {
-            await Task.Delay(10); // Simulate async work
+            await Task.Delay(10);
             return View();
         }
 
         // --- ASYNC ACTIONS FOR EACH BODY PART ---
-        // All of these now redirect to the same "Chest.cshtml" view but with different data
 
         public async Task<IActionResult> Chest() => await GetMuscleView("Chest");
 
@@ -34,75 +36,39 @@ namespace Final_project___MaxFitness.Controllers
 
         public async Task<IActionResult> Arms() => await GetMuscleView("Arms");
 
-
-        // Generic private async method to handle data fetching
+        // Generic private async method using the new models and service
         private async Task<IActionResult> GetMuscleView(string muscleName)
         {
             _logger.LogInformation($"Loading {muscleName} Details Page using master template.");
 
-            // Start multiple data fetches concurrently to satisfy async requirements and improve speed
-            var exerciseTask = FetchExercisesAsync(muscleName);
-            var statsTask = FetchStatsAsync(muscleName);
+            // Use the service to fetch data asynchronously using your new models
+            var statsTask = _muscleService.GetMuscleStatsAsync(muscleName);
+            var exerciseTask = _muscleService.GetExercisesAsync(muscleName);
 
-            // Wait for all tasks to complete in parallel
-            await Task.WhenAll(exerciseTask, statsTask);
+            // Execute tasks in parallel for performance
+            await Task.WhenAll(statsTask, exerciseTask);
 
-            // Pass the data to the view via ViewBag
+            // Pass the strongly-typed models to the view via ViewBag
+            // In a real app, you might prefer a ViewModel, but this fits your current setup.
+            ViewBag.Muscle = await statsTask;      // This is a MuscleProgress model
+            ViewBag.Exercises = await exerciseTask; // This is a List<ExerciseDetail> model
             ViewBag.MuscleName = muscleName;
-            ViewBag.Exercises = await exerciseTask;
-            ViewBag.Stats = await statsTask;
 
-            // This line tells ASP.NET to use the "Chest.cshtml" file 
-            // no matter which action was called.
+            // Continues to use your master template "Chest.cshtml"
             return View("Chest");
-        }
-
-        private async Task<List<string>> FetchExercisesAsync(string muscle)
-        {
-            await Task.Delay(75); // Simulate slightly longer DB Query for async demonstration
-            return muscle switch
-            {
-                "Chest" => new List<string> { "Bench Press", "Dumbbell Flys", "Push-ups", "Cable Crossovers" },
-                "Back" => new List<string> { "Deadlifts", "Pull-ups", "Bent Over Rows", "Lat Pulldowns" },
-                "Legs" => new List<string> { "Squats", "Leg Press", "Calf Raises", "Hamstring Curls" },
-                "Arms" => new List<string> { "Bicep Curls", "Tricep Dips", "Hammer Curls", "Skull Crushers" },
-                _ => new List<string> { "Generic Exercise" }
-            };
-        }
-
-        private async Task<Dictionary<string, string>> FetchStatsAsync(string muscle)
-        {
-            await Task.Delay(75); // Simulate DB Query
-
-            // Logic to provide different PRs based on the muscle selected
-            string maxWeight = muscle switch
-            {
-                "Legs" => "315 lbs",
-                "Back" => "275 lbs",
-                "Chest" => "225 lbs",
-                "Arms" => "95 lbs",
-                _ => "0 lbs"
-            };
-
-            return new Dictionary<string, string> {
-                { "Max Rep", maxWeight },
-                { "Volume This Week", "14,200 lbs" },
-                { "Last Trained", "Yesterday" }
-            };
         }
 
         public async Task<IActionResult> Privacy()
         {
-            await Task.Yield(); // Explicitly yield for async flow
+            await Task.Yield();
             return View();
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> Error()
         {
-            // Simple check for Activity.Current using null-coalescing
             var model = new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier };
-            return await Task.FromResult<IActionResult>(View(model));
+            return View(model);
         }
     }
 }
