@@ -1,5 +1,5 @@
 using Final_project___MaxFitness.Models;
-using Final_project___MaxFitness.Services; // Add this using for the service
+using Final_project___MaxFitness.Services;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,9 +11,8 @@ namespace Final_project___MaxFitness.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly IMuscleService _muscleService; // Add the service field
+        private readonly IMuscleService _muscleService;
 
-        // Inject the service through the constructor
         public HomeController(ILogger<HomeController> logger, IMuscleService muscleService)
         {
             _logger = logger;
@@ -27,34 +26,27 @@ namespace Final_project___MaxFitness.Controllers
         }
 
         // --- ASYNC ACTIONS FOR EACH BODY PART ---
-
         public async Task<IActionResult> Chest() => await GetMuscleView("Chest");
-
         public async Task<IActionResult> Back() => await GetMuscleView("Back");
-
         public async Task<IActionResult> Legs() => await GetMuscleView("Legs");
-
         public async Task<IActionResult> Arms() => await GetMuscleView("Arms");
 
-        // Generic private async method using the new models and service
         private async Task<IActionResult> GetMuscleView(string muscleName)
         {
-            _logger.LogInformation($"Loading {muscleName} Details Page using master template.");
+            _logger.LogInformation($"Loading {muscleName} Details Page.");
 
-            // Use the service to fetch data asynchronously using your new models
+            // FETCH DATA ASYNCHRONOUSLY
             var statsTask = _muscleService.GetMuscleStatsAsync(muscleName);
             var exerciseTask = _muscleService.GetExercisesAsync(muscleName);
 
-            // Execute tasks in parallel for performance
+            // RUN BOTH TASKS AT ONCE
             await Task.WhenAll(statsTask, exerciseTask);
 
-            // Pass the strongly-typed models to the view via ViewBag
-            // In a real app, you might prefer a ViewModel, but this fits your current setup.
-            ViewBag.Muscle = await statsTask;      // This is a MuscleProgress model
-            ViewBag.Exercises = await exerciseTask; // This is a List<ExerciseDetail> model
+            // ASSIGN TO VIEW BAG
             ViewBag.MuscleName = muscleName;
+            ViewBag.Muscle = await statsTask;
+            ViewBag.Exercises = await exerciseTask;
 
-            // Continues to use your master template "Chest.cshtml"
             return View("Chest");
         }
 
