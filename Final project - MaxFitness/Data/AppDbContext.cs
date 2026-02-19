@@ -8,6 +8,8 @@ namespace Final_project___MaxFitness.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Exercise> Exercises { get; set; }
+        public DbSet<WorkoutSession> WorkoutSessions { get; set; }
+        public DbSet<WorkoutExerciseLog> WorkoutExerciseLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
