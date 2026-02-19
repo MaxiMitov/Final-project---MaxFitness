@@ -240,6 +240,18 @@
 
 
 <!-- ============================================================
+     FINISH WORKOUT OVERLAY
+     ============================================================ -->
+<div class="finish-overlay" id="finishOverlay">
+    <div class="finish-bg-glow finish-bg-glow--1"></div>
+    <div class="finish-bg-glow finish-bg-glow--2"></div>
+    <div class="finish-content" id="finishContent">
+        <!-- Filled by JS animation -->
+    </div>
+</div>
+
+
+<!-- ============================================================
      STYLES
      ============================================================ -->
 <style>
@@ -867,6 +879,286 @@
         font-weight: 600;
     }
 
+    /* ===== FINISH OVERLAY ===== */
+    .finish-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(8,8,14,0.97);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+        overflow-y: auto;
+    }
+
+    .finish-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .finish-bg-glow {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(120px);
+        opacity: 0;
+        transition: opacity 1s ease;
+    }
+
+    .finish-overlay.active .finish-bg-glow { opacity: 1; }
+
+    .finish-bg-glow--1 {
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(230,57,70,0.15), transparent 70%);
+        top: -100px;
+        right: -100px;
+    }
+
+    .finish-bg-glow--2 {
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(34,197,94,0.1), transparent 70%);
+        bottom: -80px;
+        left: -80px;
+    }
+
+    .finish-content {
+        position: relative;
+        z-index: 1;
+        width: 90%;
+        max-width: 600px;
+        padding: 3rem 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+    }
+
+    .finish-trophy {
+        font-size: 3.5rem;
+        margin-bottom: 0.5rem;
+        opacity: 0;
+        transform: scale(0.3) rotateZ(-15deg);
+        transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .finish-trophy.visible {
+        opacity: 1;
+        transform: scale(1) rotateZ(0deg);
+    }
+
+    .finish-heading {
+        font-size: clamp(1.8rem, 4vw, 2.5rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.01em;
+        text-align: center;
+        margin-bottom: 2rem;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.5s ease;
+    }
+
+    .finish-heading.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .finish-stat-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.9rem 1.25rem;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 10px;
+        margin-bottom: 0.6rem;
+        opacity: 0;
+        transform: translateX(-30px);
+        transition: all 0.4s ease;
+    }
+
+    .finish-stat-row.visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .finish-stat-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        background: rgba(230,57,70,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        color: var(--accent);
+        flex-shrink: 0;
+    }
+
+    .finish-stat-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-secondary);
+    }
+
+    .finish-stat-value {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .finish-stat-info { flex: 1; }
+
+    .finish-divider {
+        width: 60%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+        margin: 1.2rem 0;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+
+    .finish-divider.visible { opacity: 1; }
+
+    .finish-exercise-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-secondary);
+        margin-bottom: 0.8rem;
+        align-self: flex-start;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.4s ease;
+    }
+
+    .finish-exercise-title.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .finish-exercise-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.65rem 1rem;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        opacity: 0;
+        transform: translateY(15px);
+        transition: all 0.35s ease;
+    }
+
+    .finish-exercise-row.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .finish-ex-name {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .finish-ex-name i { color: var(--accent); font-size: 0.75rem; }
+
+    .finish-ex-detail {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .finish-intensity-bar {
+        width: 100%;
+        height: 8px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+
+    .finish-intensity-bar.visible { opacity: 1; }
+
+    .finish-intensity-fill {
+        height: 100%;
+        border-radius: 8px;
+        width: 0%;
+        transition: width 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .finish-intensity-label {
+        font-size: 1.3rem;
+        font-weight: 900;
+        text-align: center;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.5s ease;
+    }
+
+    .finish-intensity-label.visible {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .finish-home-btn {
+        margin-top: 2rem;
+        padding: 0.9rem 2.5rem;
+        border-radius: 10px;
+        border: none;
+        font-size: 1rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        background: var(--accent);
+        color: #fff;
+        transition: all 0.3s ease;
+        opacity: 0;
+        transform: translateY(20px);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .finish-home-btn.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .finish-home-btn:hover {
+        background: #ff2040;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(230,57,70,0.3);
+    }
+
+    @@keyframes finishPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(230,57,70,0.3); }
+        50% { box-shadow: 0 0 0 12px rgba(230,57,70,0); }
+    }
+
+    .finish-home-btn.visible {
+        animation: finishPulse 2s ease-in-out 1s 3;
+    }
+
     /* ===== RESPONSIVE ===== */
     @@media (max-width: 1024px) {
         .workout-layout {
@@ -1284,7 +1576,138 @@
         if (timerRunning) toggleTimer();
         var result = calculateIntensity();
         var mins = Math.floor(timerSeconds / 60);
-        alert('Workout Complete!\n\nDuration: ' + mins + ' minutes\nTotal Sets: ' + result.totalSets + '\nTotal Reps: ' + result.totalReps + '\nTotal Volume: ' + result.totalVolume.toLocaleString() + ' kg\nIntensity: ' + result.score + '%');
+        var secs = timerSeconds % 60;
+        var durationText = mins + 'm ' + secs + 's';
+
+        var content = document.getElementById('finishContent');
+        content.innerHTML = '';
+
+        var items = [];
+
+        // Trophy icon
+        var trophy = document.createElement('div');
+        trophy.className = 'finish-trophy';
+        trophy.innerHTML = '<i class="fa-solid fa-trophy" style="color: #ffd166;"></i>';
+        content.appendChild(trophy);
+        items.push(trophy);
+
+        // Heading
+        var heading = document.createElement('h2');
+        heading.className = 'finish-heading';
+        heading.innerHTML = 'WORKOUT <span class="text-gradient">COMPLETE</span>';
+        content.appendChild(heading);
+        items.push(heading);
+
+        // Stats
+        var stats = [
+            { icon: 'fa-clock', label: 'Duration', value: durationText },
+            { icon: 'fa-dumbbell', label: 'Total Sets', value: result.totalSets },
+            { icon: 'fa-repeat', label: 'Total Reps', value: result.totalReps },
+            { icon: 'fa-weight-hanging', label: 'Total Volume', value: result.totalVolume.toLocaleString() + ' kg' }
+        ];
+
+        stats.forEach(function(stat) {
+            var row = document.createElement('div');
+            row.className = 'finish-stat-row';
+            row.innerHTML =
+                '<div class="finish-stat-icon"><i class="fa-solid ' + stat.icon + '"></i></div>' +
+                '<div class="finish-stat-info">' +
+                    '<div class="finish-stat-label">' + stat.label + '</div>' +
+                    '<div class="finish-stat-value">' + stat.value + '</div>' +
+                '</div>';
+            content.appendChild(row);
+            items.push(row);
+        });
+
+        // Divider
+        var divider = document.createElement('div');
+        divider.className = 'finish-divider';
+        content.appendChild(divider);
+        items.push(divider);
+
+        // Exercise breakdown title
+        var exTitle = document.createElement('div');
+        exTitle.className = 'finish-exercise-title';
+        exTitle.textContent = 'Exercise Breakdown';
+        content.appendChild(exTitle);
+        items.push(exTitle);
+
+        // Each exercise
+        exercises.forEach(function(ex) {
+            var filledSets = ex.sets.filter(function(s) { return parseInt(s.reps) > 0; });
+            var setCount = filledSets.length || ex.sets.length;
+            var totalReps = 0;
+            var totalVol = 0;
+            filledSets.forEach(function(s) {
+                var r = parseInt(s.reps) || 0;
+                var w = parseFloat(s.weight) || 0;
+                totalReps += r;
+                totalVol += r * w;
+            });
+
+            var row = document.createElement('div');
+            row.className = 'finish-exercise-row';
+            row.innerHTML =
+                '<div class="finish-ex-name"><i class="fa-solid fa-chevron-right"></i> ' + ex.name + '</div>' +
+                '<div class="finish-ex-detail">' + setCount + ' sets &middot; ' + totalReps + ' reps &middot; ' + totalVol.toLocaleString() + ' kg</div>';
+            content.appendChild(row);
+            items.push(row);
+        });
+
+        // Intensity bar
+        var barWrap = document.createElement('div');
+        barWrap.className = 'finish-intensity-bar';
+        var barFill = document.createElement('div');
+        barFill.className = 'finish-intensity-fill';
+        if (result.score <= 25) barFill.classList.add('intensity-low');
+        else if (result.score <= 50) barFill.classList.add('intensity-moderate');
+        else if (result.score <= 75) barFill.classList.add('intensity-high');
+        else barFill.classList.add('intensity-extreme');
+        barWrap.appendChild(barFill);
+        content.appendChild(barWrap);
+        items.push(barWrap);
+
+        // Intensity label
+        var intensityLabel = document.createElement('div');
+        intensityLabel.className = 'finish-intensity-label';
+        var levelText = result.score <= 25 ? 'Light' : result.score <= 50 ? 'Moderate' : result.score <= 75 ? 'High' : 'Extreme';
+        var levelColor = result.score <= 25 ? '#22c55e' : result.score <= 50 ? '#ffd166' : result.score <= 75 ? '#ff6b35' : '#e63946';
+        intensityLabel.innerHTML = '<span style="color:' + levelColor + '">' + result.score + '% — ' + levelText + '</span>';
+        content.appendChild(intensityLabel);
+        items.push(intensityLabel);
+
+        // Home button
+        var homeBtn = document.createElement('a');
+        homeBtn.href = '/';
+        homeBtn.className = 'finish-home-btn';
+        homeBtn.innerHTML = '<i class="fa-solid fa-house"></i> Go to Home';
+        content.appendChild(homeBtn);
+        items.push(homeBtn);
+
+        // Show overlay
+        document.getElementById('finishOverlay').classList.add('active');
+
+        // Staggered reveal animation
+        var delay = 200;
+        items.forEach(function(el, i) {
+            setTimeout(function() {
+                el.classList.add('visible');
+
+                // Trigger intensity bar fill after bar becomes visible
+                if (el === barWrap) {
+                    setTimeout(function() {
+                        barFill.style.width = result.score + '%';
+                    }, 100);
+                }
+            }, delay + (i * 180));
+        });
     }
+
+    // Close finish overlay on Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.getElementById('finishOverlay').classList.remove('active');
+        }
+    });
 </script>
 }
