@@ -1,4 +1,6 @@
-using Final_project___MaxFitness.Services; // Ensure this matches your project's new folder name
+using Final_project___MaxFitness.Data;
+using Final_project___MaxFitness.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace Final_project___MaxFitness
 {
@@ -11,8 +13,11 @@ namespace Final_project___MaxFitness
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
-            // --- REGISTER YOUR NEW ASYNC SERVICE HERE ---
-            // AddScoped creates a new instance of the service for every HTTP request
+            // SQLite database
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            // Register services
             builder.Services.AddScoped<IMuscleService, MuscleService>();
 
             var app = builder.Build();
