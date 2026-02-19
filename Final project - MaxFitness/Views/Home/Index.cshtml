@@ -264,71 +264,82 @@
 
                     <!-- ===== MUSCLE GROUPS ===== -->
 
+                    @{ var nk = muscleLookup.GetValueOrDefault("Neck"); }
                     <!-- Head / Neck -->
                     <ellipse class="muscle-group" data-muscle="Neck"
-                             data-status="needs-work" data-last-trained="7 days ago" data-exercises="4"
+                             data-status="@(nk?.Status ?? "needs-work")" data-last-trained="@(nk?.LastTrained ?? "Never")" data-exercises="@(nk?.ExerciseCount ?? 0)"
                              cx="150" cy="45" rx="28" ry="32"
-                             fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                             fill="@GetFill(nk?.Status ?? "needs-work")" stroke="@GetStroke(nk?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var tr = muscleLookup.GetValueOrDefault("Traps"); }
                     <!-- Traps -->
                     <rect class="muscle-group" data-muscle="Traps"
-                          data-status="needs-work" data-last-trained="8 days ago" data-exercises="5"
+                          data-status="@(tr?.Status ?? "needs-work")" data-last-trained="@(tr?.LastTrained ?? "Never")" data-exercises="@(tr?.ExerciseCount ?? 0)"
                           x="133" y="74" width="34" height="20" rx="5"
-                          fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                          fill="@GetFill(tr?.Status ?? "needs-work")" stroke="@GetStroke(tr?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var ls = muscleLookup.GetValueOrDefault("Left Shoulder"); }
                     <!-- Left Shoulder -->
                     <ellipse class="muscle-group" data-muscle="Left Shoulder"
-                             data-status="needs-work" data-last-trained="6 days ago" data-exercises="6"
+                             data-status="@(ls?.Status ?? "needs-work")" data-last-trained="@(ls?.LastTrained ?? "Never")" data-exercises="@(ls?.ExerciseCount ?? 0)"
                              cx="93" cy="105" rx="27" ry="18"
-                             fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                             fill="@GetFill(ls?.Status ?? "needs-work")" stroke="@GetStroke(ls?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var rs = muscleLookup.GetValueOrDefault("Right Shoulder"); }
                     <!-- Right Shoulder -->
                     <ellipse class="muscle-group" data-muscle="Right Shoulder"
-                             data-status="needs-work" data-last-trained="6 days ago" data-exercises="6"
+                             data-status="@(rs?.Status ?? "needs-work")" data-last-trained="@(rs?.LastTrained ?? "Never")" data-exercises="@(rs?.ExerciseCount ?? 0)"
                              cx="207" cy="105" rx="27" ry="18"
-                             fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                             fill="@GetFill(rs?.Status ?? "needs-work")" stroke="@GetStroke(rs?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var cl = muscleLookup.GetValueOrDefault("Chest (Left)"); }
                     <!-- Chest Left -->
                     <path class="muscle-group" data-muscle="Chest (Left)"
-                          data-status="needs-work" data-last-trained="5 days ago" data-exercises="5"
+                          data-status="@(cl?.Status ?? "needs-work")" data-last-trained="@(cl?.LastTrained ?? "Never")" data-exercises="@(cl?.ExerciseCount ?? 0)"
                           d="M108,112 Q105,98 150,96 L150,158 Q110,156 108,142 Z"
-                          fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                          fill="@GetFill(cl?.Status ?? "needs-work")" stroke="@GetStroke(cl?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var cr = muscleLookup.GetValueOrDefault("Chest (Right)"); }
                     <!-- Chest Right -->
                     <path class="muscle-group" data-muscle="Chest (Right)"
-                          data-status="needs-work" data-last-trained="5 days ago" data-exercises="5"
+                          data-status="@(cr?.Status ?? "needs-work")" data-last-trained="@(cr?.LastTrained ?? "Never")" data-exercises="@(cr?.ExerciseCount ?? 0)"
                           d="M192,112 Q195,98 150,96 L150,158 Q190,156 192,142 Z"
-                          fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                          fill="@GetFill(cr?.Status ?? "needs-work")" stroke="@GetStroke(cr?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var lb = muscleLookup.GetValueOrDefault("Left Bicep"); }
                     <!-- Left Bicep -->
                     <ellipse class="muscle-group" data-muscle="Left Bicep"
-                             data-status="needs-work" data-last-trained="7 days ago" data-exercises="4"
+                             data-status="@(lb?.Status ?? "needs-work")" data-last-trained="@(lb?.LastTrained ?? "Never")" data-exercises="@(lb?.ExerciseCount ?? 0)"
                              cx="76" cy="155" rx="14" ry="32"
-                             fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                             fill="@GetFill(lb?.Status ?? "needs-work")" stroke="@GetStroke(lb?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var rb = muscleLookup.GetValueOrDefault("Right Bicep"); }
                     <!-- Right Bicep -->
                     <ellipse class="muscle-group" data-muscle="Right Bicep"
-                             data-status="needs-work" data-last-trained="7 days ago" data-exercises="4"
+                             data-status="@(rb?.Status ?? "needs-work")" data-last-trained="@(rb?.LastTrained ?? "Never")" data-exercises="@(rb?.ExerciseCount ?? 0)"
                              cx="224" cy="155" rx="14" ry="32"
-                             fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                             fill="@GetFill(rb?.Status ?? "needs-work")" stroke="@GetStroke(rb?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var lf = muscleLookup.GetValueOrDefault("Left Forearm"); }
                     <!-- Left Forearm -->
                     <ellipse class="muscle-group" data-muscle="Left Forearm"
-                             data-status="needs-work" data-last-trained="9 days ago" data-exercises="3"
+                             data-status="@(lf?.Status ?? "needs-work")" data-last-trained="@(lf?.LastTrained ?? "Never")" data-exercises="@(lf?.ExerciseCount ?? 0)"
                              cx="70" cy="218" rx="12" ry="30"
-                             fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                             fill="@GetFill(lf?.Status ?? "needs-work")" stroke="@GetStroke(lf?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var rf = muscleLookup.GetValueOrDefault("Right Forearm"); }
                     <!-- Right Forearm -->
                     <ellipse class="muscle-group" data-muscle="Right Forearm"
-                             data-status="needs-work" data-last-trained="9 days ago" data-exercises="3"
+                             data-status="@(rf?.Status ?? "needs-work")" data-last-trained="@(rf?.LastTrained ?? "Never")" data-exercises="@(rf?.ExerciseCount ?? 0)"
                              cx="230" cy="218" rx="12" ry="30"
-                             fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                             fill="@GetFill(rf?.Status ?? "needs-work")" stroke="@GetStroke(rf?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var ab = muscleLookup.GetValueOrDefault("Abs"); }
                     <!-- Abs -->
                     <rect class="muscle-group" data-muscle="Abs"
-                          data-status="needs-work" data-last-trained="5 days ago" data-exercises="8"
+                          data-status="@(ab?.Status ?? "needs-work")" data-last-trained="@(ab?.LastTrained ?? "Never")" data-exercises="@(ab?.ExerciseCount ?? 0)"
                           x="131" y="162" width="38" height="64" rx="6"
-                          fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                          fill="@GetFill(ab?.Status ?? "needs-work")" stroke="@GetStroke(ab?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     <!-- Abs detail lines (cosmetic) -->
                     <line x1="134" y1="180" x2="166" y2="180" stroke="rgba(230,57,70,0.2)" stroke-width="0.8" pointer-events="none" />
@@ -336,41 +347,47 @@
                     <line x1="134" y1="212" x2="166" y2="212" stroke="rgba(230,57,70,0.2)" stroke-width="0.8" pointer-events="none" />
                     <line x1="150" y1="163" x2="150" y2="225" stroke="rgba(230,57,70,0.15)" stroke-width="0.8" pointer-events="none" />
 
+                    @{ var lo = muscleLookup.GetValueOrDefault("Left Oblique"); }
                     <!-- Left Oblique -->
                     <rect class="muscle-group" data-muscle="Left Oblique"
-                          data-status="needs-work" data-last-trained="5 days ago" data-exercises="4"
+                          data-status="@(lo?.Status ?? "needs-work")" data-last-trained="@(lo?.LastTrained ?? "Never")" data-exercises="@(lo?.ExerciseCount ?? 0)"
                           x="110" y="167" width="18" height="55" rx="5"
-                          fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                          fill="@GetFill(lo?.Status ?? "needs-work")" stroke="@GetStroke(lo?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var ro = muscleLookup.GetValueOrDefault("Right Oblique"); }
                     <!-- Right Oblique -->
                     <rect class="muscle-group" data-muscle="Right Oblique"
-                          data-status="needs-work" data-last-trained="5 days ago" data-exercises="4"
+                          data-status="@(ro?.Status ?? "needs-work")" data-last-trained="@(ro?.LastTrained ?? "Never")" data-exercises="@(ro?.ExerciseCount ?? 0)"
                           x="172" y="167" width="18" height="55" rx="5"
-                          fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                          fill="@GetFill(ro?.Status ?? "needs-work")" stroke="@GetStroke(ro?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var lq = muscleLookup.GetValueOrDefault("Left Quad"); }
                     <!-- Left Quad -->
                     <ellipse class="muscle-group" data-muscle="Left Quad"
-                             data-status="needs-work" data-last-trained="6 days ago" data-exercises="6"
+                             data-status="@(lq?.Status ?? "needs-work")" data-last-trained="@(lq?.LastTrained ?? "Never")" data-exercises="@(lq?.ExerciseCount ?? 0)"
                              cx="127" cy="295" rx="22" ry="52"
-                             fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                             fill="@GetFill(lq?.Status ?? "needs-work")" stroke="@GetStroke(lq?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var rq = muscleLookup.GetValueOrDefault("Right Quad"); }
                     <!-- Right Quad -->
                     <ellipse class="muscle-group" data-muscle="Right Quad"
-                             data-status="needs-work" data-last-trained="6 days ago" data-exercises="6"
+                             data-status="@(rq?.Status ?? "needs-work")" data-last-trained="@(rq?.LastTrained ?? "Never")" data-exercises="@(rq?.ExerciseCount ?? 0)"
                              cx="173" cy="295" rx="22" ry="52"
-                             fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                             fill="@GetFill(rq?.Status ?? "needs-work")" stroke="@GetStroke(rq?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var lc = muscleLookup.GetValueOrDefault("Left Calf"); }
                     <!-- Left Calf -->
                     <ellipse class="muscle-group" data-muscle="Left Calf"
-                             data-status="needs-work" data-last-trained="6 days ago" data-exercises="3"
+                             data-status="@(lc?.Status ?? "needs-work")" data-last-trained="@(lc?.LastTrained ?? "Never")" data-exercises="@(lc?.ExerciseCount ?? 0)"
                              cx="123" cy="405" rx="16" ry="44"
-                             fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                             fill="@GetFill(lc?.Status ?? "needs-work")" stroke="@GetStroke(lc?.Status ?? "needs-work")" stroke-width="1.2" />
 
+                    @{ var rc = muscleLookup.GetValueOrDefault("Right Calf"); }
                     <!-- Right Calf -->
                     <ellipse class="muscle-group" data-muscle="Right Calf"
-                             data-status="needs-work" data-last-trained="6 days ago" data-exercises="3"
+                             data-status="@(rc?.Status ?? "needs-work")" data-last-trained="@(rc?.LastTrained ?? "Never")" data-exercises="@(rc?.ExerciseCount ?? 0)"
                              cx="177" cy="405" rx="16" ry="44"
-                             fill="rgba(230,57,70,0.15)" stroke="rgba(230,57,70,0.4)" stroke-width="1.2" />
+                             fill="@GetFill(rc?.Status ?? "needs-work")" stroke="@GetStroke(rc?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     <!-- Scan line (cosmetic HUD effect) -->
                     <line class="body-scan-line" x1="40" y1="0" x2="260" y2="0" stroke="rgba(230,57,70,0.15)" stroke-width="1" pointer-events="none" />
@@ -451,22 +468,33 @@
                     <h3 class="body-map-info-title">OVERVIEW</h3>
                     <div class="summary-stat-row">
                         <span class="summary-label">Muscle Groups Tracked</span>
-                        <span class="summary-value">14</span>
+                        <span class="summary-value">@totalMuscles</span>
                     </div>
                     <div class="summary-stat-row">
                         <span class="summary-label">Strong</span>
-                        <span class="summary-value summary-value--strong">0</span>
+                        <span class="summary-value summary-value--strong">@strongCount</span>
                     </div>
                     <div class="summary-stat-row">
                         <span class="summary-label">Moderate</span>
-                        <span class="summary-value summary-value--moderate">0</span>
+                        <span class="summary-value summary-value--moderate">@moderateCount</span>
                     </div>
                     <div class="summary-stat-row">
                         <span class="summary-label">Needs Work</span>
-                        <span class="summary-value summary-value--needs-work">14</span>
+                        <span class="summary-value summary-value--needs-work">@needsWorkCount</span>
                     </div>
                     <div class="summary-progress-bar">
-                        <div class="summary-progress-segment summary-progress--needs-work" style="width: 100%;"></div>
+                        @if (strongPct > 0)
+                        {
+                            <div class="summary-progress-segment summary-progress--strong" style="width: @(strongPct)%;"></div>
+                        }
+                        @if (moderatePct > 0)
+                        {
+                            <div class="summary-progress-segment summary-progress--moderate" style="width: @(moderatePct)%;"></div>
+                        }
+                        @if (needsWorkPct > 0)
+                        {
+                            <div class="summary-progress-segment summary-progress--needs-work" style="width: @(needsWorkPct)%;"></div>
+                        }
                     </div>
                 </div>
             </div>
