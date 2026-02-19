@@ -519,115 +519,60 @@
         </div>
 
         <div class="activity-list">
-            <!-- Activity 1 -->
-            <div class="activity-card card-dark">
-                <div class="activity-icon activity-icon--push">
-                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
+            @if (recentWorkouts.Count == 0)
+            {
+                <div class="activity-card card-dark" style="justify-content: center; text-align: center; padding: 2rem;">
+                    <div style="color: var(--text-secondary);">
+                        <i class="fa-solid fa-dumbbell" style="font-size: 1.5rem; opacity: 0.3; margin-bottom: 0.5rem; display: block;"></i>
+                        <p style="margin: 0;">No workouts yet. Start your first session!</p>
+                    </div>
                 </div>
-                <div class="activity-info">
-                    <h4 class="activity-name">Upper Body Push</h4>
-                    <span class="activity-date">Today</span>
-                </div>
-                <div class="activity-meta">
-                    <span class="activity-meta-item">
-                        <i class="fa-regular fa-clock"></i> 45 min
-                    </span>
-                    <span class="activity-meta-item">
-                        <i class="fa-solid fa-dumbbell"></i> 12 exercises
-                    </span>
-                </div>
-                <span class="activity-intensity activity-intensity--high">
-                    <i class="fa-solid fa-signal"></i> High
-                </span>
-            </div>
+            }
+            @{
+                var activityIcons = new[] { "fa-solid fa-dumbbell", "fa-solid fa-person-walking", "fa-solid fa-bolt", "fa-solid fa-hand-fist", "fa-solid fa-arrow-up-from-bracket" };
+                var activityIconClasses = new[] { "activity-icon--push", "activity-icon--legs", "activity-icon--pull", "activity-icon--arms", "activity-icon--hiit" };
+            }
+            @foreach (var (workout, idx) in recentWorkouts.Select((w, i) => (w, i)))
+            {
+                var iconIdx = idx % activityIcons.Length;
+                var intensityClass = workout.IntensityLabel switch {
+                    "Light" => "activity-intensity--medium",
+                    "Moderate" => "activity-intensity--medium",
+                    "High" => "activity-intensity--high",
+                    "Extreme" => "activity-intensity--extreme",
+                    _ => "activity-intensity--medium"
+                };
+                var intensityIcon = workout.IntensityLabel switch {
+                    "Light" => "fa-solid fa-gauge",
+                    "Moderate" => "fa-solid fa-gauge",
+                    "High" => "fa-solid fa-signal",
+                    "Extreme" => "fa-solid fa-fire",
+                    _ => "fa-solid fa-gauge"
+                };
+                var workoutName = string.Join(" & ", workout.MuscleGroups.Select(m => char.ToUpper(m[0]) + m.Substring(1)).Take(3));
+                if (string.IsNullOrEmpty(workoutName)) { workoutName = "Workout"; }
 
-            <!-- Activity 2 -->
-            <div class="activity-card card-dark">
-                <div class="activity-icon activity-icon--legs">
-                    <i class="fa-solid fa-person-walking"></i>
-                </div>
-                <div class="activity-info">
-                    <h4 class="activity-name">Leg Day</h4>
-                    <span class="activity-date">Yesterday</span>
-                </div>
-                <div class="activity-meta">
-                    <span class="activity-meta-item">
-                        <i class="fa-regular fa-clock"></i> 55 min
-                    </span>
-                    <span class="activity-meta-item">
-                        <i class="fa-solid fa-dumbbell"></i> 10 exercises
-                    </span>
-                </div>
-                <span class="activity-intensity activity-intensity--extreme">
-                    <i class="fa-solid fa-fire"></i> Extreme
-                </span>
-            </div>
-
-            <!-- Activity 3 -->
-            <div class="activity-card card-dark">
-                <div class="activity-icon activity-icon--pull">
-                    <i class="fa-solid fa-arrow-down-long"></i>
-                </div>
-                <div class="activity-info">
-                    <h4 class="activity-name">Pull & Back</h4>
-                    <span class="activity-date">2 days ago</span>
-                </div>
-                <div class="activity-meta">
-                    <span class="activity-meta-item">
-                        <i class="fa-regular fa-clock"></i> 40 min
-                    </span>
-                    <span class="activity-meta-item">
-                        <i class="fa-solid fa-dumbbell"></i> 11 exercises
+                <div class="activity-card card-dark">
+                    <div class="activity-icon @activityIconClasses[iconIdx]">
+                        <i class="@activityIcons[iconIdx]"></i>
+                    </div>
+                    <div class="activity-info">
+                        <h4 class="activity-name">@workoutName</h4>
+                        <span class="activity-date">@workout.TimeAgo</span>
+                    </div>
+                    <div class="activity-meta">
+                        <span class="activity-meta-item">
+                            <i class="fa-regular fa-clock"></i> @workout.DurationMinutes min
+                        </span>
+                        <span class="activity-meta-item">
+                            <i class="fa-solid fa-dumbbell"></i> @workout.ExerciseCount exercises
+                        </span>
+                    </div>
+                    <span class="activity-intensity @intensityClass">
+                        <i class="@intensityIcon"></i> @workout.IntensityLabel
                     </span>
                 </div>
-                <span class="activity-intensity activity-intensity--medium">
-                    <i class="fa-solid fa-gauge"></i> Medium
-                </span>
-            </div>
-
-            <!-- Activity 4 -->
-            <div class="activity-card card-dark">
-                <div class="activity-icon activity-icon--arms">
-                    <i class="fa-solid fa-hand-fist"></i>
-                </div>
-                <div class="activity-info">
-                    <h4 class="activity-name">Arms & Core</h4>
-                    <span class="activity-date">3 days ago</span>
-                </div>
-                <div class="activity-meta">
-                    <span class="activity-meta-item">
-                        <i class="fa-regular fa-clock"></i> 35 min
-                    </span>
-                    <span class="activity-meta-item">
-                        <i class="fa-solid fa-dumbbell"></i> 8 exercises
-                    </span>
-                </div>
-                <span class="activity-intensity activity-intensity--high">
-                    <i class="fa-solid fa-signal"></i> High
-                </span>
-            </div>
-
-            <!-- Activity 5 -->
-            <div class="activity-card card-dark">
-                <div class="activity-icon activity-icon--hiit">
-                    <i class="fa-solid fa-bolt"></i>
-                </div>
-                <div class="activity-info">
-                    <h4 class="activity-name">Full Body HIIT</h4>
-                    <span class="activity-date">5 days ago</span>
-                </div>
-                <div class="activity-meta">
-                    <span class="activity-meta-item">
-                        <i class="fa-regular fa-clock"></i> 30 min
-                    </span>
-                    <span class="activity-meta-item">
-                        <i class="fa-solid fa-dumbbell"></i> 15 exercises
-                    </span>
-                </div>
-                <span class="activity-intensity activity-intensity--extreme">
-                    <i class="fa-solid fa-fire"></i> Extreme
-                </span>
-            </div>
+            }
         </div>
     </div>
 </section>
