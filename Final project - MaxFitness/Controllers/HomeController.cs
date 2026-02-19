@@ -12,16 +12,27 @@ namespace Final_project___MaxFitness.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IMuscleService _muscleService;
+        private readonly IWorkoutStatsService _workoutStatsService;
 
-        public HomeController(ILogger<HomeController> logger, IMuscleService muscleService)
+        public HomeController(ILogger<HomeController> logger, IMuscleService muscleService, IWorkoutStatsService workoutStatsService)
         {
             _logger = logger;
             _muscleService = muscleService;
+            _workoutStatsService = workoutStatsService;
         }
 
         public async Task<IActionResult> Index()
         {
-            await Task.Delay(10);
+            var statsTask = _workoutStatsService.GetDashboardStatsAsync();
+            var musclesTask = _workoutStatsService.GetMuscleStatusesAsync();
+            var recentTask = _workoutStatsService.GetRecentWorkoutsAsync(5);
+
+            await Task.WhenAll(statsTask, musclesTask, recentTask);
+
+            ViewBag.Stats = await statsTask;
+            ViewBag.MuscleStatuses = await musclesTask;
+            ViewBag.RecentWorkouts = await recentTask;
+
             return View();
         }
 
