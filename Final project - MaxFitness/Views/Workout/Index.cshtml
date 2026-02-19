@@ -1,0 +1,1041 @@
+@{
+    ViewData["Title"] = "Start Workout";
+}
+
+<!-- ============================================================
+     WORKOUT PAGE HEADER
+     ============================================================ -->
+<section class="workout-header">
+    <div class="container">
+        <div class="workout-header-content">
+            <div>
+                <h1 class="workout-title">START <span class="text-gradient">WORKOUT</span></h1>
+                <p class="workout-subtitle">Select a muscle group, load exercises, and track every set.</p>
+            </div>
+            <div class="workout-timer-area">
+                <div class="workout-timer-display" id="workoutTimer">
+                    <i class="fa-solid fa-stopwatch"></i>
+                    <span id="timerValue">00:00</span>
+                </div>
+                <button class="btn-accent btn-sm" id="timerStartBtn" onclick="toggleTimer()">
+                    <i class="fa-solid fa-play" id="timerIcon"></i> <span id="timerBtnText">Start Timer</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     BODY PART SELECTOR
+     ============================================================ -->
+<section class="workout-section">
+    <div class="container">
+        <h3 class="workout-section-title">SELECT <span class="text-gradient">MUSCLE GROUP</span></h3>
+        <div class="body-part-grid" id="bodyPartGrid">
+            <button class="body-part-btn" data-muscle="chest" onclick="selectMuscle(this)">
+                <div class="body-part-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+                <span class="body-part-name">Chest</span>
+            </button>
+            <button class="body-part-btn" data-muscle="back" onclick="selectMuscle(this)">
+                <div class="body-part-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <span class="body-part-name">Back</span>
+            </button>
+            <button class="body-part-btn" data-muscle="shoulders" onclick="selectMuscle(this)">
+                <div class="body-part-icon"><i class="fa-solid fa-up-down-left-right"></i></div>
+                <span class="body-part-name">Shoulders</span>
+            </button>
+            <button class="body-part-btn" data-muscle="biceps" onclick="selectMuscle(this)">
+                <div class="body-part-icon"><i class="fa-solid fa-hand-fist"></i></div>
+                <span class="body-part-name">Biceps</span>
+            </button>
+            <button class="body-part-btn" data-muscle="triceps" onclick="selectMuscle(this)">
+                <div class="body-part-icon"><i class="fa-solid fa-hand-back-fist"></i></div>
+                <span class="body-part-name">Triceps</span>
+            </button>
+            <button class="body-part-btn" data-muscle="legs" onclick="selectMuscle(this)">
+                <div class="body-part-icon"><i class="fa-solid fa-person-walking"></i></div>
+                <span class="body-part-name">Legs</span>
+            </button>
+            <button class="body-part-btn" data-muscle="abs" onclick="selectMuscle(this)">
+                <div class="body-part-icon"><i class="fa-solid fa-tablets"></i></div>
+                <span class="body-part-name">Abs</span>
+            </button>
+            <button class="body-part-btn" data-muscle="forearms" onclick="selectMuscle(this)">
+                <div class="body-part-icon"><i class="fa-solid fa-hand"></i></div>
+                <span class="body-part-name">Forearms</span>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     EXERCISE LIST + LOGGING
+     ============================================================ -->
+<section class="workout-section" id="exerciseSection" style="display: none;">
+    <div class="container">
+        <div class="exercise-header-row">
+            <h3 class="workout-section-title"><span class="text-gradient" id="selectedMuscleName">--</span> EXERCISES</h3>
+            <button class="btn-ghost btn-sm" onclick="addCustomExercise()">
+                <i class="fa-solid fa-plus"></i> Add Exercise
+            </button>
+        </div>
+
+        <!-- Exercise Log Table -->
+        <div class="exercise-log" id="exerciseLog">
+            <!-- Exercises get inserted here by JS -->
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     WORKOUT INTENSITY + SUMMARY
+     ============================================================ -->
+<section class="workout-section" id="summarySection" style="display: none;">
+    <div class="container">
+        <h3 class="workout-section-title">WORKOUT <span class="text-gradient">SUMMARY</span></h3>
+        <div class="summary-grid">
+            <div class="summary-card card-dark">
+                <div class="summary-card-icon"><i class="fa-solid fa-clock"></i></div>
+                <span class="summary-card-label">Duration</span>
+                <span class="summary-card-value" id="summaryDuration">00:00</span>
+            </div>
+            <div class="summary-card card-dark">
+                <div class="summary-card-icon"><i class="fa-solid fa-dumbbell"></i></div>
+                <span class="summary-card-label">Total Sets</span>
+                <span class="summary-card-value" id="summaryTotalSets">0</span>
+            </div>
+            <div class="summary-card card-dark">
+                <div class="summary-card-icon"><i class="fa-solid fa-repeat"></i></div>
+                <span class="summary-card-label">Total Reps</span>
+                <span class="summary-card-value" id="summaryTotalReps">0</span>
+            </div>
+            <div class="summary-card card-dark">
+                <div class="summary-card-icon"><i class="fa-solid fa-weight-hanging"></i></div>
+                <span class="summary-card-label">Total Volume</span>
+                <span class="summary-card-value" id="summaryVolume">0 <span class="summary-unit">kg</span></span>
+            </div>
+            <div class="summary-card card-dark summary-card--intensity">
+                <div class="summary-card-icon"><i class="fa-solid fa-fire"></i></div>
+                <span class="summary-card-label">Intensity</span>
+                <span class="summary-card-value" id="summaryIntensity">--</span>
+                <div class="intensity-bar-container">
+                    <div class="intensity-bar-fill" id="intensityBar" style="width: 0%;"></div>
+                </div>
+                <span class="intensity-level" id="intensityLevel">--</span>
+            </div>
+        </div>
+
+        <div class="finish-workout-area">
+            <button class="btn-accent btn-xl" id="finishWorkoutBtn" onclick="finishWorkout()">
+                <i class="fa-solid fa-flag-checkered"></i> Finish Workout
+            </button>
+        </div>
+    </div>
+</section>
+
+
+<!-- ============================================================
+     PAGE STYLES
+     ============================================================ -->
+<style>
+    .workout-header {
+        padding: 6rem 0 2rem;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .workout-header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+    }
+
+    .workout-title {
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.01em;
+        margin-bottom: 0.3rem;
+    }
+
+    .workout-subtitle {
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+
+    .workout-timer-area {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .workout-timer-display {
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+        padding: 0.6rem 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 1.5rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        color: var(--text-primary);
+    }
+
+    .workout-timer-display i {
+        color: var(--accent);
+        font-size: 1.1rem;
+    }
+
+    .workout-section {
+        padding: 2.5rem 0;
+    }
+
+    .workout-section-title {
+        font-size: 1.3rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Body Part Grid */
+    .body-part-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+
+    .body-part-btn {
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        padding: 1.5rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: var(--text-primary);
+    }
+
+    .body-part-btn:hover {
+        border-color: rgba(230,57,70,0.3);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .body-part-btn.active {
+        border-color: var(--accent);
+        background: rgba(230,57,70,0.08);
+        box-shadow: 0 0 20px rgba(230,57,70,0.15);
+    }
+
+    .body-part-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: rgba(230,57,70,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: var(--accent);
+        transition: all 0.3s ease;
+    }
+
+    .body-part-btn.active .body-part-icon {
+        background: var(--gradient-primary);
+        color: #fff;
+    }
+
+    .body-part-name {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    /* Exercise Header */
+    .exercise-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .exercise-header-row .workout-section-title {
+        margin-bottom: 0;
+    }
+
+    /* Exercise Log */
+    .exercise-log {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .exercise-item {
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .exercise-item:hover {
+        border-color: rgba(230,57,70,0.15);
+    }
+
+    .exercise-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        cursor: pointer;
+    }
+
+    .exercise-item-name {
+        font-weight: 700;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .exercise-item-name i {
+        color: var(--accent);
+        font-size: 0.85rem;
+    }
+
+    .exercise-item-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        background: rgba(230,57,70,0.1);
+        color: var(--accent);
+        border: 1px solid rgba(230,57,70,0.2);
+    }
+
+    .exercise-item-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .exercise-remove-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.3rem;
+        border-radius: 4px;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+    }
+
+    .exercise-remove-btn:hover {
+        color: var(--accent);
+        background: rgba(230,57,70,0.1);
+    }
+
+    /* Sets Table */
+    .sets-table {
+        width: 100%;
+        padding: 0.75rem 1.25rem 1rem;
+    }
+
+    .sets-table-header {
+        display: grid;
+        grid-template-columns: 50px 1fr 1fr 1fr 50px;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        margin-bottom: 0.5rem;
+    }
+
+    .sets-table-header span {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-secondary);
+    }
+
+    .set-row {
+        display: grid;
+        grid-template-columns: 50px 1fr 1fr 1fr 50px;
+        gap: 0.75rem;
+        align-items: center;
+        padding: 0.4rem 0;
+    }
+
+    .set-number {
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: var(--accent);
+        text-align: center;
+    }
+
+    .set-input {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 6px;
+        padding: 0.5rem 0.6rem;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-align: center;
+        width: 100%;
+        transition: all 0.2s;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .set-input:focus {
+        outline: none;
+        border-color: rgba(230,57,70,0.4);
+        background: rgba(230,57,70,0.06);
+    }
+
+    .set-input::placeholder {
+        color: var(--text-dim, #4a4a5e);
+        font-weight: 400;
+    }
+
+    .set-remove-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 0.8rem;
+        padding: 0.3rem;
+        border-radius: 4px;
+        transition: all 0.2s;
+        text-align: center;
+    }
+
+    .set-remove-btn:hover {
+        color: var(--accent);
+        background: rgba(230,57,70,0.1);
+    }
+
+    .add-set-btn {
+        background: rgba(255,255,255,0.03);
+        border: 1px dashed rgba(255,255,255,0.1);
+        border-radius: 6px;
+        color: var(--text-secondary);
+        padding: 0.5rem;
+        width: 100%;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        margin-top: 0.5rem;
+    }
+
+    .add-set-btn:hover {
+        border-color: rgba(230,57,70,0.3);
+        color: var(--accent);
+        background: rgba(230,57,70,0.05);
+    }
+
+    /* Summary */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem;
+    }
+
+    .summary-card {
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .summary-card-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: rgba(230,57,70,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: var(--accent);
+        margin-bottom: 0.3rem;
+    }
+
+    .summary-card-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-secondary);
+    }
+
+    .summary-card-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .summary-unit {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+    }
+
+    .summary-card--intensity {
+        border-color: rgba(230,57,70,0.2);
+    }
+
+    .intensity-bar-container {
+        width: 100%;
+        height: 6px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 6px;
+        overflow: hidden;
+        margin-top: 0.3rem;
+    }
+
+    .intensity-bar-fill {
+        height: 100%;
+        border-radius: 6px;
+        transition: width 0.5s ease, background 0.5s ease;
+    }
+
+    .intensity-level {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 0.15rem 0.5rem;
+        border-radius: 20px;
+        margin-top: 0.2rem;
+    }
+
+    .intensity-low {
+        color: #22c55e;
+    }
+    .intensity-low .intensity-bar-fill,
+    .intensity-bar-fill.intensity-low {
+        background: #22c55e;
+    }
+    .intensity-moderate {
+        color: #ffd166;
+    }
+    .intensity-bar-fill.intensity-moderate {
+        background: #ffd166;
+    }
+    .intensity-high {
+        color: #ff6b35;
+    }
+    .intensity-bar-fill.intensity-high {
+        background: linear-gradient(90deg, #ff6b35, #e63946);
+    }
+    .intensity-extreme {
+        color: #e63946;
+    }
+    .intensity-bar-fill.intensity-extreme {
+        background: linear-gradient(90deg, #e63946, #ff2040);
+    }
+
+    .finish-workout-area {
+        text-align: center;
+        padding: 2.5rem 0 1rem;
+    }
+
+    /* Custom exercise modal */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .modal-box {
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 16px;
+        padding: 2rem;
+        width: 90%;
+        max-width: 400px;
+        transform: translateY(20px);
+        transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-box {
+        transform: translateY(0);
+    }
+
+    .modal-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 1.25rem;
+    }
+
+    .modal-input {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        width: 100%;
+        margin-bottom: 1rem;
+        transition: border-color 0.2s;
+    }
+
+    .modal-input:focus {
+        outline: none;
+        border-color: rgba(230,57,70,0.4);
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+    }
+
+    /* Responsive */
+    @@media (max-width: 1024px) {
+        .body-part-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        .summary-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .body-part-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .workout-header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .sets-table-header,
+        .set-row {
+            grid-template-columns: 40px 1fr 1fr 1fr 40px;
+            gap: 0.5rem;
+        }
+        .summary-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .body-part-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<!-- Custom Exercise Modal -->
+<div class="modal-overlay" id="customExerciseModal">
+    <div class="modal-box">
+        <h4 class="modal-title">Add Custom Exercise</h4>
+        <input type="text" class="modal-input" id="customExerciseName" placeholder="Exercise name..." />
+        <div class="modal-actions">
+            <button class="btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+            <button class="btn-accent btn-sm" onclick="confirmAddExercise()">
+                <i class="fa-solid fa-plus"></i> Add
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // ===== EXERCISE DATABASE =====
+    var exerciseDB = {
+        chest: [
+            { name: "Bench Press", type: "Compound" },
+            { name: "Incline Dumbbell Press", type: "Compound" },
+            { name: "Cable Flyes", type: "Isolation" },
+            { name: "Push-Ups", type: "Bodyweight" },
+            { name: "Dumbbell Pullover", type: "Isolation" }
+        ],
+        back: [
+            { name: "Deadlift", type: "Compound" },
+            { name: "Lat Pulldown", type: "Compound" },
+            { name: "Barbell Row", type: "Compound" },
+            { name: "Seated Cable Row", type: "Isolation" },
+            { name: "Face Pulls", type: "Isolation" }
+        ],
+        shoulders: [
+            { name: "Overhead Press", type: "Compound" },
+            { name: "Lateral Raises", type: "Isolation" },
+            { name: "Front Raises", type: "Isolation" },
+            { name: "Reverse Flyes", type: "Isolation" },
+            { name: "Arnold Press", type: "Compound" }
+        ],
+        biceps: [
+            { name: "Barbell Curl", type: "Isolation" },
+            { name: "Hammer Curls", type: "Isolation" },
+            { name: "Incline Dumbbell Curls", type: "Isolation" },
+            { name: "Preacher Curls", type: "Isolation" },
+            { name: "Cable Curls", type: "Isolation" }
+        ],
+        triceps: [
+            { name: "Tricep Dips", type: "Compound" },
+            { name: "Skull Crushers", type: "Isolation" },
+            { name: "Tricep Pushdown", type: "Isolation" },
+            { name: "Overhead Tricep Extension", type: "Isolation" },
+            { name: "Close-Grip Bench Press", type: "Compound" }
+        ],
+        legs: [
+            { name: "Barbell Squat", type: "Compound" },
+            { name: "Romanian Deadlift", type: "Compound" },
+            { name: "Leg Press", type: "Compound" },
+            { name: "Leg Curl", type: "Isolation" },
+            { name: "Calf Raises", type: "Isolation" },
+            { name: "Bulgarian Split Squat", type: "Compound" }
+        ],
+        abs: [
+            { name: "Crunches", type: "Bodyweight" },
+            { name: "Hanging Leg Raises", type: "Bodyweight" },
+            { name: "Plank", type: "Bodyweight" },
+            { name: "Cable Woodchops", type: "Isolation" },
+            { name: "Ab Wheel Rollout", type: "Bodyweight" }
+        ],
+        forearms: [
+            { name: "Wrist Curls", type: "Isolation" },
+            { name: "Reverse Wrist Curls", type: "Isolation" },
+            { name: "Farmer's Walk", type: "Compound" },
+            { name: "Plate Pinch", type: "Isolation" }
+        ]
+    };
+
+    // ===== STATE =====
+    var selectedMuscle = null;
+    var exercises = [];
+    var timerInterval = null;
+    var timerSeconds = 0;
+    var timerRunning = false;
+
+    // ===== TIMER =====
+    function toggleTimer() {
+        if (timerRunning) {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            document.getElementById('timerIcon').className = 'fa-solid fa-play';
+            document.getElementById('timerBtnText').textContent = 'Resume';
+        } else {
+            timerInterval = setInterval(function() {
+                timerSeconds++;
+                var mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+                var secs = (timerSeconds % 60).toString().padStart(2, '0');
+                document.getElementById('timerValue').textContent = mins + ':' + secs;
+            }, 1000);
+            timerRunning = true;
+            document.getElementById('timerIcon').className = 'fa-solid fa-pause';
+            document.getElementById('timerBtnText').textContent = 'Pause';
+        }
+    }
+
+    // ===== MUSCLE SELECTION =====
+    function selectMuscle(btn) {
+        // Clear active state
+        document.querySelectorAll('.body-part-btn').forEach(function(b) {
+            b.classList.remove('active');
+        });
+        btn.classList.add('active');
+
+        selectedMuscle = btn.getAttribute('data-muscle');
+        document.getElementById('selectedMuscleName').textContent = selectedMuscle.toUpperCase();
+
+        // Load exercises for this muscle
+        exercises = [];
+        var dbExercises = exerciseDB[selectedMuscle] || [];
+        dbExercises.forEach(function(ex) {
+            exercises.push({
+                name: ex.name,
+                type: ex.type,
+                sets: [{ reps: '', weight: '' }]
+            });
+        });
+
+        renderExercises();
+        document.getElementById('exerciseSection').style.display = 'block';
+        document.getElementById('summarySection').style.display = 'block';
+
+        // Auto-start timer if not started
+        if (!timerRunning && timerSeconds === 0) {
+            toggleTimer();
+        }
+
+        updateSummary();
+
+        // Scroll to exercises
+        document.getElementById('exerciseSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ===== RENDER EXERCISES =====
+    function renderExercises() {
+        var log = document.getElementById('exerciseLog');
+        log.innerHTML = '';
+
+        exercises.forEach(function(exercise, exIndex) {
+            var item = document.createElement('div');
+            item.className = 'exercise-item';
+
+            var setsHTML = '';
+            exercise.sets.forEach(function(set, setIndex) {
+                setsHTML += '<div class="set-row">' +
+                    '<span class="set-number">' + (setIndex + 1) + '</span>' +
+                    '<input type="number" class="set-input" placeholder="kg" value="' + (set.weight || '') + '" ' +
+                        'onchange="updateSet(' + exIndex + ',' + setIndex + ',\'weight\',this.value)" ' +
+                        'oninput="updateSet(' + exIndex + ',' + setIndex + ',\'weight\',this.value)" />' +
+                    '<input type="number" class="set-input" placeholder="reps" value="' + (set.reps || '') + '" ' +
+                        'onchange="updateSet(' + exIndex + ',' + setIndex + ',\'reps\',this.value)" ' +
+                        'oninput="updateSet(' + exIndex + ',' + setIndex + ',\'reps\',this.value)" />' +
+                    '<span></span>' +
+                    '<button class="set-remove-btn" onclick="removeSet(' + exIndex + ',' + setIndex + ')" title="Remove set">' +
+                        '<i class="fa-solid fa-xmark"></i>' +
+                    '</button>' +
+                '</div>';
+            });
+
+            item.innerHTML =
+                '<div class="exercise-item-header">' +
+                    '<div class="exercise-item-name">' +
+                        '<i class="fa-solid fa-dumbbell"></i> ' + exercise.name +
+                    '</div>' +
+                    '<div class="exercise-item-actions">' +
+                        '<span class="exercise-item-badge">' + exercise.type + '</span>' +
+                        '<button class="exercise-remove-btn" onclick="removeExercise(' + exIndex + ')" title="Remove exercise">' +
+                            '<i class="fa-solid fa-trash"></i>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="sets-table">' +
+                    '<div class="sets-table-header">' +
+                        '<span>Set</span>' +
+                        '<span>Weight (kg)</span>' +
+                        '<span>Reps</span>' +
+                        '<span></span>' +
+                        '<span></span>' +
+                    '</div>' +
+                    setsHTML +
+                    '<button class="add-set-btn" onclick="addSet(' + exIndex + ')">' +
+                        '<i class="fa-solid fa-plus"></i> Add Set' +
+                    '</button>' +
+                '</div>';
+
+            log.appendChild(item);
+        });
+    }
+
+    // ===== SET MANAGEMENT =====
+    function addSet(exIndex) {
+        exercises[exIndex].sets.push({ reps: '', weight: '' });
+        renderExercises();
+    }
+
+    function removeSet(exIndex, setIndex) {
+        if (exercises[exIndex].sets.length > 1) {
+            exercises[exIndex].sets.splice(setIndex, 1);
+            renderExercises();
+        }
+    }
+
+    function updateSet(exIndex, setIndex, field, value) {
+        exercises[exIndex].sets[setIndex][field] = value;
+        updateSummary();
+    }
+
+    // ===== EXERCISE MANAGEMENT =====
+    function removeExercise(exIndex) {
+        exercises.splice(exIndex, 1);
+        renderExercises();
+        updateSummary();
+    }
+
+    function addCustomExercise() {
+        document.getElementById('customExerciseModal').classList.add('active');
+        document.getElementById('customExerciseName').value = '';
+        document.getElementById('customExerciseName').focus();
+    }
+
+    function closeModal() {
+        document.getElementById('customExerciseModal').classList.remove('active');
+    }
+
+    function confirmAddExercise() {
+        var name = document.getElementById('customExerciseName').value.trim();
+        if (name) {
+            exercises.push({
+                name: name,
+                type: 'Custom',
+                sets: [{ reps: '', weight: '' }]
+            });
+            renderExercises();
+            closeModal();
+            updateSummary();
+        }
+    }
+
+    // Close modal on overlay click
+    document.getElementById('customExerciseModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    // Enter key in modal
+    document.getElementById('customExerciseName').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') confirmAddExercise();
+    });
+
+    // ===== INTENSITY ALGORITHM =====
+    // Factors: total volume, sets per muscle, reps per set, workout duration, exercise variety
+    function calculateIntensity() {
+        var totalSets = 0;
+        var totalReps = 0;
+        var totalVolume = 0;
+        var filledSets = 0;
+        var exerciseCount = exercises.length;
+
+        exercises.forEach(function(ex) {
+            ex.sets.forEach(function(set) {
+                var reps = parseInt(set.reps) || 0;
+                var weight = parseFloat(set.weight) || 0;
+                if (reps > 0) {
+                    totalSets++;
+                    totalReps += reps;
+                    totalVolume += reps * weight;
+                    filledSets++;
+                }
+            });
+        });
+
+        if (filledSets === 0) return { score: 0, totalSets: 0, totalReps: 0, totalVolume: 0 };
+
+        // Intensity score calculation (0-100):
+        // - Volume factor: total volume / 1000 (capped contribution)
+        // - Density factor: sets per minute of workout
+        // - Variety factor: number of exercises
+        // - Rep range factor: higher reps = more intensity points
+
+        var durationMins = Math.max(timerSeconds / 60, 1);
+
+        // Volume score (0-35 points): based on total volume relative to time
+        var volumePerMin = totalVolume / durationMins;
+        var volumeScore = Math.min(35, (volumePerMin / 50) * 35);
+
+        // Density score (0-25 points): sets per minute
+        var setsPerMin = totalSets / durationMins;
+        var densityScore = Math.min(25, (setsPerMin / 0.5) * 25);
+
+        // Volume total score (0-20 points): raw volume
+        var rawVolumeScore = Math.min(20, (totalVolume / 5000) * 20);
+
+        // Variety score (0-10 points): exercise count
+        var varietyScore = Math.min(10, (exerciseCount / 6) * 10);
+
+        // Rep intensity score (0-10 points): average reps per set
+        var avgReps = totalReps / Math.max(totalSets, 1);
+        var repScore = Math.min(10, (avgReps / 12) * 10);
+
+        var score = Math.round(volumeScore + densityScore + rawVolumeScore + varietyScore + repScore);
+        score = Math.min(100, Math.max(0, score));
+
+        return {
+            score: score,
+            totalSets: totalSets,
+            totalReps: totalReps,
+            totalVolume: totalVolume
+        };
+    }
+
+    // ===== UPDATE SUMMARY =====
+    function updateSummary() {
+        var result = calculateIntensity();
+
+        // Duration
+        var mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+        var secs = (timerSeconds % 60).toString().padStart(2, '0');
+        document.getElementById('summaryDuration').textContent = mins + ':' + secs;
+
+        // Stats
+        document.getElementById('summaryTotalSets').textContent = result.totalSets;
+        document.getElementById('summaryTotalReps').textContent = result.totalReps;
+        document.getElementById('summaryVolume').innerHTML = result.totalVolume.toLocaleString() + ' <span class="summary-unit">kg</span>';
+
+        // Intensity
+        var intensityEl = document.getElementById('summaryIntensity');
+        var barEl = document.getElementById('intensityBar');
+        var levelEl = document.getElementById('intensityLevel');
+
+        intensityEl.textContent = result.score + '%';
+        barEl.style.width = result.score + '%';
+
+        // Remove old classes
+        barEl.className = 'intensity-bar-fill';
+        levelEl.className = 'intensity-level';
+
+        if (result.score <= 25) {
+            barEl.classList.add('intensity-low');
+            levelEl.classList.add('intensity-low');
+            levelEl.textContent = 'Light';
+        } else if (result.score <= 50) {
+            barEl.classList.add('intensity-moderate');
+            levelEl.classList.add('intensity-moderate');
+            levelEl.textContent = 'Moderate';
+        } else if (result.score <= 75) {
+            barEl.classList.add('intensity-high');
+            levelEl.classList.add('intensity-high');
+            levelEl.textContent = 'High';
+        } else {
+            barEl.classList.add('intensity-extreme');
+            levelEl.classList.add('intensity-extreme');
+            levelEl.textContent = 'Extreme';
+        }
+    }
+
+    // Update summary every second (for timer-based calculations)
+    setInterval(updateSummary, 1000);
+
+    // ===== FINISH WORKOUT =====
+    function finishWorkout() {
+        if (timerRunning) toggleTimer();
+
+        var result = calculateIntensity();
+        var mins = Math.floor(timerSeconds / 60);
+
+        alert('Workout Complete!\n\n' +
+            'Duration: ' + mins + ' minutes\n' +
+            'Total Sets: ' + result.totalSets + '\n' +
+            'Total Reps: ' + result.totalReps + '\n' +
+            'Total Volume: ' + result.totalVolume.toLocaleString() + ' kg\n' +
+            'Intensity: ' + result.score + '%');
+    }
+</script>
+}
