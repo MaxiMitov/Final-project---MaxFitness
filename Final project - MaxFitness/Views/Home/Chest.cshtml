@@ -1,83 +1,469 @@
-﻿@{
-    // Use a null-coalescing check to prevent the "null reference" crash
+@{
     var muscleName = ViewBag.MuscleName ?? "Muscle";
-    ViewData["Title"] = muscleName + " Analytics";
+    ViewData["Title"] = muscleName + " Performance";
+    var muscle = ViewBag.Muscle;
+    var currentPR = muscle?.CurrentPR ?? "-- lbs";
+    var progressPct = (int)(muscle?.ProgressPercentage ?? 0);
+    var exercises = ViewBag.Exercises as List<dynamic>;
 }
 
 <style>
-    .muscle-detail-card {
-        background: var(--card-bg);
-        border-radius: 20px;
-        padding: 2rem;
-        border: 1px solid rgba(255,255,255,0.05);
-    }
+    .muscle-page { padding: 2rem 0 4rem; }
+    .breadcrumb-nav { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 2rem; font-size: 0.85rem; }
+    .breadcrumb-nav a { color: var(--text-secondary); text-decoration: none; transition: color 0.3s; }
+    .breadcrumb-nav a:hover { color: var(--accent); }
+    .breadcrumb-nav .separator { color: var(--text-secondary); opacity: 0.4; }
+    .breadcrumb-nav .current { color: var(--text-primary); font-weight: 500; }
 
-    .accent-text {
-        color: var(--accent-color);
-    }
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2.5rem; }
+    .page-header-left h1 { font-size: 2.8rem; font-weight: 800; line-height: 1.1; margin-bottom: 0.75rem; }
+    .page-header-left .subtitle { color: var(--text-secondary); font-size: 1.05rem; max-width: 520px; }
+    .page-header-right { display: flex; align-items: center; gap: 1rem; flex-shrink: 0; padding-top: 0.5rem; }
+    .badge-updated { background: var(--bg-card); border: 1px solid rgba(230,57,70,0.15); color: var(--text-secondary); padding: 0.4rem 1rem; border-radius: 2rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+    .badge-updated i { color: var(--accent); font-size: 0.7rem; }
 
-    .exercise-row {
-        background: rgba(255,255,255,0.03);
-        border-radius: 12px;
-        transition: 0.3s;
-    }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 2.5rem; }
+    .stat-item { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 1rem; padding: 1.5rem; transition: transform 0.3s, border-color 0.3s; }
+    .stat-item:hover { transform: translateY(-3px); border-color: rgba(230,57,70,0.2); }
+    .stat-item .stat-label { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    .stat-item .stat-label i { color: var(--accent); }
+    .stat-item .stat-value { font-size: 1.85rem; font-weight: 700; line-height: 1.2; }
+    .stat-item .stat-sub { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.35rem; }
+    .stat-progress-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; margin-top: 0.75rem; overflow: hidden; }
+    .stat-progress-fill { height: 100%; background: var(--gradient-primary); border-radius: 3px; transition: width 1.2s ease; }
 
-        .exercise-row:hover {
-            background: rgba(0, 242, 255, 0.1);
-        }
+    .badge-recovery { display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(46,204,113,0.12); color: #2ecc71; padding: 0.2rem 0.7rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem; }
+
+    .main-content { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; margin-bottom: 3rem; }
+
+    .exercise-library-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+    .exercise-library-header h2 { font-size: 1.3rem; font-weight: 700; }
+    .exercise-count { color: var(--text-secondary); font-size: 0.85rem; }
+
+    .exercise-card { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 1rem; padding: 1.25rem 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; cursor: pointer; }
+    .exercise-card:hover { transform: translateY(-2px); border-color: rgba(230,57,70,0.25); box-shadow: 0 8px 30px rgba(230,57,70,0.08); }
+    .exercise-card-info { flex: 1; }
+    .exercise-card-info .exercise-name { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-primary); }
+    .exercise-card-meta { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .difficulty-badge { padding: 0.2rem 0.65rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .difficulty-beginner { background: rgba(46,204,113,0.12); color: #2ecc71; }
+    .difficulty-intermediate { background: rgba(255,107,53,0.12); color: #ff6b35; }
+    .difficulty-advanced { background: rgba(230,57,70,0.12); color: #e63946; }
+    .exercise-meta-item { color: var(--text-secondary); font-size: 0.8rem; display: flex; align-items: center; gap: 0.3rem; }
+    .exercise-meta-item i { font-size: 0.7rem; }
+    .intensity-bar { display: flex; gap: 3px; align-items: center; }
+    .intensity-segment { width: 16px; height: 5px; border-radius: 2px; background: rgba(255,255,255,0.08); }
+    .intensity-segment.active { background: var(--accent); }
+    .intensity-segment.active.mid { background: var(--accent-secondary); }
+    .intensity-segment.active.low { background: var(--accent-tertiary); }
+    .btn-start-sm { background: transparent; border: 1px solid rgba(230,57,70,0.3); color: var(--accent); padding: 0.4rem 1rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
+    .btn-start-sm:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .exercise-placeholder { background: var(--bg-card); border: 1px dashed rgba(255,255,255,0.08); border-radius: 1rem; padding: 3rem 2rem; text-align: center; color: var(--text-secondary); }
+    .exercise-placeholder i { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.3; display: block; }
+
+    .sidebar-panel { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.25rem; }
+    .sidebar-panel h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .sidebar-panel h3 i { color: var(--accent); font-size: 0.9rem; }
+
+    .muscle-visual { display: flex; justify-content: center; align-items: center; padding: 1.5rem 0; margin-bottom: 1rem; }
+    .muscle-visual svg { filter: drop-shadow(0 0 20px rgba(230,57,70,0.15)); }
+
+    .muscle-facts { list-style: none; padding: 0; margin: 0; }
+    .muscle-facts li { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.85rem; }
+    .muscle-facts li:last-child { border-bottom: none; }
+    .muscle-facts .fact-label { color: var(--text-secondary); }
+    .muscle-facts .fact-value { color: var(--text-primary); font-weight: 600; }
+
+    .tip-item { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem; }
+    .tip-item:last-child { margin-bottom: 0; }
+    .tip-icon { width: 22px; height: 22px; min-width: 22px; border-radius: 50%; background: rgba(230,57,70,0.12); display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+    .tip-icon i { color: var(--accent); font-size: 0.6rem; }
+    .tip-text { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; }
+
+    .pr-timeline { position: relative; padding-left: 1.5rem; }
+    .pr-timeline::before { content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 2px; background: rgba(230,57,70,0.2); border-radius: 1px; }
+    .pr-entry { position: relative; margin-bottom: 1.1rem; }
+    .pr-entry:last-child { margin-bottom: 0; }
+    .pr-entry::before { content: ''; position: absolute; left: -1.5rem; top: 6px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--accent); background: var(--bg-card); z-index: 1; }
+    .pr-entry:first-child::before { background: var(--accent); }
+    .pr-weight { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); }
+    .pr-date { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.1rem; }
+
+    .chart-section { margin-bottom: 3rem; }
+    .chart-section h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; }
+    .chart-container { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 1rem; padding: 2rem; }
+    .chart-bars { display: flex; align-items: flex-end; justify-content: space-around; height: 200px; gap: 1.5rem; padding: 0 1rem; }
+    .chart-bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
+    .chart-bar { width: 100%; max-width: 80px; border-radius: 0.5rem 0.5rem 0 0; background: var(--gradient-primary); position: relative; transition: height 1s ease; min-height: 4px; }
+    .chart-bar::after { content: attr(data-value); position: absolute; top: -1.6rem; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+    .chart-bar-label { margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-secondary); }
+    .chart-legend { display: flex; justify-content: center; gap: 2rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.04); }
+    .chart-legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); }
+    .chart-legend-dot { width: 10px; height: 10px; border-radius: 3px; background: var(--gradient-primary); }
+    .trend-badge { display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(46,204,113,0.12); color: #2ecc71; padding: 0.2rem 0.7rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600; margin-left: 0.75rem; }
+
+    .bottom-cta { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 1.25rem; padding: 3rem; text-align: center; position: relative; overflow: hidden; }
+    .bottom-cta::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--gradient-primary); }
+    .bottom-cta h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.75rem; }
+    .bottom-cta p { color: var(--text-secondary); margin-bottom: 1.75rem; font-size: 0.95rem; }
+    .bottom-cta-buttons { display: flex; justify-content: center; gap: 1rem; }
+
+    @@media (max-width: 992px) {
+        .main-content { grid-template-columns: 1fr; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        .page-header { flex-direction: column; }
+    }
+    @@media (max-width: 576px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .page-header-left h1 { font-size: 2rem; }
+        .chart-bars { height: 150px; gap: 0.75rem; }
+        .bottom-cta-buttons { flex-direction: column; align-items: center; }
+    }
 </style>
 
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col d-flex justify-content-between align-items-center">
-            <div>
-                <h1 class="display-6 fw-bold">@muscleName <span class="accent-text">Performance</span></h1>
-                <p class="text-muted">In-depth analysis of your @muscleName.ToLower() development.</p>
+<section class="muscle-page">
+    <div class="container">
+
+        <!-- Breadcrumb Navigation -->
+        <nav class="breadcrumb-nav reveal">
+            <a asp-action="Index"><i class="fas fa-th-large"></i> Dashboard</a>
+            <span class="separator"><i class="fas fa-chevron-right"></i></span>
+            <span class="current">@muscleName</span>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="page-header reveal reveal-up">
+            <div class="page-header-left">
+                <h1>
+                    <span class="text-gradient">@muscleName</span> Performance
+                </h1>
+                <p class="subtitle">
+                    In-depth analysis and tracking for your @muscleName.ToString().ToLower() development
+                </p>
             </div>
-            <div>
-                <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
+            <div class="page-header-right">
+                <span class="badge-updated">
+                    <i class="fas fa-circle"></i> Last Updated: Today
+                </span>
+                <button class="btn-accent" style="padding: 0.6rem 1.5rem; border-radius: 0.6rem; font-weight: 600;">
+                    <i class="fas fa-plus"></i> Log Workout
+                </button>
             </div>
         </div>
-    </div>
 
-    <div class="row g-4">
-        <div class="col-lg-4">
-            <div class="muscle-detail-card mb-4">
-                <h5 class="text-muted small text-uppercase">Current PR</h5>
-                <h2 class="display-4 fw-bold accent-text">@(ViewBag.Muscle?.CurrentPR ?? "0 lbs")</h2>
-                <div class="progress-bar-container mt-3" style="height:4px; background: #333;">
-                    <div class="progress-fill" style="width: @(ViewBag.Muscle?.ProgressPercentage ?? 0)%;"></div>
+        <!-- Stats Overview -->
+        <div class="stats-grid reveal reveal-up">
+            <div class="stat-item">
+                <div class="stat-label">
+                    <i class="fas fa-trophy"></i> Current PR
                 </div>
+                <div class="stat-value text-gradient">@currentPR</div>
+                <div class="stat-sub">Personal best lift</div>
             </div>
 
-            <div class="muscle-detail-card">
-                <h5 class="text-muted small text-uppercase mb-3">Target Info</h5>
-                <h3 class="fw-bold text-white">Focus: Strength</h3>
-                <p class="small text-muted">Stat tracking is active for @muscleName.</p>
-                <button class="btn btn-sm btn-outline-info w-100 mt-2">View History (Async)</button>
+            <div class="stat-item">
+                <div class="stat-label">
+                    <i class="fas fa-chart-line"></i> Progress
+                </div>
+                <div class="stat-value">@progressPct<span style="font-size: 1rem; color: var(--text-secondary);">%</span></div>
+                <div class="stat-progress-bar">
+                    <div class="stat-progress-fill" style="width: @(progressPct)%;"></div>
+                </div>
+                <div class="stat-sub">Toward next milestone</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-label">
+                    <i class="fas fa-layer-group"></i> Weekly Volume
+                </div>
+                <div class="stat-value">12 <span style="font-size: 1rem; color: var(--text-secondary);">Sets</span></div>
+                <div class="stat-sub">This Week</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-label">
+                    <i class="fas fa-heart-pulse"></i> Recovery
+                </div>
+                <div class="stat-value">
+                    Optimal
+                    <span class="badge-recovery"><i class="fas fa-check"></i> Good</span>
+                </div>
+                <div class="stat-sub">Next session: Tomorrow</div>
             </div>
         </div>
 
-        <div class="col-lg-8">
-            <div class="muscle-detail-card h-100">
-                <h4 class="mb-4">Recommended Routine</h4>
-                @if (ViewBag.Exercises != null)
-                {
-                    @foreach (var exercise in (List<ExerciseDetail>)ViewBag.Exercises)
+        <!-- Main Content: Two Columns -->
+        <div class="main-content">
+
+            <!-- Left Column: Exercise Library -->
+            <div class="left-column">
+                <div class="exercise-library-header reveal">
+                    <h2><i class="fas fa-dumbbell" style="color: var(--accent); margin-right: 0.5rem;"></i> Recommended Exercises</h2>
+                    @if (exercises != null)
                     {
-                        <div class="exercise-row p-3 mb-2 d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="fw-bold d-block">@exercise.Name</span>
-                                <span class="small text-muted">@exercise.Difficulty</span>
+                        <span class="exercise-count">@exercises.Count exercises</span>
+                    }
+                </div>
+
+                @if (exercises != null && exercises.Count > 0)
+                {
+                    @foreach (var exercise in exercises)
+                    {
+                        var difficultyStr = ((string)(exercise.Difficulty ?? "Beginner")).ToLower();
+                        var difficultyClass = difficultyStr == "advanced" ? "difficulty-advanced"
+                            : difficultyStr == "intermediate" ? "difficulty-intermediate"
+                            : "difficulty-beginner";
+                        var intensityVal = (int)(exercise.Intensity ?? 3);
+
+                        <div class="exercise-card reveal reveal-up">
+                            <div class="exercise-card-info">
+                                <div class="exercise-name">@exercise.Name</div>
+                                <div class="exercise-card-meta">
+                                    <span class="difficulty-badge @difficultyClass">@exercise.Difficulty</span>
+                                    <span class="exercise-meta-item">
+                                        <i class="fas fa-repeat"></i> @exercise.TargetReps reps
+                                    </span>
+                                    <span class="exercise-meta-item">
+                                        <i class="fas fa-fire"></i>
+                                        <span class="intensity-bar">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                var segClass = i <= intensityVal ? "intensity-segment active" : "intensity-segment";
+                                                <span class="@segClass"></span>
+                                            }
+                                        </span>
+                                    </span>
+                                </div>
                             </div>
-                            <div class="text-end">
-                                <span class="accent-text d-block fw-bold">@exercise.TargetReps</span>
-                                <span class="small text-muted">@exercise.Intensity</span>
-                            </div>
+                            <button class="btn-start-sm"><i class="fas fa-play"></i> Start</button>
                         </div>
                     }
                 }
+                else
+                {
+                    <div class="exercise-placeholder reveal">
+                        <i class="fas fa-dumbbell"></i>
+                        <p style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">No exercises loaded yet</p>
+                        <p>Exercises for @muscleName will appear here once configured by your training program.</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Right Column: Sidebar -->
+            <div class="right-column">
+
+                <!-- Muscle Info Panel -->
+                <div class="sidebar-panel reveal reveal-up">
+                    <h3><i class="fas fa-crosshairs"></i> Muscle Overview</h3>
+
+                    <div class="muscle-visual">
+                        @switch (muscleName.ToString().ToLower())
+                        {
+                            case "chest":
+                                <svg width="160" height="120" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="10" y="20" width="65" height="75" rx="20" fill="url(#chestGrad)" opacity="0.85"/>
+                                    <rect x="85" y="20" width="65" height="75" rx="20" fill="url(#chestGrad)" opacity="0.85"/>
+                                    <line x1="80" y1="25" x2="80" y2="90" stroke="#08080d" stroke-width="3" stroke-linecap="round"/>
+                                    <line x1="25" y1="45" x2="65" y2="55" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-linecap="round"/>
+                                    <line x1="25" y1="60" x2="65" y2="68" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-linecap="round"/>
+                                    <line x1="135" y1="45" x2="95" y2="55" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-linecap="round"/>
+                                    <line x1="135" y1="60" x2="95" y2="68" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-linecap="round"/>
+                                    <defs>
+                                        <linearGradient id="chestGrad" x1="0" y1="0" x2="160" y2="120">
+                                            <stop offset="0%" stop-color="#e63946"/>
+                                            <stop offset="100%" stop-color="#ff6b35"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                break;
+
+                            case "back":
+                                <svg width="160" height="130" viewBox="0 0 160 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M30 15 Q80 5 130 15 L140 100 Q80 115 20 100 Z" fill="url(#backGrad)" opacity="0.85"/>
+                                    <line x1="80" y1="10" x2="80" y2="105" stroke="#08080d" stroke-width="3" stroke-linecap="round"/>
+                                    <line x1="35" y1="35" x2="75" y2="45" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                                    <line x1="30" y1="55" x2="75" y2="62" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+                                    <line x1="28" y1="75" x2="75" y2="78" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+                                    <line x1="125" y1="35" x2="85" y2="45" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                                    <line x1="130" y1="55" x2="85" y2="62" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+                                    <line x1="132" y1="75" x2="85" y2="78" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+                                    <defs>
+                                        <linearGradient id="backGrad" x1="0" y1="0" x2="160" y2="130">
+                                            <stop offset="0%" stop-color="#e63946"/>
+                                            <stop offset="100%" stop-color="#ff6b35"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                break;
+
+                            case "legs":
+                                <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="15" y="10" width="45" height="120" rx="16" fill="url(#legsGrad)" opacity="0.85"/>
+                                    <rect x="80" y="10" width="45" height="120" rx="16" fill="url(#legsGrad)" opacity="0.85"/>
+                                    <line x1="25" y1="40" x2="50" y2="42" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                                    <line x1="25" y1="70" x2="50" y2="72" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+                                    <line x1="25" y1="100" x2="50" y2="98" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+                                    <line x1="90" y1="40" x2="115" y2="42" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                                    <line x1="90" y1="70" x2="115" y2="72" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+                                    <line x1="90" y1="100" x2="115" y2="98" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+                                    <defs>
+                                        <linearGradient id="legsGrad" x1="0" y1="0" x2="140" y2="140">
+                                            <stop offset="0%" stop-color="#e63946"/>
+                                            <stop offset="100%" stop-color="#ff6b35"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                break;
+
+                            case "arms":
+                                <svg width="150" height="120" viewBox="0 0 150 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <ellipse cx="42" cy="60" rx="28" ry="45" fill="url(#armsGrad)" opacity="0.85"/>
+                                    <ellipse cx="108" cy="60" rx="28" ry="45" fill="url(#armsGrad)" opacity="0.85"/>
+                                    <path d="M20 35 Q42 15 64 35" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="none"/>
+                                    <path d="M86 35 Q108 15 130 35" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="none"/>
+                                    <line x1="28" y1="55" x2="56" y2="55" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+                                    <line x1="94" y1="55" x2="122" y2="55" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+                                    <defs>
+                                        <linearGradient id="armsGrad" x1="0" y1="0" x2="150" y2="120">
+                                            <stop offset="0%" stop-color="#e63946"/>
+                                            <stop offset="100%" stop-color="#ff6b35"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                break;
+
+                            default:
+                                <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="60" cy="60" r="50" fill="url(#defaultGrad)" opacity="0.85"/>
+                                    <line x1="30" y1="50" x2="90" y2="50" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+                                    <line x1="30" y1="70" x2="90" y2="70" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+                                    <defs>
+                                        <linearGradient id="defaultGrad" x1="0" y1="0" x2="120" y2="120">
+                                            <stop offset="0%" stop-color="#e63946"/>
+                                            <stop offset="100%" stop-color="#ff6b35"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                break;
+                        }
+                    </div>
+
+                    <ul class="muscle-facts">
+                        <li>
+                            <span class="fact-label">Primary Exercises</span>
+                            <span class="fact-value">8</span>
+                        </li>
+                        <li>
+                            <span class="fact-label">Compound Movements</span>
+                            <span class="fact-value">5</span>
+                        </li>
+                        <li>
+                            <span class="fact-label">Isolation Exercises</span>
+                            <span class="fact-value">3</span>
+                        </li>
+                        <li>
+                            <span class="fact-label">Recommended Weekly Sets</span>
+                            <span class="fact-value">12-16</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Training Tips -->
+                <div class="sidebar-panel reveal reveal-up">
+                    <h3><i class="fas fa-lightbulb"></i> Training Tips</h3>
+
+                    <div class="tip-item">
+                        <div class="tip-icon"><i class="fas fa-check"></i></div>
+                        <div class="tip-text">Focus on mind-muscle connection during every rep to maximize fiber recruitment and growth stimulus.</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon"><i class="fas fa-check"></i></div>
+                        <div class="tip-text">Progressive overload is key. Increase weight, reps, or sets each week to drive consistent adaptation.</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon"><i class="fas fa-check"></i></div>
+                        <div class="tip-text">Allow 48 hours recovery between sessions targeting the same muscle group for optimal repair and growth.</div>
+                    </div>
+                </div>
+
+                <!-- Personal Records History -->
+                <div class="sidebar-panel reveal reveal-up">
+                    <h3><i class="fas fa-medal"></i> Personal Records</h3>
+
+                    <div class="pr-timeline">
+                        <div class="pr-entry">
+                            <div class="pr-weight">225 lbs</div>
+                            <div class="pr-date">Feb 2026</div>
+                        </div>
+                        <div class="pr-entry">
+                            <div class="pr-weight">215 lbs</div>
+                            <div class="pr-date">Jan 2026</div>
+                        </div>
+                        <div class="pr-entry">
+                            <div class="pr-weight">200 lbs</div>
+                            <div class="pr-date">Dec 2025</div>
+                        </div>
+                        <div class="pr-entry">
+                            <div class="pr-weight">185 lbs</div>
+                            <div class="pr-date">Nov 2025</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
+
+        <!-- Progress Chart Section -->
+        <div class="chart-section reveal reveal-up">
+            <h2>
+                <i class="fas fa-chart-bar" style="color: var(--accent); margin-right: 0.5rem;"></i>
+                Monthly Progress
+                <span class="trend-badge"><i class="fas fa-arrow-trend-up"></i> +75%</span>
+            </h2>
+            <div class="chart-container">
+                <div class="chart-bars">
+                    <div class="chart-bar-group">
+                        <div class="chart-bar" style="height: 57%;" data-value="8 sets"></div>
+                        <div class="chart-bar-label">Week 1</div>
+                    </div>
+                    <div class="chart-bar-group">
+                        <div class="chart-bar" style="height: 71%;" data-value="10 sets"></div>
+                        <div class="chart-bar-label">Week 2</div>
+                    </div>
+                    <div class="chart-bar-group">
+                        <div class="chart-bar" style="height: 86%;" data-value="12 sets"></div>
+                        <div class="chart-bar-label">Week 3</div>
+                    </div>
+                    <div class="chart-bar-group">
+                        <div class="chart-bar" style="height: 100%;" data-value="14 sets"></div>
+                        <div class="chart-bar-label">Week 4</div>
+                    </div>
+                </div>
+                <div class="chart-legend">
+                    <div class="chart-legend-item">
+                        <span class="chart-legend-dot"></span> Total Sets per Week
+                    </div>
+                    <div class="chart-legend-item">
+                        <i class="fas fa-arrow-trend-up" style="color: #2ecc71;"></i> Upward Trend
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom CTA -->
+        <div class="bottom-cta reveal reveal-up">
+            <h2>Ready for your next <span class="text-gradient">@muscleName</span> session?</h2>
+            <p>Push past your limits and set a new personal record today.</p>
+            <div class="bottom-cta-buttons">
+                <button class="btn-accent" style="padding: 0.75rem 2.5rem; border-radius: 0.6rem; font-size: 1rem; font-weight: 700;">
+                    <i class="fas fa-bolt"></i> Start Workout
+                </button>
+                <a asp-action="Index" class="btn-ghost" style="padding: 0.75rem 2rem; border-radius: 0.6rem; font-size: 1rem; font-weight: 600; text-decoration: none;">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+
     </div>
-</div>
+</section>
