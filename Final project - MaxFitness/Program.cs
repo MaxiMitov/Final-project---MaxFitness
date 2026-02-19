@@ -19,6 +19,7 @@ namespace Final_project___MaxFitness
 
             // Register services
             builder.Services.AddScoped<IMuscleService, MuscleService>();
+            builder.Services.AddScoped<IWorkoutStatsService, WorkoutStatsService>();
 
             var app = builder.Build();
 
