@@ -675,65 +675,7 @@
 
 @section Scripts {
 <script>
-    // ===== EXERCISE DATABASE =====
-    var exerciseDB = {
-        chest: [
-            { name: "Bench Press", type: "Compound" },
-            { name: "Incline Dumbbell Press", type: "Compound" },
-            { name: "Cable Flyes", type: "Isolation" },
-            { name: "Push-Ups", type: "Bodyweight" },
-            { name: "Dumbbell Pullover", type: "Isolation" }
-        ],
-        back: [
-            { name: "Deadlift", type: "Compound" },
-            { name: "Lat Pulldown", type: "Compound" },
-            { name: "Barbell Row", type: "Compound" },
-            { name: "Seated Cable Row", type: "Isolation" },
-            { name: "Face Pulls", type: "Isolation" }
-        ],
-        shoulders: [
-            { name: "Overhead Press", type: "Compound" },
-            { name: "Lateral Raises", type: "Isolation" },
-            { name: "Front Raises", type: "Isolation" },
-            { name: "Reverse Flyes", type: "Isolation" },
-            { name: "Arnold Press", type: "Compound" }
-        ],
-        biceps: [
-            { name: "Barbell Curl", type: "Isolation" },
-            { name: "Hammer Curls", type: "Isolation" },
-            { name: "Incline Dumbbell Curls", type: "Isolation" },
-            { name: "Preacher Curls", type: "Isolation" },
-            { name: "Cable Curls", type: "Isolation" }
-        ],
-        triceps: [
-            { name: "Tricep Dips", type: "Compound" },
-            { name: "Skull Crushers", type: "Isolation" },
-            { name: "Tricep Pushdown", type: "Isolation" },
-            { name: "Overhead Tricep Extension", type: "Isolation" },
-            { name: "Close-Grip Bench Press", type: "Compound" }
-        ],
-        legs: [
-            { name: "Barbell Squat", type: "Compound" },
-            { name: "Romanian Deadlift", type: "Compound" },
-            { name: "Leg Press", type: "Compound" },
-            { name: "Leg Curl", type: "Isolation" },
-            { name: "Calf Raises", type: "Isolation" },
-            { name: "Bulgarian Split Squat", type: "Compound" }
-        ],
-        abs: [
-            { name: "Crunches", type: "Bodyweight" },
-            { name: "Hanging Leg Raises", type: "Bodyweight" },
-            { name: "Plank", type: "Bodyweight" },
-            { name: "Cable Woodchops", type: "Isolation" },
-            { name: "Ab Wheel Rollout", type: "Bodyweight" }
-        ],
-        forearms: [
-            { name: "Wrist Curls", type: "Isolation" },
-            { name: "Reverse Wrist Curls", type: "Isolation" },
-            { name: "Farmer's Walk", type: "Compound" },
-            { name: "Plate Pinch", type: "Isolation" }
-        ]
-    };
+    // ===== EXERCISE DATABASE (fetched from server) =====
 
     // ===== STATE =====
     var selectedMuscle = null;
@@ -773,30 +715,33 @@
         selectedMuscle = btn.getAttribute('data-muscle');
         document.getElementById('selectedMuscleName').textContent = selectedMuscle.toUpperCase();
 
-        // Load exercises for this muscle
-        exercises = [];
-        var dbExercises = exerciseDB[selectedMuscle] || [];
-        dbExercises.forEach(function(ex) {
-            exercises.push({
-                name: ex.name,
-                type: ex.type,
-                sets: [{ reps: '', weight: '' }]
+        // Fetch exercises from database
+        fetch('/Workout/GetExercises?muscleGroup=' + encodeURIComponent(selectedMuscle))
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                exercises = [];
+                data.forEach(function(ex) {
+                    exercises.push({
+                        name: ex.name,
+                        type: ex.type,
+                        sets: [{ reps: '', weight: '' }]
+                    });
+                });
+
+                renderExercises();
+                document.getElementById('exerciseSection').style.display = 'block';
+                document.getElementById('summarySection').style.display = 'block';
+
+                // Auto-start timer if not started
+                if (!timerRunning && timerSeconds === 0) {
+                    toggleTimer();
+                }
+
+                updateSummary();
+
+                // Scroll to exercises
+                document.getElementById('exerciseSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
-        });
-
-        renderExercises();
-        document.getElementById('exerciseSection').style.display = 'block';
-        document.getElementById('summarySection').style.display = 'block';
-
-        // Auto-start timer if not started
-        if (!timerRunning && timerSeconds === 0) {
-            toggleTimer();
-        }
-
-        updateSummary();
-
-        // Scroll to exercises
-        document.getElementById('exerciseSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     // ===== RENDER EXERCISES =====
