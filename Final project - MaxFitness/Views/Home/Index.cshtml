@@ -1,5 +1,36 @@
 @{
     ViewData["Title"] = "Dashboard";
+    var stats = ViewBag.Stats as Final_project___MaxFitness.Models.DashboardStats ?? new Final_project___MaxFitness.Models.DashboardStats();
+    var muscleStatuses = ViewBag.MuscleStatuses as List<Final_project___MaxFitness.Models.MuscleStatus> ?? new List<Final_project___MaxFitness.Models.MuscleStatus>();
+    var recentWorkouts = ViewBag.RecentWorkouts as List<Final_project___MaxFitness.Models.RecentWorkout> ?? new List<Final_project___MaxFitness.Models.RecentWorkout>();
+
+    // Build muscle lookup dictionary
+    var muscleLookup = muscleStatuses.ToDictionary(m => m.Name, m => m);
+
+    // Count statuses
+    var strongCount = muscleStatuses.Count(m => m.Status == "strong");
+    var moderateCount = muscleStatuses.Count(m => m.Status == "moderate");
+    var needsWorkCount = muscleStatuses.Count(m => m.Status == "needs-work");
+    var totalMuscles = muscleStatuses.Count > 0 ? muscleStatuses.Count : 14;
+    var strongPct = (int)Math.Round(strongCount * 100.0 / totalMuscles);
+    var moderatePct = (int)Math.Round(moderateCount * 100.0 / totalMuscles);
+    var needsWorkPct = 100 - strongPct - moderatePct;
+
+    // Helper to get fill/stroke colors for a muscle
+    string GetFill(string status) => status switch {
+        "strong" => "rgba(34,197,94,0.25)",
+        "moderate" => "rgba(255,107,53,0.25)",
+        _ => "rgba(230,57,70,0.15)"
+    };
+    string GetStroke(string status) => status switch {
+        "strong" => "rgba(34,197,94,0.6)",
+        "moderate" => "rgba(255,107,53,0.6)",
+        _ => "rgba(230,57,70,0.4)"
+    };
+
+    // Intensity ring calculation
+    var circumference = 2 * Math.PI * 26; // r=26
+    var intensityOffset = circumference - (stats.AvgIntensity / 100.0 * circumference);
 }
 
 <!-- ============================================================
@@ -105,11 +136,12 @@
                 </div>
                 <div class="stat-card-body">
                     <span class="stat-card-label">Weekly Workouts</span>
-                    <span class="stat-card-value">5<span class="stat-card-unit">/6</span></span>
+                    <span class="stat-card-value">@stats.WeeklyWorkouts<span class="stat-card-unit">/@stats.WeeklyGoal</span></span>
                     <div class="stat-progress-bar">
-                        <div class="stat-progress-fill" style="width: 83%;"></div>
+                        <div class="stat-progress-fill" style="width: @(stats.WeeklyProgressPercent)%;"></div>
                     </div>
-                    <span class="stat-card-detail">1 workout remaining</span>
+                    @{ var remaining = Math.Max(0, stats.WeeklyGoal - stats.WeeklyWorkouts); }
+                    <span class="stat-card-detail">@(remaining == 0 ? "Goal reached!" : $"{remaining} workout{(remaining == 1 ? "" : "s")} remaining")</span>
                 </div>
             </div>
 
@@ -120,10 +152,13 @@
                 </div>
                 <div class="stat-card-body">
                     <span class="stat-card-label">Active Streak</span>
-                    <span class="stat-card-value">12 <span class="stat-card-unit">Days</span></span>
-                    <span class="stat-badge stat-badge--gold">
-                        <i class="fa-solid fa-trophy"></i> Personal Best!
-                    </span>
+                    <span class="stat-card-value">@stats.Streak <span class="stat-card-unit">@(stats.Streak == 1 ? "Day" : "Days")</span></span>
+                    @if (stats.Streak >= 7)
+                    {
+                        <span class="stat-badge stat-badge--gold">
+                            <i class="fa-solid fa-trophy"></i> On Fire!
+                        </span>
+                    }
                 </div>
             </div>
 
@@ -134,7 +169,7 @@
                 </div>
                 <div class="stat-card-body">
                     <span class="stat-card-label">Calories Burned</span>
-                    <span class="stat-card-value">8,450</span>
+                    <span class="stat-card-value">@stats.CaloriesThisWeek.ToString("N0")</span>
                     <span class="stat-card-detail">This Week</span>
                 </div>
             </div>
@@ -146,12 +181,12 @@
                 </div>
                 <div class="stat-card-body">
                     <span class="stat-card-label">Avg Intensity</span>
-                    <span class="stat-card-value">84<span class="stat-card-unit">%</span></span>
+                    <span class="stat-card-value">@stats.AvgIntensity<span class="stat-card-unit">%</span></span>
                     <div class="intensity-ring-container">
                         <svg class="intensity-ring" viewBox="0 0 60 60">
                             <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5" />
                             <circle cx="30" cy="30" r="26" fill="none" stroke="url(#intensityGrad)" stroke-width="5"
-                                    stroke-dasharray="163.4" stroke-dashoffset="26.1" stroke-linecap="round"
+                                    stroke-dasharray="@circumference.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)" stroke-dashoffset="@intensityOffset.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)" stroke-linecap="round"
                                     transform="rotate(-90 30 30)" />
                             <defs>
                                 <linearGradient id="intensityGrad" x1="0%" y1="0%" x2="100%" y2="0%">
