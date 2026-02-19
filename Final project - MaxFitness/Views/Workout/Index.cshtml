@@ -1579,6 +1579,30 @@
         var secs = timerSeconds % 60;
         var durationText = mins + 'm ' + secs + 's';
 
+        // Save workout to database
+        var payload = {
+            durationSeconds: timerSeconds,
+            intensityScore: result.score,
+            totalSets: result.totalSets,
+            totalReps: result.totalReps,
+            totalVolume: result.totalVolume,
+            exercises: exercises.map(function(ex) {
+                return {
+                    name: ex.name,
+                    muscle: ex.muscle || 'other',
+                    sets: ex.sets.map(function(s) {
+                        return { reps: String(s.reps || ''), weight: String(s.weight || '') };
+                    })
+                };
+            })
+        };
+
+        fetch('/Workout/SaveWorkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(function(err) { console.error('Failed to save workout:', err); });
+
         var content = document.getElementById('finishContent');
         content.innerHTML = '';
 
