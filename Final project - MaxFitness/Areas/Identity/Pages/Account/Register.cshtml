@@ -1,0 +1,43 @@
+﻿@page
+@model Microsoft.AspNetCore.Identity.UI.V5.Pages.Account.Internal.RegisterModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center align-items-center" style="min-height: 70vh;">
+        <div class="col-md-8 col-lg-5">
+            <div class="card bg-dark text-white shadow-lg border-warning border-opacity-50" style="border-radius: 1rem;">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold mb-1"><span class="text-white">MAX</span><span class="text-primary">FITNESS</span></h2>
+                        <p class="text-muted small">Create your account and track your gains.</p>
+                    </div>
+                    <form id="registerForm" method="post">
+                        <div class="form-floating mb-3">
+                            <input name="Input.Email" class="form-control bg-dark text-white border-secondary" autocomplete="username" placeholder="name@example.com" />
+                            <label class="text-muted">Email address</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input name="Input.Password" type="password" class="form-control bg-dark text-white border-secondary" autocomplete="new-password" placeholder="password" />
+                            <label class="text-muted">Password</label>
+                        </div>
+                        <div class="form-floating mb-4">
+                            <input name="Input.ConfirmPassword" type="password" class="form-control bg-dark text-white border-secondary" autocomplete="new-password" placeholder="password" />
+                            <label class="text-muted">Confirm Password</label>
+                        </div>
+                        <button id="registerSubmit" type="submit" class="btn btn-warning text-dark w-100 fw-bold rounded-pill py-2 mb-3">
+                            <i class="fa-solid fa-user-plus me-2"></i> Create Account
+                        </button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <p class="mb-0 text-light small">
+                            Already have an account?
+                            <a asp-page="./Login" class="text-decoration-none text-primary fw-bold">Log in</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
