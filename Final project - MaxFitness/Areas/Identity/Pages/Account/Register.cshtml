@@ -6,10 +6,10 @@
 
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
     <div class="col-md-5">
-        <div class="card shadow-lg border-0 rounded-4 bg-dark text-white p-4">
+        <div class="card shadow-lg border rounded-4 bg-dark text-white p-4" style="border-color: #f75c2e !important;">
             <div class="card-body">
                 <div class="text-center mb-4">
-                    <h2 class="fw-bold"><span class="text-primary">MAX</span>FITNESS</h2>
+                    <h2 class="fw-bold"><span style="color: #f75c2e;">MAX</span>FITNESS</h2>
                     <p class="text-muted small">Create your account to start tracking gains!</p>
                 </div>
 
@@ -34,13 +34,13 @@
                         <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
                     </div>
 
-                    <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary fw-bold rounded-pill mb-3">
+                    <button id="registerSubmit" type="submit" class="w-100 btn btn-lg fw-bold rounded-pill mb-3" style="background-color: #f75c2e; border-color: #f75c2e; color: #fff;">
                         SIGN UP
                     </button>
 
                     <div class="text-center small">
                         <p>
-                            Already an athlete? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="text-primary fw-bold text-decoration-none">Login Here</a>
+                            Already an athlete? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="fw-bold text-decoration-none" style="color: #f75c2e;">Login Here</a>
                         </p>
                     </div>
                 </form>
