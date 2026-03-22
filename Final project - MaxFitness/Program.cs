@@ -2,67 +2,58 @@ using Final_project___MaxFitness.Data;
 using Final_project___MaxFitness.Services;
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace Final_project___MaxFitness
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSingleton<IEmailSender, NoOpEmailSender>();
+
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = false;
+})
+.AddEntityFrameworkStores<AppDbContext>();
 
-            builder.Services.AddControllersWithViews();
-            builder.Services.AddRazorPages();
+builder.Services.AddScoped<IMuscleService, MuscleService>();
+builder.Services.AddScoped<IWorkoutStatsService, WorkoutStatsService>();
 
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+var app = builder.Build();
 
-            builder.Services.AddDefaultIdentity<IdentityUser>(options =>
-            {
-                options.SignIn.RequireConfirmedAccount = false;
-                options.Password.RequireDigit = false;
-                options.Password.RequiredLength = 6;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireLowercase = false;
-            })
-            .AddEntityFrameworkStores<AppDbContext>();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
 
-            // FIX: Register dummy email sender
-            builder.Services.AddSingleton<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, DummyEmailSender>();
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
 
-            builder.Services.AddScoped<IMuscleService, MuscleService>();
-            builder.Services.AddScoped<IWorkoutStatsService, WorkoutStatsService>();
+app.UseAuthentication();
+app.UseAuthorization();
 
-            var app = builder.Build();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Home/Error");
-                app.UseHsts();
-            }
+app.MapRazorPages();
 
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
+app.Run();
 
-            app.UseRouting();
-
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
-
-            app.MapRazorPages();
-
-            app.Run();
-        }
-    }
-
-    public class DummyEmailSender : Microsoft.AspNetCore.Identity.UI.Services.IEmailSender
-    {
-        public Task SendEmailAsync(string email, string subject, string htmlMessage) => Task.CompletedTask;
-    }
+// Dummy sender to prevent the crash
+public class NoOpEmailSender : IEmailSender
+{
+    public Task SendEmailAsync(string email, string subject, string htmlMessage) => Task.CompletedTask;
 }
