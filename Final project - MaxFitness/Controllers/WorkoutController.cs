@@ -1,23 +1,38 @@
 using Final_project___MaxFitness.Data;
 using Final_project___MaxFitness.Models;
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using System.Text.Json;
 
 namespace Final_project___MaxFitness.Controllers
 {
+    [Authorize]
     public class WorkoutController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public WorkoutController(AppDbContext context)
+        public WorkoutController(AppDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var workouts = await _context.WorkoutSessions
+                .Where(w => w.UserId == user.Id)
+                .OrderByDescending(w => w.CompletedAt)
+                .ToListAsync();
+
+            return View(workouts);
         }
 
         [HttpGet]
@@ -37,7 +52,9 @@ namespace Final_project___MaxFitness.Controllers
             if (request == null || request.Exercises.Count == 0)
                 return BadRequest("No exercises provided.");
 
-            // Estimate calories: volume-based + duration-based for bodyweight
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
             var durationMinutes = Math.Max(request.DurationSeconds / 60.0, 1);
             var volumeCalories = request.TotalVolume * 0.05;
             var durationCalories = Math.Floor(durationMinutes) * 5;
@@ -45,6 +62,7 @@ namespace Final_project___MaxFitness.Controllers
 
             var session = new WorkoutSession
             {
+                UserId = user.Id,
                 CompletedAt = DateTime.UtcNow,
                 DurationSeconds = request.DurationSeconds,
                 IntensityScore = request.IntensityScore,
