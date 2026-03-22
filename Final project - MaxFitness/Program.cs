@@ -29,6 +29,9 @@ namespace Final_project___MaxFitness
             })
             .AddEntityFrameworkStores<AppDbContext>();
 
+            // FIX: Register dummy email sender
+            builder.Services.AddSingleton<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, DummyEmailSender>();
+
             builder.Services.AddScoped<IMuscleService, MuscleService>();
             builder.Services.AddScoped<IWorkoutStatsService, WorkoutStatsService>();
 
@@ -56,5 +59,10 @@ namespace Final_project___MaxFitness
 
             app.Run();
         }
+    }
+
+    public class DummyEmailSender : Microsoft.AspNetCore.Identity.UI.Services.IEmailSender
+    {
+        public Task SendEmailAsync(string email, string subject, string htmlMessage) => Task.CompletedTask;
     }
 }
