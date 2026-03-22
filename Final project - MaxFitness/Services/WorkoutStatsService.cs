@@ -1,5 +1,6 @@
 using Final_project___MaxFitness.Data;
 using Final_project___MaxFitness.Models;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Final_project___MaxFitness.Services
@@ -8,7 +9,6 @@ namespace Final_project___MaxFitness.Services
     {
         private readonly AppDbContext _context;
 
-        // Maps workout muscle groups to body map region names
         private static readonly Dictionary<string, string[]> MuscleMapping = new()
         {
             ["chest"] = new[] { "Chest (Left)", "Chest (Right)" },
@@ -20,7 +20,6 @@ namespace Final_project___MaxFitness.Services
             ["forearms"] = new[] { "Left Forearm", "Right Forearm" }
         };
 
-        // All body map regions
         private static readonly string[] AllBodyMapRegions = new[]
         {
             "Neck", "Traps",
@@ -38,7 +37,7 @@ namespace Final_project___MaxFitness.Services
             _context = context;
         }
 
-        public async Task<DashboardStats> GetDashboardStatsAsync()
+        public async Task<DashboardStats> GetDashboardStatsAsync(string userId)
         {
             var now = DateTime.UtcNow;
             var startOfWeek = now.Date.AddDays(-(int)now.DayOfWeek + (int)DayOfWeek.Monday);
@@ -46,7 +45,7 @@ namespace Final_project___MaxFitness.Services
                 startOfWeek = startOfWeek.AddDays(-7);
 
             var weekWorkouts = await _context.WorkoutSessions
-                .Where(w => w.CompletedAt >= startOfWeek)
+                .Where(w => w.UserId == userId && w.CompletedAt >= startOfWeek)
                 .ToListAsync();
 
             var weeklyCount = weekWorkouts.Count;
@@ -54,8 +53,8 @@ namespace Final_project___MaxFitness.Services
             var progressPercent = Math.Min(100, (int)Math.Round((weeklyCount / (double)goal) * 100));
             var caloriesThisWeek = weekWorkouts.Sum(w => w.CaloriesBurned);
 
-            // Average intensity of recent workouts (last 10)
             var recentIntensities = await _context.WorkoutSessions
+                .Where(w => w.UserId == userId)
                 .OrderByDescending(w => w.CompletedAt)
                 .Take(10)
                 .Select(w => w.IntensityScore)
@@ -65,8 +64,7 @@ namespace Final_project___MaxFitness.Services
                 ? (int)Math.Round(recentIntensities.Average())
                 : 0;
 
-            // Streak: consecutive days with at least one workout
-            var streak = await CalculateStreakAsync();
+            var streak = await CalculateStreakAsync(userId);
 
             return new DashboardStats
             {
@@ -79,9 +77,10 @@ namespace Final_project___MaxFitness.Services
             };
         }
 
-        private async Task<int> CalculateStreakAsync()
+        private async Task<int> CalculateStreakAsync(string userId)
         {
             var workoutDates = await _context.WorkoutSessions
+                .Where(w => w.UserId == userId)
                 .OrderByDescending(w => w.CompletedAt)
                 .Select(w => w.CompletedAt.Date)
                 .ToListAsync();
@@ -91,7 +90,6 @@ namespace Final_project___MaxFitness.Services
             var uniqueDates = workoutDates.Distinct().OrderByDescending(d => d).ToList();
             var today = DateTime.UtcNow.Date;
 
-            // Streak must include today or yesterday
             if (uniqueDates[0] < today.AddDays(-1)) return 0;
 
             var streak = 1;
@@ -106,17 +104,16 @@ namespace Final_project___MaxFitness.Services
             return streak;
         }
 
-        public async Task<List<MuscleStatus>> GetMuscleStatusesAsync()
+        public async Task<List<MuscleStatus>> GetMuscleStatusesAsync(string userId)
         {
             var now = DateTime.UtcNow;
 
-            // Get all exercise logs with their session dates
             var logs = await _context.WorkoutExerciseLogs
                 .Include(l => l.WorkoutSession)
+                .Where(l => l.WorkoutSession.UserId == userId)
                 .OrderByDescending(l => l.WorkoutSession.CompletedAt)
                 .ToListAsync();
 
-            // Build a map: muscle group -> most recent training date
             var lastTrainedByGroup = new Dictionary<string, DateTime>();
             foreach (var log in logs)
             {
@@ -125,7 +122,6 @@ namespace Final_project___MaxFitness.Services
                     lastTrainedByGroup[group] = log.WorkoutSession.CompletedAt;
             }
 
-            // Map each body region to its status
             var statuses = new List<MuscleStatus>();
             foreach (var region in AllBodyMapRegions)
             {
@@ -165,10 +161,11 @@ namespace Final_project___MaxFitness.Services
             return statuses;
         }
 
-        public async Task<List<RecentWorkout>> GetRecentWorkoutsAsync(int count = 5)
+        public async Task<List<RecentWorkout>> GetRecentWorkoutsAsync(string userId, int count = 5)
         {
             var sessions = await _context.WorkoutSessions
                 .Include(s => s.ExerciseLogs)
+                .Where(s => s.UserId == userId)
                 .OrderByDescending(s => s.CompletedAt)
                 .Take(count)
                 .ToListAsync();

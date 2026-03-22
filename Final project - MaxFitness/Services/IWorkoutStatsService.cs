@@ -4,8 +4,8 @@ namespace Final_project___MaxFitness.Services
 {
     public interface IWorkoutStatsService
     {
-        Task<DashboardStats> GetDashboardStatsAsync();
-        Task<List<MuscleStatus>> GetMuscleStatusesAsync();
-        Task<List<RecentWorkout>> GetRecentWorkoutsAsync(int count = 5);
+        Task<DashboardStats> GetDashboardStatsAsync(string userId);
+        Task<List<MuscleStatus>> GetMuscleStatusesAsync(string userId);
+        Task<List<RecentWorkout>> GetRecentWorkoutsAsync(string userId, int count = 5);
     }
 }
