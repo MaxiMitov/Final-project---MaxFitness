@@ -1,11 +1,12 @@
 using Final_project___MaxFitness.Models;
 
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Final_project___MaxFitness.Data
 {
-    public class AppDbContext : IdentityDbContext
+    public class AppDbContext : IdentityDbContext<IdentityUser>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -15,8 +16,17 @@ namespace Final_project___MaxFitness.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // This is required for Identity to setup its internal tables (Users, Roles, etc.)
             base.OnModelCreating(modelBuilder);
 
+            // Configure relationship: A WorkoutSession belongs to one User
+            modelBuilder.Entity<WorkoutSession>()
+                .HasOne(w => w.User)
+                .WithMany()
+                .HasForeignKey(w => w.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Seed Data for Exercises
             modelBuilder.Entity<Exercise>().HasData(
                 new Exercise { Id = 1, Name = "Bench Press", MuscleGroup = "chest", Type = "Compound" },
                 new Exercise { Id = 2, Name = "Incline Dumbbell Press", MuscleGroup = "chest", Type = "Compound" },

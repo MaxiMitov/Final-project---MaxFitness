@@ -1,11 +1,19 @@
 using System.ComponentModel.DataAnnotations;
 
+using Microsoft.AspNetCore.Identity;
+
 namespace Final_project___MaxFitness.Models
 {
     public class WorkoutSession
     {
         [Key]
         public int Id { get; set; }
+
+        // Link to the Identity User
+        [Required]
+        public string UserId { get; set; }
+
+        public virtual IdentityUser? User { get; set; }
 
         public DateTime CompletedAt { get; set; } = DateTime.UtcNow;
 
