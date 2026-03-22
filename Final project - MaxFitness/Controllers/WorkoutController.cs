@@ -22,17 +22,9 @@ namespace Final_project___MaxFitness.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Challenge();
-
-            var workouts = await _context.WorkoutSessions
-                .Where(w => w.UserId == user.Id)
-                .OrderByDescending(w => w.CompletedAt)
-                .ToListAsync();
-
-            return View(workouts);
+            return View();
         }
 
         [HttpGet]
@@ -52,8 +44,9 @@ namespace Final_project___MaxFitness.Controllers
             if (request == null || request.Exercises.Count == 0)
                 return BadRequest("No exercises provided.");
 
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
 
             var durationMinutes = Math.Max(request.DurationSeconds / 60.0, 1);
             var volumeCalories = request.TotalVolume * 0.05;
@@ -62,7 +55,7 @@ namespace Final_project___MaxFitness.Controllers
 
             var session = new WorkoutSession
             {
-                UserId = user.Id,
+                UserId = userId,
                 CompletedAt = DateTime.UtcNow,
                 DurationSeconds = request.DurationSeconds,
                 IntensityScore = request.IntensityScore,
