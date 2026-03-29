@@ -65,14 +65,25 @@
         filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5));
     }
 
-    .custom-nav-pills .nav-link.active {
-        background-color: #0d6efd;
+    .custom-nav-pills .nav-link {
         border-radius: 50px;
-        box-shadow: 0 4px 15px rgba(13, 110, 253, 0.4);
         padding: 10px 30px;
         font-size: 1.1rem;
         letter-spacing: 0.5px;
+        color: #adb5bd;
+        transition: all 0.2s;
     }
+
+        .custom-nav-pills .nav-link:hover {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #ffffff;
+        }
+
+        .custom-nav-pills .nav-link.active {
+            background-color: #0d6efd;
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.4);
+            color: #ffffff;
+        }
 
     .section-title {
         font-size: 1.5rem;
@@ -87,9 +98,12 @@
 <div class="dashboard-wrapper text-light pb-5">
 
     <div class="d-flex justify-content-center mt-4 mb-5">
-        <ul class="nav nav-pills custom-nav-pills">
+        <ul class="nav nav-pills custom-nav-pills gap-3">
             <li class="nav-item">
-                <a class="nav-link active fw-bold text-white" asp-page="./Index">My Dashboard</a>
+                <a class="nav-link active fw-bold" asp-page="./Index">My Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fw-bold" asp-page="./Settings">Settings</a>
             </li>
         </ul>
     </div>
@@ -155,3 +169,5 @@
             </div>
         }
     </div>
+
+</div>
