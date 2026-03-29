@@ -18,8 +18,8 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
 
                     <div class="form-floating mb-3 text-dark">
-                        <input asp-for="Input.Email" class="form-control rounded-3" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                        <label asp-for="Input.Email">Email Address</label>
+                        <input asp-for="Input.Email" type="text" class="form-control rounded-3" autocomplete="username" aria-required="true" placeholder="Username or Email" />
+                        <label asp-for="Input.Email">Username or Email</label>
                         <span asp-validation-for="Input.Email" class="text-danger small"></span>
                     </div>
 
