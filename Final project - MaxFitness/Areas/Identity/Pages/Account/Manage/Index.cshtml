@@ -6,64 +6,109 @@
     ViewData["ActivePage"] = "Index";
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<style>
+    .dashboard-card {
+        background-color: #1e1e24; /* Dark gray to match your theme */
+        border: 1px solid #333;
+        border-radius: 10px;
+        transition: transform 0.2s;
+    }
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="card mb-4 shadow-sm border-primary">
-            <div class="card-body">
-                <h5 class="card-title text-primary">Overview</h5>
-                <p class="card-text mb-1"><strong>Athlete:</strong> @Model.Username</p>
-                <p class="card-text">
-                    <strong>Most Trained Muscle:</strong>
-                    <span class="badge bg-success fs-6">@Model.Stats.MostTrainedMuscle</span>
-                </p>
+        .dashboard-card:hover {
+            transform: translateY(-3px);
+            border-color: #007bff; /* subtle blue highlight on hover */
+        }
+
+    .text-accent {
+        color: #0d6efd; /* Bootstrap primary blue */
+    }
+
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 800;
+        background: -webkit-linear-gradient(#fff, #aaa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .achievement-card {
+        background-color: #1a1a20;
+        border: 1px solid #333;
+        border-radius: 8px;
+    }
+
+    .achievement-locked {
+        opacity: 0.5;
+        filter: grayscale(100%);
+    }
+
+    .achievement-icon {
+        font-size: 2.5rem;
+        width: 60px;
+        text-align: center;
+    }
+</style>
+
+<div class="container text-light py-4">
+    <h2 class="mb-4 fw-bold">@ViewData["Title"]</h2>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="dashboard-card p-4 shadow">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="text-muted mb-1">Athlete</h4>
+                        <h3 class="fw-bold text-light mb-0">@Model.Username</h3>
+                    </div>
+                    <div class="text-end">
+                        <h5 class="text-muted mb-1">Most Trained</h5>
+                        <h4 class="text-accent fw-bold mb-0">@Model.Stats.MostTrainedMuscle</h4>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
 
-        <h4 class="mb-3 text-secondary">Muscle Group Frequency</h4>
-        <div class="row mb-4">
-            @if (Model.Stats.MuscleTrainingCounts.Count > 0)
+    <h4 class="mb-3 fw-bold border-bottom border-secondary pb-2">Muscle Group Distribution</h4>
+    <div class="row mb-5">
+        @if (Model.Stats.MuscleTrainingCounts.Count > 0)
+        {
+            foreach (var stat in Model.Stats.MuscleTrainingCounts)
             {
-                foreach (var stat in Model.Stats.MuscleTrainingCounts)
-                {
-                    <div class="col-md-4 mb-3">
-                        <div class="card bg-light text-center h-100 shadow-sm">
-                            <div class="card-body py-4">
-                                <h6 class="card-title text-uppercase text-muted fw-bold">@stat.MuscleGroup</h6>
-                                <h2 class="card-text text-dark display-6 fw-bold">@stat.Count</h2>
-                                <span class="text-muted small">Sessions</span>
-                            </div>
-                        </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="col-12">
-                    <p class="text-muted fst-italic">No workout data available yet. Start training!</p>
-                </div>
-            }
-        </div>
-
-        <h4 class="mb-3 text-secondary">Trophy Room</h4>
-        <div class="row">
-            @foreach (var ach in Model.Stats.Achievements)
-            {
-                <div class="col-md-6 mb-3">
-                    <div class="card h-100 shadow-sm @(ach.IsUnlocked ? "border-warning" : "border-secondary bg-light text-muted")">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="me-3 fs-1 fw-bold @(ach.IsUnlocked ? "text-warning" : "text-secondary")">
-                                @(ach.IsUnlocked ? ach.Icon : "X")
-                            </div>
-                            <div>
-                                <h5 class="card-title mb-1 fw-bold @(ach.IsUnlocked ? "text-dark" : "text-muted")">@ach.Name</h5>
-                                <p class="card-text mb-0 small">@ach.Description</p>
-                            </div>
-                        </div>
+                <div class="col-md-4 col-sm-6 mb-4">
+                    <div class="dashboard-card text-center h-100 p-4 shadow">
+                        <h6 class="text-uppercase text-muted fw-bold tracking-wider mb-2">@stat.MuscleGroup</h6>
+                        <div class="stat-number mb-1">@stat.Count</div>
+                        <span class="text-muted small">Sessions</span>
                     </div>
                 </div>
             }
-        </div>
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="alert alert-secondary bg-dark text-light border-secondary">
+                    <i class="bi bi-info-circle me-2"></i> No workout data available yet. Start training to see your stats!
+                </div>
+            </div>
+        }
+    </div>
+
+    <h4 class="mb-3 fw-bold border-bottom border-secondary pb-2">Trophy Room</h4>
+    <div class="row">
+        @foreach (var ach in Model.Stats.Achievements)
+        {
+            <div class="col-md-6 col-lg-6 mb-3">
+                <div class="achievement-card d-flex align-items-center p-3 h-100 @(!ach.IsUnlocked ? "achievement-locked" : "")">
+                    <div class="achievement-icon me-3 @(ach.IsUnlocked ? "text-warning" : "text-secondary")">
+                        @(ach.IsUnlocked ? ach.Icon : "🔒")
+                    </div>
+                    <div>
+                        <h5 class="mb-1 fw-bold @(ach.IsUnlocked ? "text-light" : "text-muted")">@ach.Name</h5>
+                        <p class="mb-0 text-muted small">@ach.Description</p>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 </div>
