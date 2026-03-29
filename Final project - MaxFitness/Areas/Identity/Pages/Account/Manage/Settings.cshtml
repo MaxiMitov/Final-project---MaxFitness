@@ -1,4 +1,101 @@
 ﻿@page
 @model Final_project___MaxFitness.Areas.Identity.Pages.Account.Manage.SettingsModel
+
 @{
+    ViewData["Title"] = "Settings";
+    ViewData["ActivePage"] = "Settings";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .dashboard-wrapper {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .dashboard-card {
+        background-color: #1e1e24;
+        border: 1px solid #333;
+        border-radius: 12px;
+    }
+
+    .custom-nav-pills .nav-link {
+        border-radius: 50px;
+        padding: 10px 30px;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+        color: #adb5bd;
+        transition: all 0.2s;
+    }
+
+        .custom-nav-pills .nav-link:hover {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #ffffff;
+        }
+
+        .custom-nav-pills .nav-link.active {
+            background-color: #0d6efd;
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.4);
+            color: #ffffff;
+        }
+
+    .form-control-dark {
+        background-color: #2b2b36;
+        border: 1px solid #444;
+        color: #ffffff;
+    }
+
+        .form-control-dark:focus {
+            background-color: #2b2b36;
+            border-color: #0d6efd;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+</style>
+
+<div class="dashboard-wrapper text-light pb-5">
+
+    <div class="d-flex justify-content-center mt-4 mb-5">
+        <ul class="nav nav-pills custom-nav-pills gap-3">
+            <li class="nav-item">
+                <a class="nav-link fw-bold" asp-page="./Index">My Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active fw-bold" asp-page="./Settings">Settings</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            @if (!string.IsNullOrEmpty(Model.StatusMessage))
+            {
+                var statusClass = Model.StatusMessage.StartsWith("Error") ? "alert-danger" : "alert-success text-dark";
+                <div class="alert @statusClass alert-dismissible fade show fw-bold shadow-sm" role="alert">
+                    @Model.StatusMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="dashboard-card p-5 shadow-lg">
+                <h3 class="mb-4 fw-bold border-bottom border-secondary pb-3">Profile Settings</h3>
+
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-4">
+                        <label asp-for="Input.Username" class="form-label text-muted text-uppercase tracking-wider fs-6 fw-bold">Display Name</label>
+                        <input asp-for="Input.Username" class="form-control form-control-dark form-control-lg" placeholder="Enter a new username..." />
+                        <span asp-validation-for="Input.Username" class="text-danger small mt-1 d-block fw-bold"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }
