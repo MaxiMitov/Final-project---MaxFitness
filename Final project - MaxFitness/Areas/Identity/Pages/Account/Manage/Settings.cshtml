@@ -8,6 +8,23 @@
 }
 
 <style>
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-in {
+        animation: fadeInUp 0.5s ease-out forwards;
+        opacity: 0;
+    }
+
     .dashboard-wrapper {
         max-width: 1000px;
         margin: 0 auto;
@@ -17,7 +34,20 @@
         background-color: #1e1e24;
         border: 1px solid #333;
         border-radius: 12px;
+        position: relative;
+        overflow: hidden;
     }
+
+        /* Adds a sleek blue gradient line to the top of the card */
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #0d6efd, #0dcaf0);
+        }
 
     .custom-nav-pills .nav-link {
         border-radius: 50px;
@@ -39,17 +69,61 @@
             color: #ffffff;
         }
 
+    /* Input styling for Dark Mode */
+    .input-group-text-dark {
+        background-color: #1a1a20;
+        border: 1px solid #444;
+        border-right: none;
+        color: #adb5bd;
+        transition: border-color 0.3s;
+    }
+
     .form-control-dark {
         background-color: #2b2b36;
         border: 1px solid #444;
+        border-left: none;
         color: #ffffff;
+        transition: all 0.3s;
     }
 
         .form-control-dark:focus {
             background-color: #2b2b36;
-            border-color: #0d6efd;
             color: #ffffff;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            box-shadow: none;
+        }
+
+    /* Highlight both icon and input when typing */
+    .input-group:focus-within .input-group-text-dark,
+    .input-group:focus-within .form-control-dark {
+        border-color: #0d6efd;
+    }
+
+    .input-group:focus-within .input-group-text-dark {
+        color: #0d6efd;
+    }
+
+    .avatar-circle {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #0d6efd, #6610f2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: white;
+        margin: 0 auto 1.5rem auto;
+        box-shadow: 0 8px 15px rgba(13, 110, 253, 0.3);
+    }
+
+    .btn-save {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 110, 253, 0.4) !important;
         }
 </style>
 
@@ -66,31 +140,52 @@
         </ul>
     </div>
 
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+    <div class="row justify-content-center animate-in">
+        <div class="col-md-8 col-lg-6">
             @if (!string.IsNullOrEmpty(Model.StatusMessage))
             {
                 var statusClass = Model.StatusMessage.StartsWith("Error") ? "alert-danger" : "alert-success text-dark";
-                <div class="alert @statusClass alert-dismissible fade show fw-bold shadow-sm" role="alert">
+                <div class="alert @statusClass alert-dismissible fade show fw-bold shadow-sm mb-4" role="alert">
                     @Model.StatusMessage
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
 
-            <div class="dashboard-card p-5 shadow-lg">
-                <h3 class="mb-4 fw-bold border-bottom border-secondary pb-3">Profile Settings</h3>
+            <div class="dashboard-card p-5 shadow-lg text-center">
 
-                <form method="post">
+                <div class="avatar-circle">
+                    @(Model.Input.Username?.Length > 0 ? Model.Input.Username.Substring(0, 1).ToUpper() : "U")
+                </div>
+
+                <h3 class="mb-1 fw-bold">Account Settings</h3>
+                <p class="text-muted mb-4 pb-4 border-bottom border-secondary border-opacity-25">Update your public identity</p>
+
+                <form method="post" class="text-start">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                     <div class="mb-4">
-                        <label asp-for="Input.Username" class="form-label text-muted text-uppercase tracking-wider fs-6 fw-bold">Display Name</label>
-                        <input asp-for="Input.Username" class="form-control form-control-dark form-control-lg" placeholder="Enter a new username..." />
-                        <span asp-validation-for="Input.Username" class="text-danger small mt-1 d-block fw-bold"></span>
+                        <label asp-for="Input.Username" class="form-label text-muted text-uppercase tracking-wider fs-6 fw-bold mb-2">Display Name</label>
+
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text input-group-text-dark">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
+                                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
+                                </svg>
+                            </span>
+                            <input asp-for="Input.Username" class="form-control form-control-dark" placeholder="Enter a new username..." />
+                        </div>
+                        <span asp-validation-for="Input.Username" class="text-danger small mt-2 d-block fw-bold"></span>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow">Save Changes</button>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm btn-save mt-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check2-circle me-2 mb-1" viewBox="0 0 16 16">
+                            <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0" />
+                            <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z" />
+                        </svg>
+                        Save Changes
+                    </button>
                 </form>
+
             </div>
         </div>
     </div>
