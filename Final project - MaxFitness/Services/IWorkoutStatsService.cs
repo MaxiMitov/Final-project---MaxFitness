@@ -7,5 +7,6 @@ namespace Final_project___MaxFitness.Services
         Task<DashboardStats> GetDashboardStatsAsync(string userId);
         Task<List<MuscleStatus>> GetMuscleStatusesAsync(string userId);
         Task<List<RecentWorkout>> GetRecentWorkoutsAsync(string userId, int count = 5);
+        Task<UserProfileStats> GetUserProfileStatsAsync(string userId);
     }
 }

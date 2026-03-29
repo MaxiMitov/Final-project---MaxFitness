@@ -183,6 +183,45 @@ namespace Final_project___MaxFitness.Services
             }).ToList();
         }
 
+        public async Task<UserProfileStats> GetUserProfileStatsAsync(string userId)
+        {
+            var logs = await _context.WorkoutExerciseLogs
+                .Include(l => l.WorkoutSession)
+                .Where(l => l.WorkoutSession.UserId == userId)
+                .ToListAsync();
+
+            var muscleCounts = logs
+                .GroupBy(l => l.MuscleGroup)
+                .Select(g => new MuscleTrainingStat
+                {
+                    MuscleGroup = char.ToUpper(g.Key[0]) + g.Key.Substring(1).ToLower(),
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Count)
+                .ToList();
+
+            var mostTrained = muscleCounts.FirstOrDefault()?.MuscleGroup ?? "None yet";
+
+            var totalSessions = await _context.WorkoutSessions.CountAsync(w => w.UserId == userId);
+            var streak = await CalculateStreakAsync(userId);
+            var totalExercises = logs.Count;
+
+            var achievements = new List<Achievement>
+            {
+                new Achievement { Name = "First Blood", Description = "Complete your first workout session.", Icon = "Trophy", IsUnlocked = totalSessions >= 1 },
+                new Achievement { Name = "Consistency is Key", Description = "Reach a 7-day workout streak.", Icon = "Flame", IsUnlocked = streak >= 7 },
+                new Achievement { Name = "Century Club", Description = "Complete 100 workouts.", Icon = "Star", IsUnlocked = totalSessions >= 100 },
+                new Achievement { Name = "Heavy Lifter", Description = "Log over 50 individual exercises.", Icon = "Medal", IsUnlocked = totalExercises >= 50 }
+            };
+
+            return new UserProfileStats
+            {
+                MostTrainedMuscle = mostTrained,
+                MuscleTrainingCounts = muscleCounts,
+                Achievements = achievements
+            };
+        }
+
         private static string FormatTimeAgo(DateTime dt)
         {
             var diff = DateTime.UtcNow - dt;
