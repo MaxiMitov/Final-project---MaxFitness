@@ -4,82 +4,120 @@
 @{
     ViewData["Title"] = "Profile Dashboard";
     ViewData["ActivePage"] = "Index";
+    Layout = "/Views/Shared/_Layout.cshtml";
 }
 
 <style>
+    .dashboard-wrapper {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
     .dashboard-card {
-        background-color: #1e1e24; /* Dark gray to match your theme */
+        background-color: #1e1e24;
         border: 1px solid #333;
-        border-radius: 10px;
-        transition: transform 0.2s;
+        border-radius: 12px;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
         .dashboard-card:hover {
-            transform: translateY(-3px);
-            border-color: #007bff; /* subtle blue highlight on hover */
+            transform: translateY(-5px);
+            border-color: #0d6efd;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
         }
 
     .text-accent {
-        color: #0d6efd; /* Bootstrap primary blue */
+        color: #0d6efd;
     }
 
     .stat-number {
-        font-size: 3rem;
+        font-size: 3.5rem;
         font-weight: 800;
-        background: -webkit-linear-gradient(#fff, #aaa);
+        background: -webkit-linear-gradient(#ffffff, #888888);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        line-height: 1.2;
     }
 
     .achievement-card {
         background-color: #1a1a20;
         border: 1px solid #333;
-        border-radius: 8px;
+        border-radius: 12px;
+        transition: transform 0.2s;
     }
+
+        .achievement-card:hover {
+            transform: scale(1.02);
+        }
 
     .achievement-locked {
-        opacity: 0.5;
-        filter: grayscale(100%);
+        opacity: 0.6;
     }
 
-    .achievement-icon {
-        font-size: 2.5rem;
-        width: 60px;
-        text-align: center;
+        .achievement-locked .achievement-icon-img {
+            filter: grayscale(100%) opacity(0.4);
+        }
+
+    .achievement-icon-img {
+        width: 65px;
+        height: 65px;
+        object-fit: contain;
+        filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5));
+    }
+
+    .custom-nav-pills .nav-link.active {
+        background-color: #0d6efd;
+        border-radius: 50px;
+        box-shadow: 0 4px 15px rgba(13, 110, 253, 0.4);
+        padding: 10px 30px;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        border-bottom: 2px solid #333;
+        padding-bottom: 10px;
+        margin-bottom: 25px;
+        color: #e0e0e0;
     }
 </style>
 
-<div class="container text-light py-4">
-    <h2 class="mb-4 fw-bold">@ViewData["Title"]</h2>
+<div class="dashboard-wrapper text-light pb-5">
 
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="dashboard-card p-4 shadow">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4 class="text-muted mb-1">Athlete</h4>
-                        <h3 class="fw-bold text-light mb-0">@Model.Username</h3>
-                    </div>
-                    <div class="text-end">
-                        <h5 class="text-muted mb-1">Most Trained</h5>
-                        <h4 class="text-accent fw-bold mb-0">@Model.Stats.MostTrainedMuscle</h4>
-                    </div>
-                </div>
+    <div class="d-flex justify-content-center mt-4 mb-5">
+        <ul class="nav nav-pills custom-nav-pills">
+            <li class="nav-item">
+                <a class="nav-link active fw-bold text-white" asp-page="./Index">My Dashboard</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="dashboard-card p-4 shadow-lg mb-5">
+        <div class="row align-items-center text-center text-md-start">
+            <div class="col-md-6 mb-3 mb-md-0 border-end border-secondary border-opacity-25">
+                <h5 class="text-muted text-uppercase tracking-wider mb-1 fs-6">Athlete Profile</h5>
+                <h2 class="fw-bold text-light mb-0 display-6">@Model.Username</h2>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <h5 class="text-muted text-uppercase tracking-wider mb-1 fs-6">Most Trained Muscle</h5>
+                <h2 class="text-accent fw-bold mb-0 display-6">@Model.Stats.MostTrainedMuscle</h2>
             </div>
         </div>
     </div>
 
-    <h4 class="mb-3 fw-bold border-bottom border-secondary pb-2">Muscle Group Distribution</h4>
+    <h4 class="section-title">Muscle Group Distribution</h4>
     <div class="row mb-5">
         @if (Model.Stats.MuscleTrainingCounts.Count > 0)
         {
             foreach (var stat in Model.Stats.MuscleTrainingCounts)
             {
                 <div class="col-md-4 col-sm-6 mb-4">
-                    <div class="dashboard-card text-center h-100 p-4 shadow">
-                        <h6 class="text-uppercase text-muted fw-bold tracking-wider mb-2">@stat.MuscleGroup</h6>
-                        <div class="stat-number mb-1">@stat.Count</div>
-                        <span class="text-muted small">Sessions</span>
+                    <div class="dashboard-card text-center h-100 p-4 shadow-sm">
+                        <h6 class="text-uppercase text-muted fw-bold mb-3">@stat.MuscleGroup</h6>
+                        <div class="stat-number">@stat.Count</div>
+                        <div class="text-muted small text-uppercase fw-bold mt-2">Sessions</div>
                     </div>
                 </div>
             }
@@ -87,28 +125,33 @@
         else
         {
             <div class="col-12">
-                <div class="alert alert-secondary bg-dark text-light border-secondary">
-                    <i class="bi bi-info-circle me-2"></i> No workout data available yet. Start training to see your stats!
+                <div class="alert alert-secondary bg-dark text-light border-secondary text-center py-4">
+                    <h5 class="mb-0 text-muted">No workout data available yet. Start training to build your stats!</h5>
                 </div>
             </div>
         }
     </div>
 
-    <h4 class="mb-3 fw-bold border-bottom border-secondary pb-2">Trophy Room</h4>
+    <h4 class="section-title">Trophy Room</h4>
     <div class="row">
         @foreach (var ach in Model.Stats.Achievements)
         {
-            <div class="col-md-6 col-lg-6 mb-3">
-                <div class="achievement-card d-flex align-items-center p-3 h-100 @(!ach.IsUnlocked ? "achievement-locked" : "")">
-                    <div class="achievement-icon me-3 @(ach.IsUnlocked ? "text-warning" : "text-secondary")">
-                        @(ach.IsUnlocked ? ach.Icon : "🔒")
+            <div class="col-md-6 mb-4">
+                <div class="achievement-card d-flex align-items-center p-4 h-100 shadow @(!ach.IsUnlocked ? "achievement-locked" : "")">
+                    <div class="me-4 flex-shrink-0">
+                        <img src="@ach.Icon" alt="@ach.Name" class="achievement-icon-img" />
                     </div>
                     <div>
-                        <h5 class="mb-1 fw-bold @(ach.IsUnlocked ? "text-light" : "text-muted")">@ach.Name</h5>
-                        <p class="mb-0 text-muted small">@ach.Description</p>
+                        <h5 class="mb-1 fw-bold @(ach.IsUnlocked ? "text-white" : "text-muted")">
+                            @ach.Name
+                            @if (!ach.IsUnlocked)
+                            {
+                                <span class="badge bg-secondary ms-2 fs-6">Locked</span>
+                            }
+                        </h5>
+                        <p class="mb-0 text-secondary">@ach.Description</p>
                     </div>
                 </div>
             </div>
         }
     </div>
-</div>

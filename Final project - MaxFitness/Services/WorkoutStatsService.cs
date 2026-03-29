@@ -208,10 +208,10 @@ namespace Final_project___MaxFitness.Services
 
             var achievements = new List<Achievement>
             {
-                new Achievement { Name = "First Blood", Description = "Complete your first workout session.", Icon = "Trophy", IsUnlocked = totalSessions >= 1 },
-                new Achievement { Name = "Consistency is Key", Description = "Reach a 7-day workout streak.", Icon = "Flame", IsUnlocked = streak >= 7 },
-                new Achievement { Name = "Century Club", Description = "Complete 100 workouts.", Icon = "Star", IsUnlocked = totalSessions >= 100 },
-                new Achievement { Name = "Heavy Lifter", Description = "Log over 50 individual exercises.", Icon = "Medal", IsUnlocked = totalExercises >= 50 }
+                new Achievement { Name = "First Blood", Description = "Complete your first workout session.", Icon = "https://cdn-icons-png.flaticon.com/512/3112/3112946.png", IsUnlocked = totalSessions >= 1 },
+                new Achievement { Name = "Consistency is Key", Description = "Reach a 7-day workout streak.", Icon = "https://cdn-icons-png.flaticon.com/512/1000/1000300.png", IsUnlocked = streak >= 7 },
+                new Achievement { Name = "Century Club", Description = "Complete 100 workouts.", Icon = "https://cdn-icons-png.flaticon.com/512/2850/2850558.png", IsUnlocked = totalSessions >= 100 },
+                new Achievement { Name = "Heavy Lifter", Description = "Log over 50 individual exercises.", Icon = "https://cdn-icons-png.flaticon.com/512/6008/6008271.png", IsUnlocked = totalExercises >= 50 }
             };
 
             return new UserProfileStats
@@ -220,6 +220,9 @@ namespace Final_project___MaxFitness.Services
                 MuscleTrainingCounts = muscleCounts,
                 Achievements = achievements
             };
+
+
+
         }
 
         private static string FormatTimeAgo(DateTime dt)
