@@ -31,14 +31,13 @@
     }
 
     .dashboard-card {
-        background-color: #1e1e24;
-        border: 1px solid #333;
-        border-radius: 12px;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
         position: relative;
         overflow: hidden;
     }
 
-        /* Adds a sleek blue gradient line to the top of the card */
         .dashboard-card::before {
             content: '';
             position: absolute;
@@ -46,7 +45,7 @@
             left: 0;
             width: 100%;
             height: 4px;
-            background: linear-gradient(90deg, #0d6efd, #0dcaf0);
+            background: var(--gradient-primary);
         }
 
     .custom-nav-pills .nav-link {
@@ -54,58 +53,58 @@
         padding: 10px 30px;
         font-size: 1.1rem;
         letter-spacing: 0.5px;
-        color: #adb5bd;
-        transition: all 0.2s;
+        color: var(--text-secondary);
+        transition: all var(--transition-fast);
     }
 
         .custom-nav-pills .nav-link:hover {
-            background-color: rgba(13, 110, 253, 0.1);
-            color: #ffffff;
+            background-color: rgba(230, 57, 70, 0.1);
+            color: var(--text-primary);
         }
 
         .custom-nav-pills .nav-link.active {
-            background-color: #0d6efd;
-            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.4);
+            background-color: var(--accent);
+            box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
             color: #ffffff;
         }
 
     /* Input styling for Dark Mode */
     .input-group-text-dark {
-        background-color: #1a1a20;
-        border: 1px solid #444;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--text-dim);
         border-right: none;
-        color: #adb5bd;
-        transition: border-color 0.3s;
+        color: var(--text-secondary);
+        transition: border-color var(--transition-base);
     }
 
     .form-control-dark {
-        background-color: #2b2b36;
-        border: 1px solid #444;
+        background-color: var(--bg-card-hover);
+        border: 1px solid var(--text-dim);
         border-left: none;
-        color: #ffffff;
-        transition: all 0.3s;
+        color: var(--text-primary);
+        transition: all var(--transition-base);
     }
 
         .form-control-dark:focus {
-            background-color: #2b2b36;
-            color: #ffffff;
+            background-color: var(--bg-card-hover);
+            color: var(--text-primary);
             box-shadow: none;
         }
 
     /* Highlight both icon and input when typing */
     .input-group:focus-within .input-group-text-dark,
     .input-group:focus-within .form-control-dark {
-        border-color: #0d6efd;
+        border-color: var(--accent);
     }
 
     .input-group:focus-within .input-group-text-dark {
-        color: #0d6efd;
+        color: var(--accent);
     }
 
     .avatar-circle {
         width: 80px;
         height: 80px;
-        background: linear-gradient(135deg, #0d6efd, #6610f2);
+        background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -114,16 +113,19 @@
         font-weight: 800;
         color: white;
         margin: 0 auto 1.5rem auto;
-        box-shadow: 0 8px 15px rgba(13, 110, 253, 0.3);
+        box-shadow: var(--glow-red);
     }
 
     .btn-save {
-        transition: transform 0.2s, box-shadow 0.2s;
+        background: var(--gradient-primary) !important;
+        border: none !important;
+        color: #ffffff !important;
+        transition: transform var(--transition-fast), box-shadow var(--transition-fast);
     }
 
         .btn-save:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(13, 110, 253, 0.4) !important;
+            box-shadow: 0 8px 20px rgba(230, 57, 70, 0.4) !important;
         }
 </style>
 
@@ -177,7 +179,7 @@
                         <span asp-validation-for="Input.Username" class="text-danger small mt-2 d-block fw-bold"></span>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm btn-save mt-3">
+                    <button type="submit" class="btn btn-lg w-100 fw-bold shadow-sm btn-save mt-3">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check2-circle me-2 mb-1" viewBox="0 0 16 16">
                             <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0" />
                             <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z" />
