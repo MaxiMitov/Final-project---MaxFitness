@@ -752,36 +752,35 @@ select.form-input {
     letter-spacing: -0.01em;
 }
 
-.navbar-maxfit .nav-link {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
+.nav-link-maxfit {
+    color: var(--text-secondary) !important;
+    font-size: 0.88rem;
     font-weight: 500;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.9rem !important;
     border-radius: var(--radius-sm);
     transition: all var(--transition-fast);
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    text-decoration: none;
+    white-space: nowrap;
 }
 
-.navbar-maxfit .nav-link:hover,
-.navbar-maxfit .nav-link:focus {
-    color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.04);
+.nav-link-maxfit i {
+    font-size: 0.82rem;
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
 }
 
-.navbar-maxfit .nav-link.active {
+.nav-link-maxfit:hover {
+    color: var(--text-primary) !important;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link-maxfit:hover i {
+    opacity: 1;
     color: var(--accent);
-}
-
-.navbar-maxfit .nav-link.active::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 20px;
-    height: 2px;
-    background: var(--accent);
-    border-radius: 100px;
 }
 
 /* Navbar toggle for mobile */
