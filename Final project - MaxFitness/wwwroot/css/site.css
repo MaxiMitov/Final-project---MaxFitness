@@ -783,6 +783,55 @@ select.form-input {
     color: var(--accent);
 }
 
+/* New Workout button */
+.nav-btn-workout {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--gradient-primary);
+    color: #fff !important;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.45rem 1.1rem;
+    border-radius: 100px;
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    transition: all var(--transition-fast);
+    box-shadow: 0 2px 12px rgba(230, 57, 70, 0.25);
+}
+
+.nav-btn-workout:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(230, 57, 70, 0.4);
+    color: #fff !important;
+}
+
+.nav-btn-workout i {
+    font-size: 0.75rem;
+}
+
+/* Sign Up button */
+.nav-btn-signup {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--gradient-primary);
+    color: #fff !important;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.45rem 1.1rem;
+    border-radius: 100px;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    box-shadow: 0 2px 12px rgba(230, 57, 70, 0.25);
+}
+
+.nav-btn-signup:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(230, 57, 70, 0.4);
+    color: #fff !important;
+}
+
 /* Navbar toggle for mobile */
 .navbar-maxfit .navbar-toggler {
     border: 1px solid var(--border-subtle);
