@@ -1,56 +1,262 @@
-﻿@page
+@page
 @model Final_project___MaxFitness.Areas.Identity.Pages.Account.LoginModel
 
 @{
     ViewData["Title"] = "Log in";
 }
 
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
-    <div class="col-md-5">
-        <div class="card shadow-lg border rounded-4 bg-dark text-white p-4" style="border-color: #f75c2e !important;">
-            <div class="card-body">
-                <div class="text-center mb-4">
-                    <h2 class="fw-bold"><span style="color: #f75c2e;">MAX</span>FITNESS</h2>
-                    <p class="text-muted small">Welcome back, Athlete!</p>
-                </div>
+<style>
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(24px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
-                <form id="account" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+    .login-wrapper {
+        min-height: 70vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem 1rem;
+    }
 
-                    <div class="form-floating mb-3 text-dark">
-                        <input asp-for="Input.Email" type="text" class="form-control rounded-3" autocomplete="username" aria-required="true" placeholder="Username or Email" />
-                        <label asp-for="Input.Email">Username or Email</label>
-                        <span asp-validation-for="Input.Email" class="text-danger small"></span>
-                    </div>
+    .login-card {
+        width: 100%;
+        max-width: 440px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        position: relative;
+        overflow: hidden;
+        padding: 2.5rem 2rem 2rem;
+        animation: fadeInUp 0.5s ease-out forwards;
+        opacity: 0;
+    }
 
-                    <div class="form-floating mb-3 text-dark">
-                        <input asp-for="Input.Password" class="form-control rounded-3" autocomplete="current-password" aria-required="true" placeholder="password" />
-                        <label asp-for="Input.Password">Password</label>
-                        <span asp-validation-for="Input.Password" class="text-danger small"></span>
-                    </div>
+    .login-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--gradient-primary);
+    }
 
-                    <div class="checkbox mb-3 ms-1">
-                        <label asp-for="Input.RememberMe" class="form-label small text-muted">
-                            <input class="form-check-input" asp-for="Input.RememberMe" />
-                            @Html.DisplayNameFor(m => m.Input.RememberMe)
-                        </label>
-                    </div>
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
 
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg fw-bold rounded-pill mb-3" style="background-color: #f75c2e; border-color: #f75c2e; color: #fff;">
-                        LOGIN
-                    </button>
+    .login-header h2 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
 
-                    <div class="text-center small">
-                        <p class="mb-1">
-                            <a id="forgot-password" asp-page="./ForgotPassword" class="text-decoration-none text-muted">Forgot your password?</a>
-                        </p>
-                        <p>
-                            Don't have an account? <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="fw-bold text-decoration-none" style="color: #f75c2e;">Join the Team</a>
-                        </p>
-                    </div>
-                </form>
-            </div>
+    .login-header .login-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .login-input-group {
+        position: relative;
+        margin-bottom: 1.25rem;
+    }
+
+    .login-input-group .login-input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-dim);
+        font-size: 0.9rem;
+        pointer-events: none;
+        transition: color var(--transition-fast);
+        z-index: 3;
+    }
+
+    .login-input-group .form-floating > .form-control {
+        background: var(--bg-card-hover);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        padding-left: 2.75rem;
+        height: 3.25rem;
+        font-size: 0.95rem;
+        transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .login-input-group .form-floating > .form-control:focus {
+        background: var(--bg-card-hover);
+        border-color: var(--border-accent);
+        box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
+        color: var(--text-primary);
+    }
+
+    .login-input-group .form-floating > .form-control:focus ~ .login-input-icon-ref {
+        color: var(--accent);
+    }
+
+    .login-input-group:focus-within .login-input-icon {
+        color: var(--accent);
+    }
+
+    .login-input-group .form-floating > label {
+        color: var(--text-secondary);
+        padding-left: 2.75rem;
+        font-size: 0.9rem;
+    }
+
+    .login-input-group .form-floating > .form-control:focus ~ label,
+    .login-input-group .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        color: var(--text-secondary);
+        transform: scale(0.8) translateY(-0.6rem) translateX(0.15rem);
+        padding-left: 2.75rem;
+    }
+
+    .login-remember {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .login-remember .form-check-input {
+        background-color: var(--bg-card-hover);
+        border: 1px solid var(--border-subtle);
+        width: 1.1rem;
+        height: 1.1rem;
+        margin-top: 0;
+        cursor: pointer;
+    }
+
+    .login-remember .form-check-input:checked {
+        background-color: var(--accent);
+        border-color: var(--accent);
+    }
+
+    .login-remember .form-check-input:focus {
+        box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15);
+        border-color: var(--accent);
+    }
+
+    .login-remember label {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    .login-btn {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: #fff;
+        background: var(--gradient-primary);
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        margin-bottom: 1.5rem;
+    }
+
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(230, 57, 70, 0.25);
+    }
+
+    .login-btn:active {
+        transform: translateY(0);
+    }
+
+    .login-footer {
+        text-align: center;
+        font-size: 0.85rem;
+    }
+
+    .login-footer a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: color var(--transition-fast);
+    }
+
+    .login-footer a:hover {
+        color: var(--text-primary);
+    }
+
+    .login-footer .login-link-accent {
+        color: var(--accent);
+        font-weight: 600;
+    }
+
+    .login-footer .login-link-accent:hover {
+        color: var(--accent-secondary);
+    }
+
+    .login-footer p {
+        margin-bottom: 0.4rem;
+        color: var(--text-secondary);
+    }
+</style>
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-header">
+            <h2><span class="text-gradient">MAX</span>FITNESS</h2>
+            <p class="login-subtitle">Welcome back, Athlete!</p>
         </div>
+
+        <form id="account" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            <div class="login-input-group">
+                <i class="fa-solid fa-user login-input-icon"></i>
+                <div class="form-floating">
+                    <input asp-for="Input.Email" type="text" class="form-control" autocomplete="username" aria-required="true" placeholder="Username or Email" />
+                    <label asp-for="Input.Email">Username or Email</label>
+                </div>
+                <span asp-validation-for="Input.Email" class="text-danger small"></span>
+            </div>
+
+            <div class="login-input-group">
+                <i class="fa-solid fa-lock login-input-icon"></i>
+                <div class="form-floating">
+                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                    <label asp-for="Input.Password">Password</label>
+                </div>
+                <span asp-validation-for="Input.Password" class="text-danger small"></span>
+            </div>
+
+            <div class="login-remember">
+                <input class="form-check-input" asp-for="Input.RememberMe" />
+                <label asp-for="Input.RememberMe">
+                    @Html.DisplayNameFor(m => m.Input.RememberMe)
+                </label>
+            </div>
+
+            <button id="login-submit" type="submit" class="login-btn">
+                LOGIN
+            </button>
+
+            <div class="login-footer">
+                <p>
+                    <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
+                </p>
+                <p>
+                    Don't have an account?
+                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="login-link-accent">Join the Team</a>
+                </p>
+            </div>
+        </form>
     </div>
 </div>
 
