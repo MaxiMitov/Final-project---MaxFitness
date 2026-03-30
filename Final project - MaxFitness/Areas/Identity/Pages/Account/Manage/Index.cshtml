@@ -8,46 +8,61 @@
 }
 
 <style>
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     .dashboard-wrapper {
         max-width: 1000px;
         margin: 0 auto;
+        animation: fadeInUp 0.5s ease-out;
     }
 
     .dashboard-card {
-        background-color: #1e1e24;
-        border: 1px solid #333;
-        border-radius: 12px;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        transition: all var(--transition-base) cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
         .dashboard-card:hover {
             transform: translateY(-5px);
-            border-color: #0d6efd;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            border-color: var(--border-accent);
+            box-shadow: var(--glow-red);
         }
 
     .text-accent {
-        color: #0d6efd;
+        color: var(--accent);
     }
 
     .stat-number {
         font-size: 3.5rem;
         font-weight: 800;
-        background: -webkit-linear-gradient(#ffffff, #888888);
+        background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        background-clip: text;
         line-height: 1.2;
     }
 
     .achievement-card {
-        background-color: #1a1a20;
-        border: 1px solid #333;
-        border-radius: 12px;
-        transition: transform 0.2s;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        transition: all var(--transition-fast);
     }
 
         .achievement-card:hover {
             transform: scale(1.02);
+            border-color: var(--border-accent);
+            box-shadow: var(--glow-red);
         }
 
     .achievement-locked {
@@ -70,28 +85,28 @@
         padding: 10px 30px;
         font-size: 1.1rem;
         letter-spacing: 0.5px;
-        color: #adb5bd;
-        transition: all 0.2s;
+        color: var(--text-secondary);
+        transition: all var(--transition-fast);
     }
 
         .custom-nav-pills .nav-link:hover {
-            background-color: rgba(13, 110, 253, 0.1);
-            color: #ffffff;
+            background-color: rgba(230, 57, 70, 0.1);
+            color: var(--text-primary);
         }
 
         .custom-nav-pills .nav-link.active {
-            background-color: #0d6efd;
-            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.4);
+            background-color: var(--accent);
+            box-shadow: var(--glow-red);
             color: #ffffff;
         }
 
     .section-title {
         font-size: 1.5rem;
         font-weight: 700;
-        border-bottom: 2px solid #333;
+        border-bottom: 2px solid rgba(230, 57, 70, 0.2);
         padding-bottom: 10px;
         margin-bottom: 25px;
-        color: #e0e0e0;
+        color: var(--text-primary);
     }
 </style>
 
