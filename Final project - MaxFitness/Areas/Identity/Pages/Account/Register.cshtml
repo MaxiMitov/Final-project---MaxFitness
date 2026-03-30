@@ -1,51 +1,190 @@
-﻿@page
+@page
 @model Final_project___MaxFitness.Areas.Identity.Pages.Account.RegisterModel
 @{
     ViewData["Title"] = "Register";
 }
 
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
-    <div class="col-md-5">
-        <div class="card shadow-lg border rounded-4 bg-dark text-white p-4" style="border-color: #f75c2e !important;">
-            <div class="card-body">
-                <div class="text-center mb-4">
-                    <h2 class="fw-bold"><span style="color: #f75c2e;">MAX</span>FITNESS</h2>
-                    <p class="text-muted small">Create your account to start tracking gains!</p>
-                </div>
+<style>
+    .register-wrapper {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
 
-                <form id="registerForm" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+    .register-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 2.5rem 2rem;
+        width: 100%;
+        max-width: 440px;
+        position: relative;
+        overflow: hidden;
+        animation: registerSlideUp 0.5s ease-out;
+    }
 
-                    <div class="form-floating mb-3 text-dark">
-                        <input asp-for="Input.Email" class="form-control rounded-3" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                        <label asp-for="Input.Email">Email</label>
-                        <span asp-validation-for="Input.Email" class="text-danger small"></span>
-                    </div>
+    .register-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
 
-                    <div class="form-floating mb-3 text-dark">
-                        <input asp-for="Input.Password" class="form-control rounded-3" autocomplete="new-password" aria-required="true" placeholder="password" />
-                        <label asp-for="Input.Password">Password</label>
-                        <span asp-validation-for="Input.Password" class="text-danger small"></span>
-                    </div>
+    @@keyframes registerSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(24px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
-                    <div class="form-floating mb-4 text-dark">
-                        <input asp-for="Input.ConfirmPassword" class="form-control rounded-3" autocomplete="new-password" aria-required="true" placeholder="password" />
-                        <label asp-for="Input.ConfirmPassword">Confirm Password</label>
-                        <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
-                    </div>
+    .register-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
 
-                    <button id="registerSubmit" type="submit" class="w-100 btn btn-lg fw-bold rounded-pill mb-3" style="background-color: #f75c2e; border-color: #f75c2e; color: #fff;">
-                        SIGN UP
-                    </button>
+    .register-header h2 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
 
-                    <div class="text-center small">
-                        <p>
-                            Already an athlete? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="fw-bold text-decoration-none" style="color: #f75c2e;">Login Here</a>
-                        </p>
-                    </div>
-                </form>
-            </div>
+    .register-header p {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    .register-form .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .register-form .form-label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 0.4rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .register-form .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        outline: none;
+    }
+
+    .register-form .form-input::placeholder {
+        color: var(--text-dim);
+    }
+
+    .register-form .form-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15);
+    }
+
+    .register-form .field-validation-error,
+    .register-form .text-danger {
+        font-size: 0.78rem;
+        margin-top: 0.3rem;
+        display: block;
+    }
+
+    .register-btn {
+        width: 100%;
+        padding: 0.8rem;
+        background: var(--gradient-primary);
+        border: none;
+        border-radius: var(--radius-md);
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: opacity var(--transition-fast), transform var(--transition-fast);
+        margin-top: 0.5rem;
+    }
+
+    .register-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .register-btn:active {
+        transform: translateY(0);
+    }
+
+    .register-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .register-footer a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+        transition: color var(--transition-fast);
+    }
+
+    .register-footer a:hover {
+        color: var(--accent-secondary);
+    }
+</style>
+
+<div class="register-wrapper">
+    <div class="register-card">
+        <div class="register-header">
+            <h2><span class="text-gradient">MAX</span>FITNESS</h2>
+            <p>Create your account to start tracking gains!</p>
         </div>
+
+        <form id="registerForm" class="register-form" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            <div class="form-group">
+                <label asp-for="Input.Email" class="form-label">Email</label>
+                <input asp-for="Input.Email" class="form-input" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Input.Password" class="form-label">Password</label>
+                <input asp-for="Input.Password" class="form-input" autocomplete="new-password" aria-required="true" placeholder="Enter your password" />
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label asp-for="Input.ConfirmPassword" class="form-label">Confirm Password</label>
+                <input asp-for="Input.ConfirmPassword" class="form-input" autocomplete="new-password" aria-required="true" placeholder="Confirm your password" />
+                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <button id="registerSubmit" type="submit" class="register-btn">SIGN UP</button>
+
+            <div class="register-footer">
+                <p>Already an athlete? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Login Here</a></p>
+            </div>
+        </form>
     </div>
 </div>
 
