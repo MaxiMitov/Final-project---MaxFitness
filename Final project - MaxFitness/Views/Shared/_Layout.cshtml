@@ -46,7 +46,7 @@
                         <a class="nav-btn-workout" asp-area="" asp-controller="Workout" asp-action="Create">
                             <i class="fa-solid fa-plus"></i> New Workout
                         </a>
-                        <a class="nav-user-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Profile">
+                        <a class="nav-user-link" asp-area="" asp-controller="Home" asp-action="Settings" title="Profile">
                             <div class="nav-avatar">
                                 @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "U")
                             </div>
