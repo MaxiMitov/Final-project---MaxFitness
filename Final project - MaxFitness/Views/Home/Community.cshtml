@@ -1,0 +1,1290 @@
+@{
+    ViewData["Title"] = "Community";
+    var currentUser = ViewBag.CurrentUser as string ?? "User";
+    var posts = ViewBag.Posts as System.Collections.IList ?? new List<object>();
+
+    T GetProp<T>(object obj, string prop, T fallback = default) {
+        if (obj == null) return fallback;
+        var pi = obj.GetType().GetProperty(prop);
+        if (pi == null) return fallback;
+        var val = pi.GetValue(obj);
+        if (val == null) return fallback;
+        try { return (T)Convert.ChangeType(val, typeof(T)); } catch { return fallback; }
+    }
+
+    var currentLetter = currentUser.Length > 0 ? currentUser[0].ToString().ToUpper() : "U";
+
+    // Fake active-now users
+    var activeNow = new[] {
+        "IronMike92", "SarahLifts", "BeastModeBen", "QuadKillerK", "NightOwlRex", "CardioQueen"
+    };
+
+    // Trending challenges
+    var challenges = new[] {
+        new { Name = "30-Day Squat Challenge", Icon = "fa-person-running", Participants = 1284, Color = "#e63946" },
+        new { Name = "5K Steps Daily",         Icon = "fa-shoe-prints",    Participants = 876,  Color = "#ff6b35" },
+        new { Name = "No Rest Day Week",        Icon = "fa-fire",           Participants = 543,  Color = "#ffd166" }
+    };
+
+    // Top contributors
+    var topContributors = new[] {
+        new { Name = "IronMike92",  Workouts = 94, Rank = 1 },
+        new { Name = "QuadKillerK", Workouts = 81, Rank = 2 },
+        new { Name = "SarahLifts",  Workouts = 73, Rank = 3 }
+    };
+}
+
+<!-- ============================================================
+     COMMUNITY PAGE
+     ============================================================ -->
+<div class="cm-page">
+    <div class="container">
+
+        <!-- ── PAGE HEADER ──────────────────────────────────────── -->
+        <header class="cm-header reveal-up">
+            <div class="cm-header-icon">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="cm-header-text">
+                <h1 class="cm-title">COMMUNITY</h1>
+                <p class="cm-subtitle">Share your gains, inspire others</p>
+            </div>
+            <div class="cm-header-live">
+                <span class="live-dot"></span> LIVE FEED
+            </div>
+        </header>
+
+        <!-- ── TWO-COLUMN LAYOUT ────────────────────────────────── -->
+        <div class="cm-layout">
+
+            <!-- ══ MAIN FEED COLUMN ═══════════════════════════════ -->
+            <div class="cm-feed-col">
+
+                <!-- ── CREATE POST CARD ─────────────────────────── -->
+                <div class="cm-create-card reveal-up">
+                    <div class="cm-create-top">
+                        <div class="cm-avatar cm-avatar-me">@currentLetter</div>
+                        <textarea
+                            class="cm-textarea"
+                            placeholder="Share your workout or thoughts..."
+                            rows="3"
+                            onclick="this.rows=5"
+                            onfocusout="if(!this.value)this.rows=3"
+                        ></textarea>
+                    </div>
+                    <div class="cm-create-actions">
+                        <button class="cm-attach-btn" type="button">
+                            <i class="fa-solid fa-dumbbell"></i> Log Workout
+                        </button>
+                        <button class="cm-attach-btn" type="button">
+                            <i class="fa-solid fa-image"></i> Photo
+                        </button>
+                        <button class="cm-attach-btn" type="button">
+                            <i class="fa-solid fa-chart-line"></i> Progress
+                        </button>
+                        <button class="cm-post-btn" type="button">
+                            <i class="fa-solid fa-paper-plane"></i> Post
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ── FEED FILTER TABS ──────────────────────────── -->
+                <div class="cm-feed-tabs reveal-up">
+                    <button class="cm-tab-btn active" onclick="setCmTab(this)">
+                        <i class="fa-solid fa-fire"></i> All Posts
+                    </button>
+                    <button class="cm-tab-btn" onclick="setCmTab(this)">
+                        <i class="fa-solid fa-dumbbell"></i> Workouts
+                    </button>
+                    <button class="cm-tab-btn" onclick="setCmTab(this)">
+                        <i class="fa-solid fa-users"></i> Following
+                    </button>
+                </div>
+
+                <!-- ── POST FEED ─────────────────────────────────── -->
+                @if (posts.Count > 0)
+                {
+                    int postIndex = 0;
+                    foreach (var post in posts)
+                    {
+                        var userName     = GetProp<string>(post, "UserName",     "Athlete");
+                        var timeAgo      = GetProp<string>(post, "TimeAgo",      "just now");
+                        var content      = GetProp<string>(post, "Content",      "");
+                        var workoutName  = GetProp<string>(post, "WorkoutName",  "");
+                        var duration     = GetProp<string>(post, "Duration",     "");
+                        var exerciseCount= GetProp<int>   (post, "ExerciseCount",0);
+                        var intensity    = GetProp<string>(post, "Intensity",    "");
+                        var likes        = GetProp<int>   (post, "Likes",        0);
+                        var comments     = GetProp<int>   (post, "Comments",     0);
+                        var isWorkout    = !string.IsNullOrEmpty(workoutName);
+                        var postLetter   = userName.Length > 0 ? userName[0].ToString().ToUpper() : "?";
+                        var isMe         = userName == currentUser;
+
+                        // Muscle groups
+                        var muscleGroups = new List<string>();
+                        var mgRaw = post.GetType().GetProperty("MuscleGroups")?.GetValue(post);
+                        if (mgRaw is System.Collections.IEnumerable mgEnum && !(mgRaw is string)) {
+                            foreach (var mg in mgEnum) {
+                                if (mg != null) muscleGroups.Add(mg.ToString()!);
+                            }
+                        }
+
+                        // Intensity color
+                        var intensityColor = intensity?.ToLower() switch {
+                            "high"   => "#e63946",
+                            "medium" => "#ff6b35",
+                            "low"    => "#4caf50",
+                            _        => "#8b8b9e"
+                        };
+
+                        <article class="cm-post-card reveal-up" id="post-@postIndex" style="animation-delay: @(postIndex * 0.07)s">
+                            <!-- Post Header -->
+                            <div class="cm-post-header">
+                                <div class="cm-avatar cm-avatar-user">@postLetter</div>
+                                <div class="cm-post-meta">
+                                    <span class="cm-post-username">@userName @(isMe ? "<span class='you-tag'>YOU</span>" : "")</span>
+                                    <span class="cm-post-time">
+                                        <i class="fa-regular fa-clock"></i> @timeAgo
+                                    </span>
+                                </div>
+                                <button class="cm-post-more" type="button">
+                                    <i class="fa-solid fa-ellipsis"></i>
+                                </button>
+                            </div>
+
+                            <!-- Post Content -->
+                            @if (!string.IsNullOrEmpty(content))
+                            {
+                                <p class="cm-post-content">@content</p>
+                            }
+
+                            <!-- Workout Summary Box -->
+                            @if (isWorkout)
+                            {
+                                <div class="cm-workout-box">
+                                    <div class="cm-workout-header">
+                                        <i class="fa-solid fa-dumbbell cm-workout-icon"></i>
+                                        <span class="cm-workout-name">@workoutName</span>
+                                        @if (!string.IsNullOrEmpty(intensity))
+                                        {
+                                            <span class="cm-intensity-badge" style="--int-color: @intensityColor">@intensity</span>
+                                        }
+                                    </div>
+                                    <div class="cm-workout-stats">
+                                        @if (!string.IsNullOrEmpty(duration))
+                                        {
+                                            <div class="cm-wstat">
+                                                <i class="fa-regular fa-clock"></i>
+                                                <span>@duration</span>
+                                                <small>duration</small>
+                                            </div>
+                                        }
+                                        @if (exerciseCount > 0)
+                                        {
+                                            <div class="cm-wstat">
+                                                <i class="fa-solid fa-list-check"></i>
+                                                <span>@exerciseCount</span>
+                                                <small>exercises</small>
+                                            </div>
+                                        }
+                                        @if (muscleGroups.Count > 0)
+                                        {
+                                            <div class="cm-wstat">
+                                                <i class="fa-solid fa-person-dots-from-line"></i>
+                                                <span>@muscleGroups.Count</span>
+                                                <small>muscle groups</small>
+                                            </div>
+                                        }
+                                    </div>
+                                    @if (muscleGroups.Count > 0)
+                                    {
+                                        <div class="cm-muscle-tags">
+                                            @foreach (var mg in muscleGroups)
+                                            {
+                                                <span class="cm-muscle-tag">@mg</span>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            <!-- Action Row -->
+                            <div class="cm-post-actions">
+                                <button class="cm-action-btn cm-like-btn" onclick="toggleLike(this)" type="button">
+                                    <i class="fa-regular fa-heart"></i>
+                                    <span class="cm-like-count">@likes</span>
+                                </button>
+                                <button class="cm-action-btn" type="button">
+                                    <i class="fa-regular fa-comment"></i>
+                                    <span>@comments</span>
+                                </button>
+                                <button class="cm-action-btn" type="button">
+                                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                                    <span>Share</span>
+                                </button>
+                                <button class="cm-action-btn cm-bookmark-btn" onclick="toggleBookmark(this)" type="button">
+                                    <i class="fa-regular fa-bookmark"></i>
+                                </button>
+                            </div>
+                        </article>
+                        postIndex++;
+                    }
+                }
+                else
+                {
+                    <!-- Empty State -->
+                    <div class="cm-empty reveal-up">
+                        <div class="cm-empty-icon-wrap">
+                            <i class="fa-solid fa-comments cm-empty-icon"></i>
+                        </div>
+                        <h3>No posts yet</h3>
+                        <p>Be the first to share your gains with the community!</p>
+                        <button class="cm-empty-cta" type="button">
+                            <i class="fa-solid fa-plus"></i> Create First Post
+                        </button>
+                    </div>
+                }
+
+            </div><!-- /cm-feed-col -->
+
+            <!-- ══ RIGHT SIDEBAR ══════════════════════════════════ -->
+            <aside class="cm-sidebar">
+
+                <!-- ── ACTIVE NOW ───────────────────────────────── -->
+                <div class="cm-sidebar-card reveal-up">
+                    <div class="cm-sidebar-title">
+                        <span class="online-pulse"></span> Active Now
+                    </div>
+                    <ul class="cm-active-list">
+                        @foreach (var user in activeNow)
+                        {
+                            var letter = user.Length > 0 ? user[0].ToString().ToUpper() : "?";
+                            <li class="cm-active-item">
+                                <div class="cm-active-avatar-wrap">
+                                    <div class="cm-avatar cm-avatar-sm cm-avatar-user">@letter</div>
+                                    <span class="cm-online-dot"></span>
+                                </div>
+                                <span class="cm-active-name">@user</span>
+                                <button class="cm-follow-btn" type="button">Follow</button>
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                <!-- ── TRENDING CHALLENGES ──────────────────────── -->
+                <div class="cm-sidebar-card reveal-up" style="animation-delay:0.12s">
+                    <div class="cm-sidebar-title">
+                        <i class="fa-solid fa-bolt" style="color:#ffd166"></i> Trending Challenges
+                    </div>
+                    <div class="cm-challenges">
+                        @foreach (var ch in challenges)
+                        {
+                            <div class="cm-challenge-card" style="--ch-color: @ch.Color">
+                                <div class="cm-challenge-icon">
+                                    <i class="fa-solid @ch.Icon"></i>
+                                </div>
+                                <div class="cm-challenge-info">
+                                    <span class="cm-challenge-name">@ch.Name</span>
+                                    <span class="cm-challenge-count">
+                                        <i class="fa-solid fa-users"></i> @ch.Participants.ToString("N0") joined
+                                    </span>
+                                </div>
+                                <button class="cm-join-btn" onclick="toggleJoin(this)" type="button">Join</button>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- ── TOP CONTRIBUTORS ─────────────────────────── -->
+                <div class="cm-sidebar-card reveal-up" style="animation-delay:0.22s">
+                    <div class="cm-sidebar-title">
+                        <i class="fa-solid fa-trophy" style="color:#ffd166"></i> Top Contributors
+                    </div>
+                    <div class="cm-contributors">
+                        @foreach (var contrib in topContributors)
+                        {
+                            var cLetter = contrib.Name.Length > 0 ? contrib.Name[0].ToString().ToUpper() : "?";
+                            var rankColors = new[] { "#ffd166", "#c0c0d2", "#cd7f32" };
+                            var rankColor  = rankColors[contrib.Rank - 1];
+                            <div class="cm-contrib-row">
+                                <span class="cm-contrib-rank" style="color: @rankColor">#@contrib.Rank</span>
+                                <div class="cm-avatar cm-avatar-sm cm-avatar-user">@cLetter</div>
+                                <div class="cm-contrib-info">
+                                    <span class="cm-contrib-name">@contrib.Name</span>
+                                    <span class="cm-contrib-count">@contrib.Workouts workouts</span>
+                                </div>
+                                <div class="cm-contrib-bar-wrap">
+                                    <div class="cm-contrib-bar" style="width: @(Math.Round((double)contrib.Workouts / topContributors[0].Workouts * 100))%; background: @rankColor"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- ── HASHTAG SUGGESTION ───────────────────────── -->
+                <div class="cm-sidebar-card reveal-up" style="animation-delay:0.3s">
+                    <div class="cm-sidebar-title">
+                        <i class="fa-solid fa-hashtag" style="color:#ff6b35"></i> Popular Tags
+                    </div>
+                    <div class="cm-tags-cloud">
+                        <span class="cm-cloud-tag">#legday</span>
+                        <span class="cm-cloud-tag">#pushpulllegs</span>
+                        <span class="cm-cloud-tag">#gainz</span>
+                        <span class="cm-cloud-tag">#consistency</span>
+                        <span class="cm-cloud-tag">#chestday</span>
+                        <span class="cm-cloud-tag">#noexcuses</span>
+                        <span class="cm-cloud-tag">#pr</span>
+                        <span class="cm-cloud-tag">#deadlift</span>
+                    </div>
+                </div>
+
+            </aside><!-- /cm-sidebar -->
+
+        </div><!-- /cm-layout -->
+    </div><!-- /container -->
+</div><!-- /cm-page -->
+
+<!-- ============================================================
+     STYLES
+     ============================================================ -->
+<style>
+
+/* ── Keyframe Animations ──────────────────────────────────────── */
+@@keyframes revealUp {
+    from { opacity: 0; transform: translateY(26px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@@keyframes shimmerText {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
+}
+
+@@keyframes livePulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(76,175,80,0.6); }
+    50%       { opacity: 0.7; box-shadow: 0 0 0 5px rgba(76,175,80,0); }
+}
+
+@@keyframes onlinePing {
+    0%   { transform: scale(1); opacity: 1; }
+    100% { transform: scale(2.4); opacity: 0; }
+}
+
+@@keyframes heartPop {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.45); }
+    60%  { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+
+@@keyframes floatUp {
+    0%   { opacity: 0; transform: translateY(0) scale(0.7); }
+    40%  { opacity: 1; transform: translateY(-14px) scale(1.1); }
+    100% { opacity: 0; transform: translateY(-28px) scale(0.9); }
+}
+
+/* ── Page Shell ───────────────────────────────────────────────── */
+.cm-page {
+    padding: 2.5rem 0 6rem;
+    min-height: 100vh;
+    background: var(--bg-primary);
+}
+
+.reveal-up {
+    animation: revealUp 0.5s ease both;
+}
+
+/* ── Page Header ──────────────────────────────────────────────── */
+.cm-header {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.cm-header-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 0 22px rgba(230, 57, 70, 0.4);
+}
+
+.cm-title {
+    font-size: clamp(1.9rem, 5vw, 3rem);
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    margin: 0;
+    background: linear-gradient(90deg, #e63946 0%, #ff6b35 45%, #ffd166 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmerText 4s linear infinite;
+}
+
+.cm-subtitle {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.cm-header-live {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(76,175,80,0.12);
+    border: 1px solid rgba(76,175,80,0.35);
+    color: #4caf50;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4caf50;
+    animation: livePulse 2s ease-in-out infinite;
+    display: inline-block;
+}
+
+/* ── Two-Column Layout ────────────────────────────────────────── */
+.cm-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.75rem;
+    align-items: start;
+}
+
+/* ── Feed Column ──────────────────────────────────────────────── */
+.cm-feed-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+/* ── Avatar Circles ───────────────────────────────────────────── */
+.cm-avatar {
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.cm-avatar-me {
+    width: 46px;
+    height: 46px;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+    color: #fff;
+    box-shadow: 0 0 14px rgba(230,57,70,0.4);
+}
+
+.cm-avatar-user {
+    width: 46px;
+    height: 46px;
+    font-size: 1.05rem;
+    background: linear-gradient(135deg, #2a2a3a, #3d3d52);
+    color: var(--text-primary);
+    border: 2px solid rgba(255,255,255,0.1);
+}
+
+.cm-avatar-sm {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 0.85rem !important;
+}
+
+/* ── Create Post Card ─────────────────────────────────────────── */
+.cm-create-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 1.25rem 1.4rem;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cm-create-card:focus-within {
+    border-color: rgba(230,57,70,0.4);
+    box-shadow: 0 0 22px rgba(230,57,70,0.12);
+}
+
+.cm-create-top {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.cm-textarea {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    resize: none;
+    transition: border-color 0.22s ease, background 0.22s ease;
+    outline: none;
+}
+
+.cm-textarea::placeholder { color: var(--text-secondary); }
+
+.cm-textarea:focus {
+    border-color: rgba(230,57,70,0.4);
+    background: rgba(255,255,255,0.06);
+}
+
+.cm-create-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.cm-attach-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.cm-attach-btn:hover {
+    border-color: rgba(255,107,53,0.4);
+    color: var(--accent-secondary);
+    background: rgba(255,107,53,0.07);
+}
+
+.cm-post-btn {
+    margin-left: auto;
+    background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+    border: none;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    padding: 0.5rem 1.3rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    letter-spacing: 0.03em;
+    box-shadow: 0 4px 14px rgba(230,57,70,0.3);
+}
+
+.cm-post-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230,57,70,0.45);
+}
+
+/* ── Feed Filter Tabs ─────────────────────────────────────────── */
+.cm-feed-tabs {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.cm-tab-btn {
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255,255,255,0.07);
+    color: var(--text-secondary);
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.cm-tab-btn:hover {
+    border-color: rgba(230,57,70,0.3);
+    color: var(--text-primary);
+}
+
+.cm-tab-btn.active {
+    background: linear-gradient(135deg, rgba(230,57,70,0.18), rgba(255,107,53,0.1));
+    border-color: rgba(230,57,70,0.5);
+    color: var(--accent);
+}
+
+/* ── Post Cards ───────────────────────────────────────────────── */
+.cm-post-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px;
+    padding: 1.3rem 1.4rem;
+    transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cm-post-card:hover {
+    border-color: rgba(255,255,255,0.13);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+}
+
+.cm-post-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 0.9rem;
+}
+
+.cm-post-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.cm-post-username {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.you-tag {
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    background: var(--accent);
+    color: #fff;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+}
+
+.cm-post-time {
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.cm-post-more {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.3rem 0.5rem;
+    border-radius: 8px;
+    transition: background 0.2s ease, color 0.2s ease;
+    font-size: 1rem;
+}
+
+.cm-post-more:hover {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-primary);
+}
+
+.cm-post-content {
+    font-size: 0.93rem;
+    line-height: 1.65;
+    color: var(--text-primary);
+    margin: 0 0 0.9rem;
+}
+
+/* ── Workout Summary Box ──────────────────────────────────────── */
+.cm-workout-box {
+    background: linear-gradient(135deg, rgba(230,57,70,0.08) 0%, rgba(255,107,53,0.05) 100%);
+    border: 1px solid rgba(230,57,70,0.22);
+    border-radius: 14px;
+    padding: 1rem 1.15rem;
+    margin-bottom: 1rem;
+}
+
+.cm-workout-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
+}
+
+.cm-workout-icon {
+    color: var(--accent);
+    font-size: 1rem;
+}
+
+.cm-workout-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.cm-intensity-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--int-color, #8b8b9e);
+    background: color-mix(in srgb, var(--int-color, #8b8b9e) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--int-color, #8b8b9e) 40%, transparent);
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+}
+
+.cm-workout-stats {
+    display: flex;
+    gap: 1.25rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.cm-wstat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    min-width: 60px;
+}
+
+.cm-wstat i    { font-size: 0.8rem; color: var(--accent-secondary); margin-bottom: 0.1rem; }
+.cm-wstat span { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+.cm-wstat small{ font-size: 0.62rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.cm-muscle-tags {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.cm-muscle-tag {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--accent-secondary);
+    background: rgba(255,107,53,0.1);
+    border: 1px solid rgba(255,107,53,0.22);
+    padding: 0.18rem 0.6rem;
+    border-radius: 999px;
+    text-transform: capitalize;
+}
+
+/* ── Post Action Row ──────────────────────────────────────────── */
+.cm-post-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.cm-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    padding: 0.45rem 0.8rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+}
+
+.cm-action-btn:hover {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-primary);
+}
+
+.cm-action-btn i { font-size: 0.95rem; }
+
+.cm-like-btn.liked {
+    color: var(--accent);
+}
+
+.cm-like-btn.liked i {
+    animation: heartPop 0.4s ease;
+    color: var(--accent);
+}
+
+.cm-like-btn.liked i::before {
+    content: "\f004"; /* fa-heart solid */
+    font-weight: 900;
+}
+
+.cm-bookmark-btn.saved {
+    color: #ffd166;
+}
+
+.cm-bookmark-btn.saved i::before {
+    content: "\f02e"; /* fa-bookmark solid */
+    font-weight: 900;
+}
+
+.cm-post-actions .cm-bookmark-btn {
+    margin-left: auto;
+}
+
+/* ── Empty State ──────────────────────────────────────────────── */
+.cm-empty {
+    background: var(--bg-card);
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 18px;
+    padding: 4rem 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.cm-empty-icon-wrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(230,57,70,0.08);
+    border: 1px solid rgba(230,57,70,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+}
+
+.cm-empty-icon {
+    font-size: 2.2rem;
+    color: var(--accent);
+    opacity: 0.6;
+}
+
+.cm-empty h3 {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+}
+
+.cm-empty p {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.cm-empty-cta {
+    background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+    border: none;
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    padding: 0.65rem 1.5rem;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: all 0.22s ease;
+    box-shadow: 0 4px 14px rgba(230,57,70,0.3);
+}
+
+.cm-empty-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230,57,70,0.45);
+}
+
+/* ══ Sidebar ══════════════════════════════════════════════════════ */
+.cm-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    position: sticky;
+    top: 1.5rem;
+}
+
+.cm-sidebar-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px;
+    padding: 1.15rem 1.25rem;
+}
+
+.cm-sidebar-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Active Now ───────────────────────────────────────────────── */
+.online-pulse {
+    width: 8px;
+    height: 8px;
+    background: #4caf50;
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+}
+
+.online-pulse::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: #4caf50;
+    animation: onlinePing 1.8s ease-out infinite;
+}
+
+.cm-active-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.cm-active-item {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.cm-active-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.cm-online-dot {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    width: 9px;
+    height: 9px;
+    background: #4caf50;
+    border-radius: 50%;
+    border: 2px solid var(--bg-card);
+}
+
+.cm-active-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cm-follow-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+.cm-follow-btn:hover,
+.cm-follow-btn.following {
+    background: rgba(230,57,70,0.14);
+    border-color: rgba(230,57,70,0.45);
+    color: var(--accent);
+}
+
+/* ── Trending Challenges ──────────────────────────────────────── */
+.cm-challenges {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.cm-challenge-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 0.7rem 0.85rem;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.cm-challenge-card:hover {
+    border-color: color-mix(in srgb, var(--ch-color) 40%, transparent);
+    background: color-mix(in srgb, var(--ch-color) 6%, transparent);
+}
+
+.cm-challenge-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--ch-color) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ch-color) 35%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: var(--ch-color);
+    flex-shrink: 0;
+}
+
+.cm-challenge-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.cm-challenge-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cm-challenge-count {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.cm-join-btn {
+    background: none;
+    border: 1px solid color-mix(in srgb, var(--ch-color) 50%, transparent);
+    color: var(--ch-color);
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+}
+
+.cm-join-btn:hover,
+.cm-join-btn.joined {
+    background: color-mix(in srgb, var(--ch-color) 18%, transparent);
+}
+
+.cm-join-btn.joined::before {
+    content: "✓ ";
+}
+
+/* ── Top Contributors ─────────────────────────────────────────── */
+.cm-contributors {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.cm-contrib-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.cm-contrib-rank {
+    font-size: 0.82rem;
+    font-weight: 900;
+    min-width: 22px;
+    text-align: right;
+}
+
+.cm-contrib-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.cm-contrib-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cm-contrib-count {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+}
+
+.cm-contrib-bar-wrap {
+    width: 48px;
+    height: 4px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 999px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.cm-contrib-bar {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.5s ease;
+}
+
+/* ── Popular Tags Cloud ───────────────────────────────────────── */
+.cm-tags-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.cm-cloud-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cm-cloud-tag:hover {
+    color: var(--accent-secondary);
+    border-color: rgba(255,107,53,0.35);
+    background: rgba(255,107,53,0.07);
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@@media (max-width: 992px) {
+    .cm-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .cm-sidebar {
+        position: static;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+}
+
+@@media (max-width: 640px) {
+    .cm-header-live { display: none; }
+
+    .cm-sidebar {
+        grid-template-columns: 1fr;
+    }
+
+    .cm-create-actions {
+        gap: 0.4rem;
+    }
+
+    .cm-attach-btn {
+        font-size: 0.74rem;
+        padding: 0.38rem 0.65rem;
+    }
+
+    .cm-post-btn {
+        padding: 0.45rem 1rem;
+    }
+
+    .cm-feed-tabs {
+        overflow-x: auto;
+        padding-bottom: 0.25rem;
+    }
+
+    .cm-tab-btn {
+        white-space: nowrap;
+    }
+}
+
+</style>
+
+<script>
+// Like toggle with count increment
+function toggleLike(btn) {
+    var countEl = btn.querySelector('.cm-like-count');
+    var count   = parseInt(countEl.textContent, 10) || 0;
+
+    if (btn.classList.contains('liked')) {
+        btn.classList.remove('liked');
+        countEl.textContent = count - 1;
+    } else {
+        btn.classList.add('liked');
+        countEl.textContent = count + 1;
+    }
+}
+
+// Bookmark toggle
+function toggleBookmark(btn) {
+    btn.classList.toggle('saved');
+}
+
+// Feed filter tabs
+function setCmTab(btn) {
+    document.querySelectorAll('.cm-tab-btn').forEach(function(b) {
+        b.classList.remove('active');
+    });
+    btn.classList.add('active');
+}
+
+// Challenge join toggle
+function toggleJoin(btn) {
+    if (btn.classList.contains('joined')) {
+        btn.classList.remove('joined');
+        btn.textContent = 'Join';
+    } else {
+        btn.classList.add('joined');
+        btn.textContent = '\u2713 Joined';
+    }
+}
+
+// Follow toggle
+document.querySelectorAll('.cm-follow-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        if (this.classList.contains('following')) {
+            this.classList.remove('following');
+            this.textContent = 'Follow';
+        } else {
+            this.classList.add('following');
+            this.textContent = 'Following';
+        }
+    });
+});
+</script>
