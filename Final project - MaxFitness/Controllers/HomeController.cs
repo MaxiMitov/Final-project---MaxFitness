@@ -50,10 +50,21 @@ namespace Final_project___MaxFitness.Controllers
         public async Task<IActionResult> Back() => await GetMuscleView("Back");
         public async Task<IActionResult> Legs() => await GetMuscleView("Legs");
         public async Task<IActionResult> Arms() => await GetMuscleView("Arms");
+        public async Task<IActionResult> Shoulders() => await GetMuscleView("Shoulders");
+        public async Task<IActionResult> Abs() => await GetMuscleView("Abs");
+        public async Task<IActionResult> Forearms() => await GetMuscleView("Forearms");
+        public async Task<IActionResult> Triceps() => await GetMuscleView("Triceps");
+        public async Task<IActionResult> Biceps() => await GetMuscleView("Biceps");
 
         private async Task<IActionResult> GetMuscleView(string muscleName)
         {
-            var statsTask = _muscleService.GetMuscleStatsAsync(muscleName);
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            var statsTask = _muscleService.GetMuscleStatsAsync(muscleName, userId);
             var exerciseTask = _muscleService.GetExercisesAsync(muscleName);
 
             await Task.WhenAll(statsTask, exerciseTask);
