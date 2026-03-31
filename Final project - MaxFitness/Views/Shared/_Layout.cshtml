@@ -40,6 +40,12 @@
                 <div class="nav-right">
                     @if (SignInManager.IsSignedIn(User))
                     {
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a class="nav-link-maxfit" asp-area="" asp-controller="Admin" asp-action="Index" style="color: #ffd166;">
+                                <i class="fa-solid fa-shield-halved"></i> <span>Admin</span>
+                            </a>
+                        }
                         <a class="nav-btn-workout" asp-area="" asp-controller="Workout" asp-action="Index">
                             <i class="fa-solid fa-plus"></i> New Workout
                         </a>
