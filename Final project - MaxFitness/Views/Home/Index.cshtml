@@ -31,92 +31,46 @@
     // Intensity ring calculation
     var circumference = 2 * Math.PI * 26; // r=26
     var intensityOffset = circumference - (stats.AvgIntensity / 100.0 * circumference);
+
+    // Weekly goal ring
+    var goalCircumference = 2 * Math.PI * 20; // r=20
+    var goalOffset = goalCircumference - (stats.WeeklyProgressPercent / 100.0 * goalCircumference);
+
+    // Today's date
+    var todayFormatted = DateTime.Now.ToString("dddd, MMMM d");
+    var remaining = Math.Max(0, stats.WeeklyGoal - stats.WeeklyWorkouts);
 }
 
 <!-- ============================================================
-     HERO SECTION
+     WELCOME HEADER
      ============================================================ -->
-<section class="hero-section reveal" id="hero">
-    <div class="hero-grid-overlay"></div>
-    <div class="hero-particles">
-        <span class="particle particle-1"></span>
-        <span class="particle particle-2"></span>
-        <span class="particle particle-3"></span>
-        <span class="particle particle-4"></span>
-        <span class="particle particle-5"></span>
-        <span class="particle particle-6"></span>
-        <span class="particle particle-7"></span>
-        <span class="particle particle-8"></span>
-    </div>
-
-    <div class="container hero-container">
-        <div class="hero-content">
-            <h1 class="hero-heading">
-                <span class="hero-line">
-                    <span class="text-gradient">TRAIN</span> HARDER
-                </span>
-                <span class="hero-line">
-                    <span class="text-gradient">TRACK</span> SMARTER
-                </span>
-            </h1>
-            <p class="hero-subtitle">
-                Your complete fitness command center. Monitor every muscle, optimize every rep.
-            </p>
-            <div class="hero-cta-group">
-                <a asp-action="Index" asp-controller="Workout" class="btn-accent btn-lg hero-cta-primary">
+<section class="welcome-section reveal" id="welcome">
+    <div class="container">
+        <div class="welcome-inner">
+            <div class="welcome-left">
+                <p class="welcome-date">@todayFormatted</p>
+                <h1 class="welcome-heading">
+                    Welcome back, <span class="text-gradient">@(User.Identity?.Name ?? "Athlete")</span>
+                </h1>
+                <p class="welcome-sub">
+                    @if (stats.Streak >= 7)
+                    {
+                        <span><i class="fa-solid fa-fire" style="color: #ff6b35;"></i> You're on a <strong>@stats.Streak-day streak</strong> — keep the momentum going.</span>
+                    }
+                    else if (stats.WeeklyWorkouts >= stats.WeeklyGoal)
+                    {
+                        <span><i class="fa-solid fa-trophy" style="color: #ffd166;"></i> Weekly goal reached. Outstanding work this week.</span>
+                    }
+                    else
+                    {
+                        <span>@(remaining == 0 ? "All goals met — rest or push further." : $"{remaining} workout{(remaining == 1 ? "" : "s")} left to hit your weekly goal.")</span>
+                    }
+                </p>
+            </div>
+            <div class="welcome-right">
+                <a asp-action="Index" asp-controller="Workout" class="btn-accent btn-lg">
                     <i class="fa-solid fa-bolt"></i> Start Workout
                 </a>
-                <a asp-action="Progress" asp-controller="Home" class="btn-ghost btn-lg hero-cta-secondary">
-                    <i class="fa-solid fa-chart-line"></i> View Progress
-                </a>
-            </div>
-        </div>
-        <div class="hero-visual">
-            <svg class="hero-hud-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
-                <!-- Outer rings -->
-                <circle cx="250" cy="250" r="220" fill="none" stroke="rgba(230,57,70,0.08)" stroke-width="1" />
-                <circle cx="250" cy="250" r="180" fill="none" stroke="rgba(230,57,70,0.06)" stroke-width="1" stroke-dasharray="8 4" />
-                <circle cx="250" cy="250" r="140" fill="none" stroke="rgba(230,57,70,0.04)" stroke-width="1" />
-                <!-- Crosshairs -->
-                <line x1="250" y1="20" x2="250" y2="480" stroke="rgba(230,57,70,0.05)" stroke-width="1" />
-                <line x1="20" y1="250" x2="480" y2="250" stroke="rgba(230,57,70,0.05)" stroke-width="1" />
-                <!-- Corner brackets -->
-                <path d="M60,60 L60,100" fill="none" stroke="rgba(230,57,70,0.15)" stroke-width="2" />
-                <path d="M60,60 L100,60" fill="none" stroke="rgba(230,57,70,0.15)" stroke-width="2" />
-                <path d="M440,60 L440,100" fill="none" stroke="rgba(230,57,70,0.15)" stroke-width="2" />
-                <path d="M440,60 L400,60" fill="none" stroke="rgba(230,57,70,0.15)" stroke-width="2" />
-                <path d="M60,440 L60,400" fill="none" stroke="rgba(230,57,70,0.15)" stroke-width="2" />
-                <path d="M60,440 L100,440" fill="none" stroke="rgba(230,57,70,0.15)" stroke-width="2" />
-                <path d="M440,440 L440,400" fill="none" stroke="rgba(230,57,70,0.15)" stroke-width="2" />
-                <path d="M440,440 L400,440" fill="none" stroke="rgba(230,57,70,0.15)" stroke-width="2" />
-                <!-- Rotating ring -->
-                <circle cx="250" cy="250" r="200" fill="none" stroke="rgba(255,107,53,0.12)" stroke-width="1.5" stroke-dasharray="20 10 5 10" class="hud-ring-rotate" />
-                <!-- Data points -->
-                <circle cx="250" cy="50" r="4" fill="rgba(230,57,70,0.3)" class="hud-pulse" />
-                <circle cx="450" cy="250" r="4" fill="rgba(255,107,53,0.3)" class="hud-pulse" style="animation-delay: 0.5s" />
-                <circle cx="250" cy="450" r="4" fill="rgba(255,209,102,0.3)" class="hud-pulse" style="animation-delay: 1s" />
-                <circle cx="50" cy="250" r="4" fill="rgba(230,57,70,0.3)" class="hud-pulse" style="animation-delay: 1.5s" />
-            </svg>
-        </div>
-    </div>
-
-    <div class="hero-stats-ticker">
-        <div class="container">
-            <div class="ticker-inner">
-                <div class="ticker-item">
-                    <span class="ticker-value">12,450+</span>
-                    <span class="ticker-label">Workouts Logged</span>
-                </div>
-                <div class="ticker-divider"></div>
-                <div class="ticker-item">
-                    <span class="ticker-value">3,200+</span>
-                    <span class="ticker-label">Athletes</span>
-                </div>
-                <div class="ticker-divider"></div>
-                <div class="ticker-item">
-                    <span class="ticker-value">98%</span>
-                    <span class="ticker-label">Satisfaction</span>
-                </div>
             </div>
         </div>
     </div>
@@ -126,77 +80,330 @@
 <!-- ============================================================
      QUICK STATS ROW
      ============================================================ -->
-<section class="section-padding reveal reveal-up" id="quick-stats">
+<section class="stats-section reveal-up" id="quick-stats">
     <div class="container">
         <div class="stat-grid">
-            <!-- Card 1: Weekly Workouts -->
+
+            <!-- Weekly Workouts -->
             <div class="stat-card">
-                <div class="stat-card-icon">
-                    <i class="fa-solid fa-dumbbell"></i>
-                </div>
-                <div class="stat-card-body">
-                    <span class="stat-card-label">Weekly Workouts</span>
-                    <span class="stat-card-value">@stats.WeeklyWorkouts<span class="stat-card-unit">/@stats.WeeklyGoal</span></span>
-                    <div class="stat-progress-bar">
-                        <div class="stat-progress-fill" style="width: @(stats.WeeklyProgressPercent)%;"></div>
+                <div class="stat-card-top">
+                    <div class="stat-ring-wrap">
+                        <svg viewBox="0 0 50 50" class="stat-ring-svg">
+                            <defs>
+                                <linearGradient id="ringGradGoal" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#e63946" />
+                                    <stop offset="100%" stop-color="#ff6b35" />
+                                </linearGradient>
+                            </defs>
+                            <circle cx="25" cy="25" r="20" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="4" />
+                            <circle cx="25" cy="25" r="20" fill="none" stroke="url(#ringGradGoal)" stroke-width="4"
+                                    stroke-dasharray="@goalCircumference.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
+                                    stroke-dashoffset="@goalOffset.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
+                                    stroke-linecap="round" transform="rotate(-90 25 25)" />
+                        </svg>
+                        <span class="stat-ring-value">@stats.WeeklyWorkouts</span>
                     </div>
-                    @{ var remaining = Math.Max(0, stats.WeeklyGoal - stats.WeeklyWorkouts); }
-                    <span class="stat-card-detail">@(remaining == 0 ? "Goal reached!" : $"{remaining} workout{(remaining == 1 ? "" : "s")} remaining")</span>
+                    <div class="stat-card-text">
+                        <span class="stat-label">Weekly Workouts</span>
+                        <span class="stat-value">@stats.WeeklyWorkouts<span class="stat-unit"> / @stats.WeeklyGoal</span></span>
+                        <span class="stat-detail">@(remaining == 0 ? "Goal complete" : $"{remaining} to go")</span>
+                    </div>
+                </div>
+                <div class="stat-bar-track">
+                    <div class="stat-bar-fill" style="width: @(stats.WeeklyProgressPercent)%;"></div>
                 </div>
             </div>
 
-            <!-- Card 2: Active Streak -->
-            <div class="stat-card">
-                <div class="stat-card-icon stat-card-icon--fire">
-                    <i class="fa-solid fa-fire"></i>
-                </div>
-                <div class="stat-card-body">
-                    <span class="stat-card-label">Active Streak</span>
-                    <span class="stat-card-value">@stats.Streak <span class="stat-card-unit">@(stats.Streak == 1 ? "Day" : "Days")</span></span>
-                    @if (stats.Streak >= 7)
-                    {
-                        <span class="stat-badge stat-badge--gold">
-                            <i class="fa-solid fa-trophy"></i> On Fire!
-                        </span>
-                    }
-                </div>
-            </div>
-
-            <!-- Card 3: Calories Burned -->
-            <div class="stat-card">
-                <div class="stat-card-icon stat-card-icon--lightning">
-                    <i class="fa-solid fa-bolt-lightning"></i>
-                </div>
-                <div class="stat-card-body">
-                    <span class="stat-card-label">Calories Burned</span>
-                    <span class="stat-card-value">@stats.CaloriesThisWeek.ToString("N0")</span>
-                    <span class="stat-card-detail">This Week</span>
+            <!-- Active Streak -->
+            <div class="stat-card stat-card--fire">
+                <div class="stat-card-top">
+                    <div class="stat-icon-box stat-icon-box--fire">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <div class="stat-card-text">
+                        <span class="stat-label">Active Streak</span>
+                        <span class="stat-value">@stats.Streak<span class="stat-unit"> @(stats.Streak == 1 ? "day" : "days")</span></span>
+                        @if (stats.Streak >= 7)
+                        {
+                            <span class="stat-badge stat-badge--gold"><i class="fa-solid fa-trophy"></i> On Fire</span>
+                        }
+                        else
+                        {
+                            <span class="stat-detail">Keep going!</span>
+                        }
+                    </div>
                 </div>
             </div>
 
-            <!-- Card 4: Avg Intensity -->
+            <!-- Calories Burned -->
             <div class="stat-card">
-                <div class="stat-card-icon stat-card-icon--chart">
-                    <i class="fa-solid fa-chart-simple"></i>
+                <div class="stat-card-top">
+                    <div class="stat-icon-box stat-icon-box--cal">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <div class="stat-card-text">
+                        <span class="stat-label">Calories Burned</span>
+                        <span class="stat-value">@stats.CaloriesThisWeek.ToString("N0")</span>
+                        <span class="stat-detail">This week</span>
+                    </div>
                 </div>
-                <div class="stat-card-body">
-                    <span class="stat-card-label">Avg Intensity</span>
-                    <span class="stat-card-value">@stats.AvgIntensity<span class="stat-card-unit">%</span></span>
-                    <div class="intensity-ring-container">
-                        <svg class="intensity-ring" viewBox="0 0 60 60">
-                            <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5" />
-                            <circle cx="30" cy="30" r="26" fill="none" stroke="url(#intensityGrad)" stroke-width="5"
-                                    stroke-dasharray="@circumference.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)" stroke-dashoffset="@intensityOffset.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)" stroke-linecap="round"
-                                    transform="rotate(-90 30 30)" />
+            </div>
+
+            <!-- Avg Intensity -->
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div class="stat-ring-wrap">
+                        <svg viewBox="0 0 60 60" class="stat-ring-svg stat-ring-svg--lg">
                             <defs>
                                 <linearGradient id="intensityGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                                     <stop offset="0%" stop-color="#e63946" />
                                     <stop offset="100%" stop-color="#ff6b35" />
                                 </linearGradient>
                             </defs>
+                            <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="5" />
+                            <circle cx="30" cy="30" r="26" fill="none" stroke="url(#intensityGrad)" stroke-width="5"
+                                    stroke-dasharray="@circumference.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
+                                    stroke-dashoffset="@intensityOffset.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
+                                    stroke-linecap="round" transform="rotate(-90 30 30)" />
                         </svg>
+                        <span class="stat-ring-value stat-ring-value--lg">@stats.AvgIntensity<span style="font-size:0.6em">%</span></span>
+                    </div>
+                    <div class="stat-card-text">
+                        <span class="stat-label">Avg Intensity</span>
+                        <span class="stat-value">@stats.AvgIntensity<span class="stat-unit">%</span></span>
+                        <span class="stat-detail">This week</span>
                     </div>
                 </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<!-- ============================================================
+     TWO-COLUMN MAIN AREA
+     ============================================================ -->
+<section class="main-section" id="main-content">
+    <div class="container">
+        <div class="main-grid">
+
+            <!-- ===== LEFT COLUMN ===== -->
+            <div class="main-left">
+
+                <!-- Quick Actions -->
+                <div class="panel reveal-up" id="quick-actions">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Quick Actions</h2>
+                    </div>
+                    <div class="action-cards">
+                        <a asp-action="Index" asp-controller="Workout" class="action-card action-card--primary">
+                            <div class="action-card-icon">
+                                <i class="fa-solid fa-dumbbell"></i>
+                            </div>
+                            <div class="action-card-body">
+                                <span class="action-card-title">Start Workout</span>
+                                <span class="action-card-desc">Jump into your next session</span>
+                            </div>
+                            <i class="fa-solid fa-arrow-right action-card-arrow"></i>
+                        </a>
+                        <a href="#body-map" class="action-card" id="bodyMapActionBtn">
+                            <div class="action-card-icon action-card-icon--secondary">
+                                <i class="fa-solid fa-person"></i>
+                            </div>
+                            <div class="action-card-body">
+                                <span class="action-card-title">Body Map</span>
+                                <span class="action-card-desc">View muscle group status</span>
+                            </div>
+                            <i class="fa-solid fa-arrow-right action-card-arrow"></i>
+                        </a>
+                        <a asp-action="Settings" asp-controller="Home" class="action-card">
+                            <div class="action-card-icon action-card-icon--neutral">
+                                <i class="fa-solid fa-gear"></i>
+                            </div>
+                            <div class="action-card-body">
+                                <span class="action-card-title">Settings</span>
+                                <span class="action-card-desc">Manage your preferences</span>
+                            </div>
+                            <i class="fa-solid fa-arrow-right action-card-arrow"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Recent Workouts -->
+                <div class="panel reveal-up" id="recent-workouts-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Recent Workouts</h2>
+                        @if (recentWorkouts.Count > 0)
+                        {
+                            <span class="panel-badge">@recentWorkouts.Count</span>
+                        }
+                    </div>
+
+                    @if (recentWorkouts.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fa-solid fa-dumbbell"></i>
+                            </div>
+                            <p class="empty-state-title">No workouts yet</p>
+                            <p class="empty-state-desc">Complete your first session to see your history here.</p>
+                            <a asp-action="Index" asp-controller="Workout" class="btn-accent btn-sm">
+                                <i class="fa-solid fa-play"></i> Start Now
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="workout-list">
+                            @{
+                                var iconPool = new[] { "fa-solid fa-dumbbell", "fa-solid fa-person-walking", "fa-solid fa-bolt", "fa-solid fa-hand-fist", "fa-solid fa-arrow-up-from-bracket" };
+                                var iconColorPool = new[] { "wicon--red", "wicon--orange", "wicon--green", "wicon--yellow", "wicon--red" };
+                            }
+                            @foreach (var (workout, idx) in recentWorkouts.Select((w, i) => (w, i)))
+                            {
+                                var iIdx = idx % iconPool.Length;
+                                var intensityClass = workout.IntensityLabel switch {
+                                    "Light" => "ibadge--light",
+                                    "Moderate" => "ibadge--moderate",
+                                    "High" => "ibadge--high",
+                                    "Extreme" => "ibadge--extreme",
+                                    _ => "ibadge--moderate"
+                                };
+                                var workoutName = string.Join(" & ", workout.MuscleGroups.Select(m => char.ToUpper(m[0]) + m.Substring(1)).Take(2));
+                                if (string.IsNullOrEmpty(workoutName)) { workoutName = "Workout"; }
+
+                                <div class="workout-row">
+                                    <div class="workout-row-icon @iconColorPool[iIdx]">
+                                        <i class="@iconPool[iIdx]"></i>
+                                    </div>
+                                    <div class="workout-row-info">
+                                        <span class="workout-row-name">@workoutName</span>
+                                        <div class="workout-row-tags">
+                                            @foreach (var mg in workout.MuscleGroups.Take(3))
+                                            {
+                                                <span class="muscle-tag">@mg</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="workout-row-meta">
+                                        <span class="workout-row-time">@workout.TimeAgo</span>
+                                        <div class="workout-row-stats">
+                                            <span><i class="fa-regular fa-clock"></i> @workout.DurationMinutes min</span>
+                                            <span><i class="fa-solid fa-list-check"></i> @workout.ExerciseCount ex</span>
+                                        </div>
+                                    </div>
+                                    <span class="intensity-badge @intensityClass">@workout.IntensityLabel</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+            </div>
+
+            <!-- ===== RIGHT SIDEBAR ===== -->
+            <div class="main-right">
+
+                <!-- Muscle Overview -->
+                <div class="panel reveal-up" id="muscle-overview-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Muscle Overview</h2>
+                        <a href="#body-map" class="panel-link">View Map <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                    <div class="muscle-overview-grid">
+                        @{
+                            var overviewMuscles = new[] {
+                                ("Chest (Left)", "Chest"),
+                                ("Back", "Back"),
+                                ("Left Quad", "Quads"),
+                                ("Left Shoulder", "Shoulders"),
+                                ("Abs", "Core"),
+                                ("Left Bicep", "Arms"),
+                                ("Left Calf", "Calves"),
+                                ("Traps", "Traps")
+                            };
+                        }
+                        @foreach (var (key, label) in overviewMuscles)
+                        {
+                            var mStatus = muscleLookup.GetValueOrDefault(key);
+                            var dotClass = mStatus?.Status switch {
+                                "strong" => "mdot--strong",
+                                "moderate" => "mdot--moderate",
+                                _ => "mdot--needs-work"
+                            };
+                            var barWidth = mStatus?.Status switch {
+                                "strong" => 90,
+                                "moderate" => 55,
+                                _ => 20
+                            };
+                            <div class="muscle-overview-row">
+                                <span class="mdot @dotClass"></span>
+                                <span class="muscle-overview-name">@label</span>
+                                <div class="muscle-overview-bar-track">
+                                    <div class="muscle-overview-bar-fill @dotClass" style="width: @(barWidth)%;"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="muscle-overview-legend">
+                        <span class="legend-pill legend-pill--strong">Strong</span>
+                        <span class="legend-pill legend-pill--moderate">Moderate</span>
+                        <span class="legend-pill legend-pill--needs-work">Needs Work</span>
+                    </div>
+                </div>
+
+                <!-- Achievements -->
+                <div class="panel reveal-up" id="achievements-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Achievements</h2>
+                    </div>
+                    <div class="achieve-list">
+                        <!-- Iron Will -->
+                        <div class="achieve-row achieve-row--unlocked">
+                            <div class="achieve-icon achieve-icon--gold">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div class="achieve-info">
+                                <span class="achieve-name">Iron Will</span>
+                                <div class="achieve-bar-track">
+                                    <div class="achieve-bar-fill achieve-bar-fill--complete" style="width: 100%;"></div>
+                                </div>
+                                <span class="achieve-label">7 / 7 days</span>
+                            </div>
+                            <span class="achieve-badge achieve-badge--done"><i class="fa-solid fa-check"></i></span>
+                        </div>
+                        <!-- Beast Mode -->
+                        <div class="achieve-row">
+                            <div class="achieve-icon achieve-icon--accent">
+                                <i class="fa-solid fa-dragon"></i>
+                            </div>
+                            <div class="achieve-info">
+                                <span class="achieve-name">Beast Mode</span>
+                                <div class="achieve-bar-track">
+                                    <div class="achieve-bar-fill" style="width: 84%;"></div>
+                                </div>
+                                <span class="achieve-label">42 / 50 workouts</span>
+                            </div>
+                            <span class="achieve-pct">84%</span>
+                        </div>
+                        <!-- Consistency King -->
+                        <div class="achieve-row">
+                            <div class="achieve-icon achieve-icon--accent">
+                                <i class="fa-solid fa-crown"></i>
+                            </div>
+                            <div class="achieve-info">
+                                <span class="achieve-name">Consistency King</span>
+                                <div class="achieve-bar-track">
+                                    <div class="achieve-bar-fill" style="width: 40%;"></div>
+                                </div>
+                                <span class="achieve-label">12 / 30 days</span>
+                            </div>
+                            <span class="achieve-pct">40%</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -204,17 +411,26 @@
 
 
 <!-- ============================================================
-     INTERACTIVE BODY MAP SECTION (CENTERPIECE)
+     INTERACTIVE BODY MAP SECTION
      ============================================================ -->
-<section class="section-padding body-map-section reveal reveal-up" id="body-map">
+<section class="body-map-section reveal-up" id="body-map">
     <div class="container">
         <div class="section-header">
-            <h2 class="section-title">MUSCLE <span class="text-gradient">STATUS</span></h2>
-            <p class="section-subtitle">Tactical overview of your physique readiness</p>
+            <div class="section-header-left">
+                <h2 class="section-title">Muscle <span class="text-gradient">Status Map</span></h2>
+                <p class="section-subtitle">Hover any muscle to see readiness details</p>
+            </div>
+            <div class="section-header-right">
+                <div class="status-summary-pills">
+                    <span class="status-pill status-pill--strong"><span class="spill-dot"></span> @strongCount Strong</span>
+                    <span class="status-pill status-pill--moderate"><span class="spill-dot"></span> @moderateCount Moderate</span>
+                    <span class="status-pill status-pill--needs-work"><span class="spill-dot"></span> @needsWorkCount Needs Work</span>
+                </div>
+            </div>
         </div>
 
         <div class="body-map-layout">
-            <!-- Left: Body Map SVG -->
+            <!-- Body Map SVG -->
             <div class="body-map-container">
                 <div class="body-map-glow"></div>
                 <svg viewBox="0 0 300 520" class="body-map-svg" xmlns="http://www.w3.org/2000/svg">
@@ -244,355 +460,247 @@
                         </linearGradient>
                     </defs>
 
-                    <!-- Body silhouette outline (behind everything) -->
+                    <!-- Body silhouette -->
                     <g class="body-silhouette" opacity="0.07">
-                        <!-- Head outline -->
                         <ellipse cx="150" cy="42" rx="32" ry="36" fill="white" />
-                        <!-- Neck -->
                         <rect x="135" y="72" width="30" height="24" rx="6" fill="white" />
-                        <!-- Torso -->
                         <path d="M100,96 Q90,96 80,110 L70,140 L65,180 L68,230 L105,240 L130,235 L150,232 L170,235 L195,240 L232,230 L235,180 L230,140 L220,110 Q210,96 200,96 Z" fill="white" />
-                        <!-- Left Arm -->
                         <path d="M80,110 Q60,115 55,140 L50,180 L48,220 L52,250 L60,258 L70,250 L75,220 L80,180 Z" fill="white" />
-                        <!-- Right Arm -->
                         <path d="M220,110 Q240,115 245,140 L250,180 L252,220 L248,250 L240,258 L230,250 L225,220 L220,180 Z" fill="white" />
-                        <!-- Left Leg -->
                         <path d="M108,235 L100,290 L95,345 L96,400 L100,440 L105,470 L112,480 L130,480 L135,470 L138,440 L140,400 L142,345 L145,290 L148,240 Z" fill="white" />
-                        <!-- Right Leg -->
                         <path d="M192,235 L200,290 L205,345 L204,400 L200,440 L195,470 L188,480 L170,480 L165,470 L162,440 L160,400 L158,345 L155,290 L152,240 Z" fill="white" />
                     </g>
 
-                    <!-- ===== MUSCLE GROUPS ===== -->
+                    <!-- MUSCLE GROUPS -->
 
                     @{ var nk = muscleLookup.GetValueOrDefault("Neck"); }
-                    <!-- Head / Neck -->
                     <ellipse class="muscle-group" data-muscle="Neck"
                              data-status="@(nk?.Status ?? "needs-work")" data-last-trained="@(nk?.LastTrained ?? "Never")" data-exercises="@(nk?.ExerciseCount ?? 0)"
                              cx="150" cy="45" rx="28" ry="32"
                              fill="@GetFill(nk?.Status ?? "needs-work")" stroke="@GetStroke(nk?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var tr = muscleLookup.GetValueOrDefault("Traps"); }
-                    <!-- Traps -->
                     <rect class="muscle-group" data-muscle="Traps"
                           data-status="@(tr?.Status ?? "needs-work")" data-last-trained="@(tr?.LastTrained ?? "Never")" data-exercises="@(tr?.ExerciseCount ?? 0)"
                           x="133" y="74" width="34" height="20" rx="5"
                           fill="@GetFill(tr?.Status ?? "needs-work")" stroke="@GetStroke(tr?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var ls = muscleLookup.GetValueOrDefault("Left Shoulder"); }
-                    <!-- Left Shoulder -->
                     <ellipse class="muscle-group" data-muscle="Left Shoulder"
                              data-status="@(ls?.Status ?? "needs-work")" data-last-trained="@(ls?.LastTrained ?? "Never")" data-exercises="@(ls?.ExerciseCount ?? 0)"
                              cx="93" cy="105" rx="27" ry="18"
                              fill="@GetFill(ls?.Status ?? "needs-work")" stroke="@GetStroke(ls?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var rs = muscleLookup.GetValueOrDefault("Right Shoulder"); }
-                    <!-- Right Shoulder -->
                     <ellipse class="muscle-group" data-muscle="Right Shoulder"
                              data-status="@(rs?.Status ?? "needs-work")" data-last-trained="@(rs?.LastTrained ?? "Never")" data-exercises="@(rs?.ExerciseCount ?? 0)"
                              cx="207" cy="105" rx="27" ry="18"
                              fill="@GetFill(rs?.Status ?? "needs-work")" stroke="@GetStroke(rs?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var cl = muscleLookup.GetValueOrDefault("Chest (Left)"); }
-                    <!-- Chest Left -->
                     <path class="muscle-group" data-muscle="Chest (Left)"
                           data-status="@(cl?.Status ?? "needs-work")" data-last-trained="@(cl?.LastTrained ?? "Never")" data-exercises="@(cl?.ExerciseCount ?? 0)"
                           d="M108,112 Q105,98 150,96 L150,158 Q110,156 108,142 Z"
                           fill="@GetFill(cl?.Status ?? "needs-work")" stroke="@GetStroke(cl?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var cr = muscleLookup.GetValueOrDefault("Chest (Right)"); }
-                    <!-- Chest Right -->
                     <path class="muscle-group" data-muscle="Chest (Right)"
                           data-status="@(cr?.Status ?? "needs-work")" data-last-trained="@(cr?.LastTrained ?? "Never")" data-exercises="@(cr?.ExerciseCount ?? 0)"
                           d="M192,112 Q195,98 150,96 L150,158 Q190,156 192,142 Z"
                           fill="@GetFill(cr?.Status ?? "needs-work")" stroke="@GetStroke(cr?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var lb = muscleLookup.GetValueOrDefault("Left Bicep"); }
-                    <!-- Left Bicep -->
                     <ellipse class="muscle-group" data-muscle="Left Bicep"
                              data-status="@(lb?.Status ?? "needs-work")" data-last-trained="@(lb?.LastTrained ?? "Never")" data-exercises="@(lb?.ExerciseCount ?? 0)"
                              cx="76" cy="155" rx="14" ry="32"
                              fill="@GetFill(lb?.Status ?? "needs-work")" stroke="@GetStroke(lb?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var rb = muscleLookup.GetValueOrDefault("Right Bicep"); }
-                    <!-- Right Bicep -->
                     <ellipse class="muscle-group" data-muscle="Right Bicep"
                              data-status="@(rb?.Status ?? "needs-work")" data-last-trained="@(rb?.LastTrained ?? "Never")" data-exercises="@(rb?.ExerciseCount ?? 0)"
                              cx="224" cy="155" rx="14" ry="32"
                              fill="@GetFill(rb?.Status ?? "needs-work")" stroke="@GetStroke(rb?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var lf = muscleLookup.GetValueOrDefault("Left Forearm"); }
-                    <!-- Left Forearm -->
                     <ellipse class="muscle-group" data-muscle="Left Forearm"
                              data-status="@(lf?.Status ?? "needs-work")" data-last-trained="@(lf?.LastTrained ?? "Never")" data-exercises="@(lf?.ExerciseCount ?? 0)"
                              cx="70" cy="218" rx="12" ry="30"
                              fill="@GetFill(lf?.Status ?? "needs-work")" stroke="@GetStroke(lf?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var rf = muscleLookup.GetValueOrDefault("Right Forearm"); }
-                    <!-- Right Forearm -->
                     <ellipse class="muscle-group" data-muscle="Right Forearm"
                              data-status="@(rf?.Status ?? "needs-work")" data-last-trained="@(rf?.LastTrained ?? "Never")" data-exercises="@(rf?.ExerciseCount ?? 0)"
                              cx="230" cy="218" rx="12" ry="30"
                              fill="@GetFill(rf?.Status ?? "needs-work")" stroke="@GetStroke(rf?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var ab = muscleLookup.GetValueOrDefault("Abs"); }
-                    <!-- Abs -->
                     <rect class="muscle-group" data-muscle="Abs"
                           data-status="@(ab?.Status ?? "needs-work")" data-last-trained="@(ab?.LastTrained ?? "Never")" data-exercises="@(ab?.ExerciseCount ?? 0)"
                           x="131" y="162" width="38" height="64" rx="6"
                           fill="@GetFill(ab?.Status ?? "needs-work")" stroke="@GetStroke(ab?.Status ?? "needs-work")" stroke-width="1.2" />
 
-                    <!-- Abs detail lines (cosmetic) -->
+                    <!-- Abs detail lines -->
                     <line x1="134" y1="180" x2="166" y2="180" stroke="rgba(230,57,70,0.2)" stroke-width="0.8" pointer-events="none" />
                     <line x1="134" y1="196" x2="166" y2="196" stroke="rgba(230,57,70,0.2)" stroke-width="0.8" pointer-events="none" />
                     <line x1="134" y1="212" x2="166" y2="212" stroke="rgba(230,57,70,0.2)" stroke-width="0.8" pointer-events="none" />
                     <line x1="150" y1="163" x2="150" y2="225" stroke="rgba(230,57,70,0.15)" stroke-width="0.8" pointer-events="none" />
 
                     @{ var lo = muscleLookup.GetValueOrDefault("Left Oblique"); }
-                    <!-- Left Oblique -->
                     <rect class="muscle-group" data-muscle="Left Oblique"
                           data-status="@(lo?.Status ?? "needs-work")" data-last-trained="@(lo?.LastTrained ?? "Never")" data-exercises="@(lo?.ExerciseCount ?? 0)"
                           x="110" y="167" width="18" height="55" rx="5"
                           fill="@GetFill(lo?.Status ?? "needs-work")" stroke="@GetStroke(lo?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var ro = muscleLookup.GetValueOrDefault("Right Oblique"); }
-                    <!-- Right Oblique -->
                     <rect class="muscle-group" data-muscle="Right Oblique"
                           data-status="@(ro?.Status ?? "needs-work")" data-last-trained="@(ro?.LastTrained ?? "Never")" data-exercises="@(ro?.ExerciseCount ?? 0)"
                           x="172" y="167" width="18" height="55" rx="5"
                           fill="@GetFill(ro?.Status ?? "needs-work")" stroke="@GetStroke(ro?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var lq = muscleLookup.GetValueOrDefault("Left Quad"); }
-                    <!-- Left Quad -->
                     <ellipse class="muscle-group" data-muscle="Left Quad"
                              data-status="@(lq?.Status ?? "needs-work")" data-last-trained="@(lq?.LastTrained ?? "Never")" data-exercises="@(lq?.ExerciseCount ?? 0)"
                              cx="127" cy="295" rx="22" ry="52"
                              fill="@GetFill(lq?.Status ?? "needs-work")" stroke="@GetStroke(lq?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var rq = muscleLookup.GetValueOrDefault("Right Quad"); }
-                    <!-- Right Quad -->
                     <ellipse class="muscle-group" data-muscle="Right Quad"
                              data-status="@(rq?.Status ?? "needs-work")" data-last-trained="@(rq?.LastTrained ?? "Never")" data-exercises="@(rq?.ExerciseCount ?? 0)"
                              cx="173" cy="295" rx="22" ry="52"
                              fill="@GetFill(rq?.Status ?? "needs-work")" stroke="@GetStroke(rq?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var lc = muscleLookup.GetValueOrDefault("Left Calf"); }
-                    <!-- Left Calf -->
                     <ellipse class="muscle-group" data-muscle="Left Calf"
                              data-status="@(lc?.Status ?? "needs-work")" data-last-trained="@(lc?.LastTrained ?? "Never")" data-exercises="@(lc?.ExerciseCount ?? 0)"
                              cx="123" cy="405" rx="16" ry="44"
                              fill="@GetFill(lc?.Status ?? "needs-work")" stroke="@GetStroke(lc?.Status ?? "needs-work")" stroke-width="1.2" />
 
                     @{ var rc = muscleLookup.GetValueOrDefault("Right Calf"); }
-                    <!-- Right Calf -->
                     <ellipse class="muscle-group" data-muscle="Right Calf"
                              data-status="@(rc?.Status ?? "needs-work")" data-last-trained="@(rc?.LastTrained ?? "Never")" data-exercises="@(rc?.ExerciseCount ?? 0)"
                              cx="177" cy="405" rx="16" ry="44"
                              fill="@GetFill(rc?.Status ?? "needs-work")" stroke="@GetStroke(rc?.Status ?? "needs-work")" stroke-width="1.2" />
 
-                    <!-- Scan line (cosmetic HUD effect) -->
+                    <!-- Scan line -->
                     <line class="body-scan-line" x1="40" y1="0" x2="260" y2="0" stroke="rgba(230,57,70,0.15)" stroke-width="1" pointer-events="none" />
                 </svg>
-
-                <!-- Body Map Labels -->
-                <div class="body-map-label body-map-label--left" style="top: 18%; left: 2%;">
-                    <span class="body-map-label-line"></span>
-                    <span class="body-map-label-text">Shoulders</span>
-                </div>
-                <div class="body-map-label body-map-label--left" style="top: 30%; left: 0%;">
-                    <span class="body-map-label-line"></span>
-                    <span class="body-map-label-text">Biceps</span>
-                </div>
-                <div class="body-map-label body-map-label--right" style="top: 8%; right: 2%;">
-                    <span class="body-map-label-line"></span>
-                    <span class="body-map-label-text">Neck / Traps</span>
-                </div>
-                <div class="body-map-label body-map-label--right" style="top: 22%; right: 0%;">
-                    <span class="body-map-label-line"></span>
-                    <span class="body-map-label-text">Chest</span>
-                </div>
-                <div class="body-map-label body-map-label--right" style="top: 36%; right: 2%;">
-                    <span class="body-map-label-line"></span>
-                    <span class="body-map-label-text">Core</span>
-                </div>
             </div>
 
-            <!-- Right: Legend + Hover Detail Panel -->
-            <div class="body-map-info">
-                <div class="body-map-legend">
-                    <h3 class="body-map-info-title">STATUS LEGEND</h3>
-                    <div class="legend-items">
-                        <div class="legend-item">
+            <!-- Info Panel -->
+            <div class="body-map-info-panel">
+                <!-- Legend -->
+                <div class="bm-card">
+                    <h3 class="bm-card-title">Legend</h3>
+                    <div class="bm-legend">
+                        <div class="bm-legend-item">
                             <span class="legend-dot legend-dot--strong"></span>
-                            <span class="legend-text">Strong <span class="legend-desc">-- Trained recently</span></span>
+                            <div>
+                                <span class="bm-legend-label">Strong</span>
+                                <span class="bm-legend-desc">Trained recently</span>
+                            </div>
                         </div>
-                        <div class="legend-item">
+                        <div class="bm-legend-item">
                             <span class="legend-dot legend-dot--moderate"></span>
-                            <span class="legend-text">Moderate <span class="legend-desc">-- Could use work</span></span>
+                            <div>
+                                <span class="bm-legend-label">Moderate</span>
+                                <span class="bm-legend-desc">Could use a session</span>
+                            </div>
                         </div>
-                        <div class="legend-item">
+                        <div class="bm-legend-item">
                             <span class="legend-dot legend-dot--needs-work"></span>
-                            <span class="legend-text">Needs Work <span class="legend-desc">-- Overdue</span></span>
+                            <div>
+                                <span class="bm-legend-label">Needs Work</span>
+                                <span class="bm-legend-desc">Overdue training</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Hover detail panel (updated via JS) -->
-                <div class="muscle-detail-panel" id="muscleDetailPanel">
+                <!-- Hover detail panel -->
+                <div class="bm-card bm-detail-card" id="muscleDetailPanel">
                     <div class="muscle-detail-empty" id="muscleDetailEmpty">
-                        <i class="fa-solid fa-hand-pointer"></i>
-                        <p>Hover over a muscle group to see details</p>
+                        <i class="fa-regular fa-hand-pointer"></i>
+                        <p>Hover a muscle group</p>
                     </div>
                     <div class="muscle-detail-content" id="muscleDetailContent" style="display: none;">
                         <h4 class="muscle-detail-name" id="muscleName">--</h4>
                         <span class="muscle-detail-status" id="muscleStatus">--</span>
-                        <div class="muscle-detail-stats">
+                        <div class="muscle-detail-rows">
                             <div class="muscle-detail-row">
                                 <i class="fa-regular fa-clock"></i>
-                                <span>Last Trained:</span>
+                                <span>Last Trained</span>
                                 <strong id="muscleLastTrained">--</strong>
                             </div>
                             <div class="muscle-detail-row">
                                 <i class="fa-solid fa-list-check"></i>
-                                <span>Exercises Available:</span>
+                                <span>Exercises</span>
                                 <strong id="muscleExercises">--</strong>
                             </div>
                         </div>
-                        <a href="#" class="btn-accent btn-sm muscle-detail-btn" id="muscleTrainBtn">
-                            <i class="fa-solid fa-play"></i> Train Now
+                        <a href="#" class="btn-accent btn-sm muscle-detail-cta" id="muscleTrainBtn">
+                            <i class="fa-solid fa-play"></i> Train This Muscle
                         </a>
                     </div>
                 </div>
 
-                <!-- Summary Stats -->
-                <div class="body-map-summary">
-                    <h3 class="body-map-info-title">OVERVIEW</h3>
-                    <div class="summary-stat-row">
-                        <span class="summary-label">Muscle Groups Tracked</span>
-                        <span class="summary-value">@totalMuscles</span>
+                <!-- Overview stats -->
+                <div class="bm-card">
+                    <h3 class="bm-card-title">Overview</h3>
+                    <div class="bm-overview-rows">
+                        <div class="bm-overview-row">
+                            <span>Tracked Groups</span>
+                            <strong>@totalMuscles</strong>
+                        </div>
+                        <div class="bm-overview-row">
+                            <span>Strong</span>
+                            <strong class="text--strong">@strongCount</strong>
+                        </div>
+                        <div class="bm-overview-row">
+                            <span>Moderate</span>
+                            <strong class="text--moderate">@moderateCount</strong>
+                        </div>
+                        <div class="bm-overview-row">
+                            <span>Needs Work</span>
+                            <strong class="text--needs-work">@needsWorkCount</strong>
+                        </div>
                     </div>
-                    <div class="summary-stat-row">
-                        <span class="summary-label">Strong</span>
-                        <span class="summary-value summary-value--strong">@strongCount</span>
-                    </div>
-                    <div class="summary-stat-row">
-                        <span class="summary-label">Moderate</span>
-                        <span class="summary-value summary-value--moderate">@moderateCount</span>
-                    </div>
-                    <div class="summary-stat-row">
-                        <span class="summary-label">Needs Work</span>
-                        <span class="summary-value summary-value--needs-work">@needsWorkCount</span>
-                    </div>
-                    <div class="summary-progress-bar">
+                    <div class="bm-overview-bar">
                         @if (strongPct > 0)
                         {
-                            <div class="summary-progress-segment summary-progress--strong" style="width: @(strongPct)%;"></div>
+                            <div class="bm-bar-seg bm-bar-seg--strong" style="width: @(strongPct)%;"></div>
                         }
                         @if (moderatePct > 0)
                         {
-                            <div class="summary-progress-segment summary-progress--moderate" style="width: @(moderatePct)%;"></div>
+                            <div class="bm-bar-seg bm-bar-seg--moderate" style="width: @(moderatePct)%;"></div>
                         }
                         @if (needsWorkPct > 0)
                         {
-                            <div class="summary-progress-segment summary-progress--needs-work" style="width: @(needsWorkPct)%;"></div>
+                            <div class="bm-bar-seg bm-bar-seg--needs-work" style="width: @(needsWorkPct)%;"></div>
                         }
                     </div>
                 </div>
             </div>
         </div>
-
-        <p class="body-map-hint">
-            <i class="fa-solid fa-circle-info"></i>
-            Click any muscle group to see detailed exercises and tracking
-        </p>
     </div>
 </section>
 
 
 <!-- ============================================================
-     RECENT ACTIVITY SECTION
+     WEEKLY OVERVIEW
      ============================================================ -->
-<section class="section-padding reveal reveal-up" id="recent-activity">
+<section class="weekly-section reveal-up" id="weekly-progress">
     <div class="container">
         <div class="section-header">
-            <h2 class="section-title">RECENT <span class="text-gradient">ACTIVITY</span></h2>
-            <p class="section-subtitle">Your latest workout sessions</p>
-        </div>
-
-        <div class="activity-list">
-            @if (recentWorkouts.Count == 0)
-            {
-                <div class="activity-card card-dark" style="justify-content: center; text-align: center; padding: 2rem;">
-                    <div style="color: var(--text-secondary);">
-                        <i class="fa-solid fa-dumbbell" style="font-size: 1.5rem; opacity: 0.3; margin-bottom: 0.5rem; display: block;"></i>
-                        <p style="margin: 0;">No workouts yet. Start your first session!</p>
-                    </div>
-                </div>
-            }
-            @{
-                var activityIcons = new[] { "fa-solid fa-dumbbell", "fa-solid fa-person-walking", "fa-solid fa-bolt", "fa-solid fa-hand-fist", "fa-solid fa-arrow-up-from-bracket" };
-                var activityIconClasses = new[] { "activity-icon--push", "activity-icon--legs", "activity-icon--pull", "activity-icon--arms", "activity-icon--hiit" };
-            }
-            @foreach (var (workout, idx) in recentWorkouts.Select((w, i) => (w, i)))
-            {
-                var iconIdx = idx % activityIcons.Length;
-                var intensityClass = workout.IntensityLabel switch {
-                    "Light" => "activity-intensity--medium",
-                    "Moderate" => "activity-intensity--medium",
-                    "High" => "activity-intensity--high",
-                    "Extreme" => "activity-intensity--extreme",
-                    _ => "activity-intensity--medium"
-                };
-                var intensityIcon = workout.IntensityLabel switch {
-                    "Light" => "fa-solid fa-gauge",
-                    "Moderate" => "fa-solid fa-gauge",
-                    "High" => "fa-solid fa-signal",
-                    "Extreme" => "fa-solid fa-fire",
-                    _ => "fa-solid fa-gauge"
-                };
-                var workoutName = string.Join(" & ", workout.MuscleGroups.Select(m => char.ToUpper(m[0]) + m.Substring(1)).Take(3));
-                if (string.IsNullOrEmpty(workoutName)) { workoutName = "Workout"; }
-
-                <div class="activity-card card-dark">
-                    <div class="activity-icon @activityIconClasses[iconIdx]">
-                        <i class="@activityIcons[iconIdx]"></i>
-                    </div>
-                    <div class="activity-info">
-                        <h4 class="activity-name">@workoutName</h4>
-                        <span class="activity-date">@workout.TimeAgo</span>
-                    </div>
-                    <div class="activity-meta">
-                        <span class="activity-meta-item">
-                            <i class="fa-regular fa-clock"></i> @workout.DurationMinutes min
-                        </span>
-                        <span class="activity-meta-item">
-                            <i class="fa-solid fa-dumbbell"></i> @workout.ExerciseCount exercises
-                        </span>
-                    </div>
-                    <span class="activity-intensity @intensityClass">
-                        <i class="@intensityIcon"></i> @workout.IntensityLabel
-                    </span>
-                </div>
-            }
-        </div>
-    </div>
-</section>
-
-
-<!-- ============================================================
-     WEEKLY PROGRESS SECTION
-     ============================================================ -->
-<section class="section-padding reveal reveal-up" id="weekly-progress">
-    <div class="container">
-        <div class="section-header">
-            <h2 class="section-title">WEEKLY <span class="text-gradient">OVERVIEW</span></h2>
-            <p class="section-subtitle">Your training volume this week</p>
+            <div class="section-header-left">
+                <h2 class="section-title">Weekly <span class="text-gradient">Overview</span></h2>
+                <p class="section-subtitle">Training volume across the week</p>
+            </div>
         </div>
 
         <div class="weekly-layout">
             <!-- Bar Chart -->
-            <div class="weekly-chart card-dark">
+            <div class="weekly-chart panel">
                 <div class="chart-area">
-                    <!-- Y-axis labels -->
                     <div class="chart-y-axis">
                         <span>60m</span>
                         <span>45m</span>
@@ -600,7 +708,6 @@
                         <span>15m</span>
                         <span>0m</span>
                     </div>
-                    <!-- Bars -->
                     <div class="chart-bars">
                         <div class="chart-bar-wrapper">
                             <div class="chart-bar chart-bar--active" style="height: 75%;" data-value="45">
@@ -650,40 +757,32 @@
 
             <!-- Side Stats -->
             <div class="weekly-stats">
-                <div class="weekly-stat-card card-dark">
-                    <div class="weekly-stat-icon">
-                        <i class="fa-solid fa-clock"></i>
-                    </div>
-                    <div class="weekly-stat-info">
-                        <span class="weekly-stat-value">235 <span class="weekly-stat-unit">min</span></span>
-                        <span class="weekly-stat-label">Total Training</span>
+                <div class="weekly-stat-item panel">
+                    <div class="wstat-icon"><i class="fa-solid fa-clock"></i></div>
+                    <div>
+                        <span class="wstat-value">235 <span class="wstat-unit">min</span></span>
+                        <span class="wstat-label">Total Training</span>
                     </div>
                 </div>
-                <div class="weekly-stat-card card-dark">
-                    <div class="weekly-stat-icon">
-                        <i class="fa-solid fa-calculator"></i>
-                    </div>
-                    <div class="weekly-stat-info">
-                        <span class="weekly-stat-value">33.6 <span class="weekly-stat-unit">min/day</span></span>
-                        <span class="weekly-stat-label">Daily Average</span>
+                <div class="weekly-stat-item panel">
+                    <div class="wstat-icon"><i class="fa-solid fa-calculator"></i></div>
+                    <div>
+                        <span class="wstat-value">33.6 <span class="wstat-unit">min/day</span></span>
+                        <span class="wstat-label">Daily Average</span>
                     </div>
                 </div>
-                <div class="weekly-stat-card card-dark">
-                    <div class="weekly-stat-icon">
-                        <i class="fa-solid fa-bed"></i>
-                    </div>
-                    <div class="weekly-stat-info">
-                        <span class="weekly-stat-value">2 <span class="weekly-stat-unit">days</span></span>
-                        <span class="weekly-stat-label">Rest Days</span>
+                <div class="weekly-stat-item panel">
+                    <div class="wstat-icon"><i class="fa-solid fa-bed"></i></div>
+                    <div>
+                        <span class="wstat-value">2 <span class="wstat-unit">days</span></span>
+                        <span class="wstat-label">Rest Days</span>
                     </div>
                 </div>
-                <div class="weekly-stat-card card-dark">
-                    <div class="weekly-stat-icon">
-                        <i class="fa-solid fa-arrow-trend-up"></i>
-                    </div>
-                    <div class="weekly-stat-info">
-                        <span class="weekly-stat-value">+12<span class="weekly-stat-unit">%</span></span>
-                        <span class="weekly-stat-label">vs. Last Week</span>
+                <div class="weekly-stat-item panel">
+                    <div class="wstat-icon wstat-icon--up"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <div>
+                        <span class="wstat-value wstat-value--up">+12<span class="wstat-unit">%</span></span>
+                        <span class="wstat-label">vs. Last Week</span>
                     </div>
                 </div>
             </div>
@@ -693,120 +792,16 @@
 
 
 <!-- ============================================================
-     ACHIEVEMENTS SECTION
+     FOOTER CTA
      ============================================================ -->
-<section class="section-padding reveal reveal-up" id="achievements">
-    <div class="container">
-        <div class="section-header">
-            <h2 class="section-title"><span class="text-gradient">ACHIEVEMENTS</span></h2>
-            <p class="section-subtitle">Milestones on your fitness journey</p>
+<section class="footer-cta reveal" id="footer-cta">
+    <div class="footer-cta-bg"></div>
+    <div class="container footer-cta-inner">
+        <div class="footer-cta-content">
+            <h2 class="footer-cta-heading">Ready for your <span class="text-gradient">next workout?</span></h2>
+            <p class="footer-cta-sub">Pick up where you left off. Every rep counts.</p>
         </div>
-
-        <div class="achievements-grid">
-            <!-- Achievement 1: Iron Will (Unlocked) -->
-            <div class="achievement-card card-dark achievement--unlocked achievement--gold">
-                <div class="achievement-glow"></div>
-                <div class="achievement-icon-area">
-                    <div class="achievement-icon-ring achievement-icon-ring--gold">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                </div>
-                <h4 class="achievement-title">Iron Will</h4>
-                <p class="achievement-desc">Complete a 7-day workout streak</p>
-                <div class="achievement-status">
-                    <span class="achievement-badge achievement-badge--unlocked">
-                        <i class="fa-solid fa-check"></i> Unlocked
-                    </span>
-                </div>
-                <div class="achievement-progress-bar achievement-progress--complete">
-                    <div class="achievement-progress-fill" style="width: 100%;"></div>
-                </div>
-                <span class="achievement-progress-text">7 / 7 Days</span>
-            </div>
-
-            <!-- Achievement 2: Beast Mode (In Progress) -->
-            <div class="achievement-card card-dark achievement--in-progress">
-                <div class="achievement-icon-area">
-                    <div class="achievement-icon-ring achievement-icon-ring--accent">
-                        <i class="fa-solid fa-dragon"></i>
-                    </div>
-                </div>
-                <h4 class="achievement-title">Beast Mode</h4>
-                <p class="achievement-desc">Complete 50 total workouts</p>
-                <div class="achievement-status">
-                    <span class="achievement-badge achievement-badge--progress">
-                        <i class="fa-solid fa-spinner"></i> In Progress
-                    </span>
-                </div>
-                <div class="achievement-progress-bar">
-                    <div class="achievement-progress-fill" style="width: 84%;"></div>
-                </div>
-                <span class="achievement-progress-text">42 / 50 Workouts (84%)</span>
-            </div>
-
-            <!-- Achievement 3: Leg Legend (Locked) -->
-            <div class="achievement-card card-dark achievement--locked">
-                <div class="achievement-lock-overlay">
-                    <i class="fa-solid fa-lock"></i>
-                </div>
-                <div class="achievement-icon-area">
-                    <div class="achievement-icon-ring achievement-icon-ring--locked">
-                        <i class="fa-solid fa-bolt-lightning"></i>
-                    </div>
-                </div>
-                <h4 class="achievement-title">Leg Legend</h4>
-                <p class="achievement-desc">Squat 3x your bodyweight</p>
-                <div class="achievement-status">
-                    <span class="achievement-badge achievement-badge--locked">
-                        <i class="fa-solid fa-lock"></i> Locked
-                    </span>
-                </div>
-                <div class="achievement-progress-bar achievement-progress--locked">
-                    <div class="achievement-progress-fill" style="width: 0%;"></div>
-                </div>
-                <span class="achievement-progress-text">Complete prerequisite challenges</span>
-            </div>
-
-            <!-- Achievement 4: Consistency King (In Progress) -->
-            <div class="achievement-card card-dark achievement--in-progress">
-                <div class="achievement-icon-area">
-                    <div class="achievement-icon-ring achievement-icon-ring--accent">
-                        <i class="fa-solid fa-crown"></i>
-                    </div>
-                </div>
-                <h4 class="achievement-title">Consistency King</h4>
-                <p class="achievement-desc">Maintain a 30-day workout streak</p>
-                <div class="achievement-status">
-                    <span class="achievement-badge achievement-badge--progress">
-                        <i class="fa-solid fa-spinner"></i> In Progress
-                    </span>
-                </div>
-                <div class="achievement-progress-bar">
-                    <div class="achievement-progress-fill" style="width: 40%;"></div>
-                </div>
-                <span class="achievement-progress-text">12 / 30 Days (40%)</span>
-            </div>
-        </div>
-    </div>
-</section>
-
-
-<!-- ============================================================
-     FOOTER CTA SECTION
-     ============================================================ -->
-<section class="footer-cta-section reveal" id="footer-cta">
-    <div class="footer-cta-orb footer-cta-orb--1"></div>
-    <div class="footer-cta-orb footer-cta-orb--2"></div>
-    <div class="footer-cta-orb footer-cta-orb--3"></div>
-
-    <div class="container footer-cta-container">
-        <h2 class="footer-cta-heading">
-            Ready to <span class="text-gradient">push your limits</span>?
-        </h2>
-        <p class="footer-cta-subtitle">
-            Start your next workout and crush your goals.
-        </p>
-        <a asp-action="Index" asp-controller="Workout" class="btn-accent btn-xl footer-cta-btn">
+        <a asp-action="Index" asp-controller="Workout" class="btn-accent btn-xl">
             <i class="fa-solid fa-play"></i> Begin Workout
         </a>
     </div>
@@ -814,358 +809,822 @@
 
 
 <!-- ============================================================
-     PAGE-SPECIFIC STYLES
+     STYLES
      ============================================================ -->
 <style>
-    /* ==================== HERO ==================== */
-    .hero-section {
-        position: relative;
-        min-height: 85vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        overflow: hidden;
-        padding: 2rem 0 0;
-    }
 
-    .hero-container {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 2rem;
-        flex: 1;
-    }
-
-    .hero-content {
-        flex: 1;
-        max-width: 640px;
-        z-index: 2;
-    }
-
-    .hero-heading {
-        font-size: clamp(2.8rem, 6vw, 5rem);
-        font-weight: 900;
-        line-height: 1.05;
-        letter-spacing: -0.02em;
-        margin-bottom: 1.5rem;
-        text-transform: uppercase;
-    }
-
-    .hero-line {
-        display: block;
-    }
-
-    .hero-subtitle {
-        font-size: 1.15rem;
-        color: var(--text-secondary);
-        line-height: 1.6;
-        margin-bottom: 2rem;
-        max-width: 480px;
-    }
-
-    .hero-cta-group {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .hero-visual {
-        flex: 0 0 auto;
-        width: 380px;
-        height: 380px;
-        position: relative;
-        z-index: 1;
-    }
-
-    .hero-hud-svg {
-        width: 100%;
-        height: 100%;
-        opacity: 0.6;
-    }
-
-    @@keyframes hudRotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
-    .hud-ring-rotate {
-        transform-origin: 250px 250px;
-        animation: hudRotate 30s linear infinite;
-    }
-
-    @@keyframes hudPulse {
-        0%, 100% { r: 4; opacity: 0.3; }
-        50% { r: 7; opacity: 0.8; }
-    }
-
-    .hud-pulse {
-        animation: hudPulse 2s ease-in-out infinite;
-    }
-
-    /* Grid overlay */
-    .hero-grid-overlay {
-        position: absolute;
-        inset: 0;
-        background-image:
-            linear-gradient(rgba(230,57,70,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(230,57,70,0.03) 1px, transparent 1px);
-        background-size: 60px 60px;
-        pointer-events: none;
-        z-index: 0;
-    }
-
-    /* Particles */
-    .hero-particles {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: 0;
-    }
-
-    .particle {
-        position: absolute;
-        width: 3px;
-        height: 3px;
-        border-radius: 50%;
-        background: rgba(230, 57, 70, 0.4);
-        animation: particleFloat 8s ease-in-out infinite;
-    }
-
-    .particle-1 { top: 15%; left: 10%; animation-delay: 0s; }
-    .particle-2 { top: 25%; left: 80%; animation-delay: 1s; background: rgba(255,107,53,0.4); }
-    .particle-3 { top: 60%; left: 20%; animation-delay: 2s; }
-    .particle-4 { top: 70%; left: 70%; animation-delay: 3s; background: rgba(255,209,102,0.3); }
-    .particle-5 { top: 40%; left: 50%; animation-delay: 4s; background: rgba(255,107,53,0.3); }
-    .particle-6 { top: 80%; left: 30%; animation-delay: 5s; }
-    .particle-7 { top: 10%; left: 60%; animation-delay: 6s; background: rgba(255,209,102,0.3); }
-    .particle-8 { top: 50%; left: 90%; animation-delay: 7s; }
-
-    @@keyframes particleFloat {
-        0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
-        25% { transform: translateY(-20px) translateX(10px); opacity: 0.7; }
-        50% { transform: translateY(-10px) translateX(-5px); opacity: 0.5; }
-        75% { transform: translateY(-25px) translateX(15px); opacity: 0.6; }
-    }
-
-    /* Stats ticker */
-    .hero-stats-ticker {
-        border-top: 1px solid rgba(255,255,255,0.06);
-        padding: 1.25rem 0;
-        z-index: 2;
-    }
-
-    .ticker-inner {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 2.5rem;
-        flex-wrap: wrap;
-    }
-
-    .ticker-item {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-    }
-
-    .ticker-value {
-        font-size: 1.2rem;
-        font-weight: 800;
-        background: var(--gradient-primary);
+    /* ==================== SHARED UTILS ==================== */
+    .text-gradient {
+        background: linear-gradient(135deg, #e63946, #ff6b35);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
 
-    .ticker-label {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .ticker-divider {
-        width: 1px;
-        height: 24px;
-        background: rgba(255,255,255,0.1);
-    }
-
-
-    /* ==================== SECTION UTILS ==================== */
-    .section-padding {
-        padding: 5rem 0;
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
     }
 
     .section-header {
-        text-align: center;
-        margin-bottom: 3rem;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
     }
 
+    .section-header-left {}
+
     .section-title {
-        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        font-size: clamp(1.5rem, 2.5vw, 2rem);
         font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 0.5rem;
+        letter-spacing: -0.01em;
+        margin-bottom: 0.25rem;
+        line-height: 1.2;
     }
 
     .section-subtitle {
+        font-size: 0.9rem;
         color: var(--text-secondary);
-        font-size: 1rem;
+    }
+
+    /* Panel base */
+    .panel {
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 14px;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .panel-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .panel-badge {
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: rgba(230,57,70,0.12);
+        color: var(--accent);
+        border: 1px solid rgba(230,57,70,0.2);
+        padding: 0.15rem 0.5rem;
+        border-radius: 20px;
+    }
+
+    .panel-link {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: color 0.2s;
+    }
+
+    .panel-link:hover {
+        color: var(--accent);
+        text-decoration: none;
+    }
+
+    /* Buttons */
+    .btn-accent {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: linear-gradient(135deg, #e63946, #ff6b35);
+        color: #fff;
+        font-weight: 700;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .btn-accent:hover {
+        filter: brightness(1.1);
+        box-shadow: 0 6px 24px rgba(230,57,70,0.35);
+        transform: translateY(-1px);
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .btn-lg { padding: 0.875rem 2rem; font-size: 0.95rem; }
+    .btn-xl { padding: 1.1rem 2.5rem; font-size: 1.05rem; border-radius: 10px; }
+    .btn-sm { padding: 0.45rem 1rem; font-size: 0.8rem; }
+
+    /* Reveal animations */
+    .reveal,
+    .reveal-up {
+        opacity: 0;
+        transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal { transform: translateY(0); }
+    .reveal-up { transform: translateY(32px); }
+
+    .reveal.revealed,
+    .reveal-up.revealed {
+        opacity: 1;
+        transform: translateY(0);
     }
 
 
-    /* ==================== STAT CARDS ==================== */
+    /* ==================== WELCOME ==================== */
+    .welcome-section {
+        padding: 3rem 0 2rem;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .welcome-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .welcome-date {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-secondary);
+        margin-bottom: 0.4rem;
+    }
+
+    .welcome-heading {
+        font-size: clamp(1.7rem, 3vw, 2.4rem);
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+        line-height: 1.1;
+    }
+
+    .welcome-sub {
+        font-size: 0.92rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .welcome-sub strong {
+        color: var(--text-primary);
+    }
+
+    .welcome-right {
+        flex-shrink: 0;
+    }
+
+
+    /* ==================== STATS ==================== */
+    .stats-section {
+        padding: 2.5rem 0;
+    }
+
     .stat-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 1.5rem;
+        gap: 1.25rem;
     }
 
     .stat-card {
         background: var(--bg-card);
         border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 12px;
-        padding: 1.5rem;
-        display: flex;
-        gap: 1rem;
-        align-items: flex-start;
-        transition: all 0.3s ease;
+        border-radius: 14px;
+        padding: 1.35rem;
+        transition: all 0.25s ease;
         position: relative;
         overflow: hidden;
     }
 
-    .stat-card::before {
+    .stat-card::after {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(--gradient-primary);
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #e63946, #ff6b35);
         opacity: 0;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.25s;
     }
 
     .stat-card:hover {
-        border-color: rgba(230,57,70,0.2);
+        border-color: rgba(230,57,70,0.18);
         transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
 
-    .stat-card:hover::before {
+    .stat-card:hover::after {
         opacity: 1;
     }
 
-    .stat-card-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 10px;
-        background: rgba(230,57,70,0.1);
+    .stat-card--fire:hover {
+        border-color: rgba(255,107,53,0.2);
+    }
+
+    .stat-card-top {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    /* Ring inside stat card */
+    .stat-ring-wrap {
+        position: relative;
+        flex-shrink: 0;
+        width: 52px;
+        height: 52px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
-        color: var(--accent);
+    }
+
+    .stat-ring-svg {
+        width: 52px;
+        height: 52px;
+        position: absolute;
+        top: 0; left: 0;
+    }
+
+    .stat-ring-svg--lg {
+        width: 52px;
+        height: 52px;
+    }
+
+    .stat-ring-value {
+        position: relative;
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        z-index: 1;
+    }
+
+    .stat-ring-value--lg {
+        font-size: 0.72rem;
+    }
+
+    /* Icon box */
+    .stat-icon-box {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
         flex-shrink: 0;
-    }
-
-    .stat-card-icon--fire {
-        background: rgba(255,107,53,0.1);
-        color: var(--accent-secondary);
-    }
-
-    .stat-card-icon--lightning {
-        background: rgba(255,209,102,0.1);
-        color: var(--accent-tertiary);
-    }
-
-    .stat-card-icon--chart {
         background: rgba(230,57,70,0.1);
         color: var(--accent);
     }
 
-    .stat-card-body {
+    .stat-icon-box--fire {
+        background: rgba(255,107,53,0.1);
+        color: #ff6b35;
+    }
+
+    .stat-icon-box--cal {
+        background: rgba(255,209,102,0.1);
+        color: #ffd166;
+    }
+
+    .stat-card-text {
         flex: 1;
         min-width: 0;
     }
 
-    .stat-card-label {
+    .stat-label {
         display: block;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: var(--text-secondary);
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.2rem;
     }
 
-    .stat-card-value {
+    .stat-value {
         display: block;
-        font-size: 1.8rem;
-        font-weight: 800;
-        line-height: 1.2;
+        font-size: 1.65rem;
+        font-weight: 900;
+        line-height: 1.15;
         color: var(--text-primary);
     }
 
-    .stat-card-unit {
-        font-size: 0.9rem;
+    .stat-unit {
+        font-size: 0.85rem;
         font-weight: 500;
         color: var(--text-secondary);
     }
 
-    .stat-card-detail {
+    .stat-detail {
         display: block;
-        font-size: 0.78rem;
+        font-size: 0.75rem;
         color: var(--text-secondary);
-        margin-top: 0.25rem;
-    }
-
-    .stat-progress-bar {
-        height: 4px;
-        background: rgba(255,255,255,0.06);
-        border-radius: 4px;
-        margin-top: 0.6rem;
-        overflow: hidden;
-    }
-
-    .stat-progress-fill {
-        height: 100%;
-        background: var(--gradient-primary);
-        border-radius: 4px;
-        transition: width 1s ease;
+        margin-top: 0.15rem;
     }
 
     .stat-badge {
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
-        font-size: 0.7rem;
+        gap: 0.25rem;
+        font-size: 0.68rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        padding: 0.2rem 0.6rem;
+        padding: 0.18rem 0.55rem;
         border-radius: 20px;
-        margin-top: 0.5rem;
+        margin-top: 0.3rem;
     }
 
     .stat-badge--gold {
-        background: rgba(255,209,102,0.15);
-        color: var(--accent-tertiary);
-        border: 1px solid rgba(255,209,102,0.3);
+        background: rgba(255,209,102,0.12);
+        color: #ffd166;
+        border: 1px solid rgba(255,209,102,0.25);
     }
 
-    .intensity-ring-container {
-        margin-top: 0.4rem;
+    .stat-bar-track {
+        height: 3px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 4px;
+        margin-top: 1rem;
+        overflow: hidden;
     }
 
-    .intensity-ring {
-        width: 48px;
-        height: 48px;
+    .stat-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #e63946, #ff6b35);
+        border-radius: 4px;
+        transition: width 1s ease;
+    }
+
+
+    /* ==================== MAIN GRID ==================== */
+    .main-section {
+        padding: 2.5rem 0;
+    }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .main-left {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .main-right {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* Quick Actions */
+    .action-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+    }
+
+    .action-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.1rem;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        text-decoration: none;
+        color: var(--text-primary);
+        transition: all 0.22s ease;
+    }
+
+    .action-card:hover {
+        background: rgba(255,255,255,0.04);
+        border-color: rgba(230,57,70,0.2);
+        transform: translateX(3px);
+        text-decoration: none;
+        color: var(--text-primary);
+    }
+
+    .action-card--primary {
+        background: rgba(230,57,70,0.07);
+        border-color: rgba(230,57,70,0.15);
+    }
+
+    .action-card--primary:hover {
+        background: rgba(230,57,70,0.12);
+        border-color: rgba(230,57,70,0.3);
+    }
+
+    .action-card-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: rgba(230,57,70,0.12);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        flex-shrink: 0;
+    }
+
+    .action-card-icon--secondary {
+        background: rgba(255,107,53,0.1);
+        color: #ff6b35;
+    }
+
+    .action-card-icon--neutral {
+        background: rgba(255,255,255,0.06);
+        color: var(--text-secondary);
+    }
+
+    .action-card-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .action-card-title {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 0.1rem;
+    }
+
+    .action-card-desc {
+        display: block;
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+    }
+
+    .action-card-arrow {
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.2);
+        transition: all 0.2s;
+    }
+
+    .action-card:hover .action-card-arrow {
+        color: var(--accent);
+        transform: translateX(2px);
+    }
+
+    /* Workout list */
+    .workout-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .workout-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.9rem 1rem;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        transition: all 0.2s ease;
+    }
+
+    .workout-row:hover {
+        background: rgba(255,255,255,0.04);
+        border-color: rgba(230,57,70,0.12);
+        transform: translateX(2px);
+    }
+
+    .workout-row-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .wicon--red { background: rgba(230,57,70,0.12); color: #e63946; }
+    .wicon--orange { background: rgba(255,107,53,0.12); color: #ff6b35; }
+    .wicon--green { background: rgba(34,197,94,0.12); color: #22c55e; }
+    .wicon--yellow { background: rgba(255,209,102,0.12); color: #ffd166; }
+
+    .workout-row-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .workout-row-name {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .workout-row-tags {
+        display: flex;
+        gap: 0.3rem;
+        flex-wrap: wrap;
+    }
+
+    .muscle-tag {
+        font-size: 0.67rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        background: rgba(255,255,255,0.05);
+        color: var(--text-secondary);
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+    }
+
+    .workout-row-meta {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .workout-row-time {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .workout-row-stats {
+        display: flex;
+        gap: 0.75rem;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .workout-row-stats i {
+        font-size: 0.65rem;
+        margin-right: 0.2rem;
+        opacity: 0.5;
+    }
+
+    .intensity-badge {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.28rem 0.65rem;
+        border-radius: 20px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .ibadge--light {
+        background: rgba(255,255,255,0.05);
+        color: rgba(255,255,255,0.4);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .ibadge--moderate {
+        background: rgba(255,209,102,0.1);
+        color: #ffd166;
+        border: 1px solid rgba(255,209,102,0.2);
+    }
+
+    .ibadge--high {
+        background: rgba(255,107,53,0.1);
+        color: #ff6b35;
+        border: 1px solid rgba(255,107,53,0.22);
+    }
+
+    .ibadge--extreme {
+        background: rgba(230,57,70,0.1);
+        color: #e63946;
+        border: 1px solid rgba(230,57,70,0.22);
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 2rem;
+        opacity: 0.2;
+        margin-bottom: 0.75rem;
+    }
+
+    .empty-state-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.35rem;
+    }
+
+    .empty-state-desc {
+        font-size: 0.82rem;
+        margin-bottom: 1.25rem;
+    }
+
+    /* Muscle Overview */
+    .muscle-overview-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .muscle-overview-row {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+    }
+
+    .mdot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .mdot--strong { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+    .mdot--moderate { background: #ff6b35; box-shadow: 0 0 6px rgba(255,107,53,0.5); }
+    .mdot--needs-work { background: #e63946; box-shadow: 0 0 6px rgba(230,57,70,0.5); }
+
+    .muscle-overview-name {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        min-width: 70px;
+        flex-shrink: 0;
+    }
+
+    .muscle-overview-bar-track {
+        flex: 1;
+        height: 4px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .muscle-overview-bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 1s ease;
+    }
+
+    .muscle-overview-bar-fill.mdot--strong { background: rgba(34,197,94,0.6); box-shadow: none; }
+    .muscle-overview-bar-fill.mdot--moderate { background: rgba(255,107,53,0.6); box-shadow: none; }
+    .muscle-overview-bar-fill.mdot--needs-work { background: rgba(230,57,70,0.5); box-shadow: none; }
+
+    .muscle-overview-legend {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .legend-pill {
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+    }
+
+    .legend-pill--strong { background: rgba(34,197,94,0.1); color: #22c55e; }
+    .legend-pill--moderate { background: rgba(255,107,53,0.1); color: #ff6b35; }
+    .legend-pill--needs-work { background: rgba(230,57,70,0.1); color: #e63946; }
+
+    /* Achievements sidebar */
+    .achieve-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .achieve-row {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.85rem;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        transition: all 0.2s;
+    }
+
+    .achieve-row:hover {
+        border-color: rgba(255,255,255,0.08);
+    }
+
+    .achieve-row--unlocked {
+        border-color: rgba(255,209,102,0.15);
+        background: rgba(255,209,102,0.03);
+    }
+
+    .achieve-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .achieve-icon--gold { background: rgba(255,209,102,0.12); color: #ffd166; border: 1px solid rgba(255,209,102,0.2); }
+    .achieve-icon--accent { background: rgba(230,57,70,0.1); color: var(--accent); }
+
+    .achieve-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .achieve-name {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        margin-bottom: 0.35rem;
+    }
+
+    .achieve-bar-track {
+        height: 3px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 0.3rem;
+    }
+
+    .achieve-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #e63946, #ff6b35);
+        border-radius: 4px;
+        transition: width 1.2s ease;
+    }
+
+    .achieve-bar-fill--complete {
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+    }
+
+    .achieve-label {
+        font-size: 0.68rem;
+        color: var(--text-secondary);
+    }
+
+    .achieve-badge--done {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(34,197,94,0.12);
+        color: #22c55e;
+        border: 1px solid rgba(34,197,94,0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        flex-shrink: 0;
+    }
+
+    .achieve-pct {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: var(--text-secondary);
+        flex-shrink: 0;
     }
 
 
     /* ==================== BODY MAP ==================== */
     .body-map-section {
-        position: relative;
+        padding: 4rem 0;
+        border-top: 1px solid rgba(255,255,255,0.04);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
     }
 
     .body-map-layout {
@@ -1179,23 +1638,23 @@
         position: relative;
         display: flex;
         justify-content: center;
-        padding: 2rem;
+        align-items: flex-start;
+        padding: 2rem 1rem;
     }
 
     .body-map-glow {
         position: absolute;
-        top: 50%;
-        left: 50%;
+        top: 50%; left: 50%;
         transform: translate(-50%, -50%);
-        width: 300px;
+        width: 280px;
         height: 400px;
-        background: radial-gradient(ellipse, rgba(230,57,70,0.06) 0%, transparent 70%);
+        background: radial-gradient(ellipse, rgba(230,57,70,0.07) 0%, transparent 65%);
         pointer-events: none;
     }
 
     .body-map-svg {
         width: 100%;
-        max-width: 300px;
+        max-width: 280px;
         height: auto;
         position: relative;
         z-index: 1;
@@ -1203,7 +1662,7 @@
 
     .muscle-group {
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.25s ease;
     }
 
     .muscle-group:hover {
@@ -1228,7 +1687,6 @@
         stroke-width: 2;
     }
 
-    /* Scan line animation */
     @@keyframes bodyScan {
         0% { transform: translateY(0); opacity: 0; }
         10% { opacity: 1; }
@@ -1240,90 +1698,80 @@
         animation: bodyScan 4s ease-in-out infinite;
     }
 
-    /* Body map labels */
-    .body-map-label {
-        position: absolute;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        pointer-events: none;
-        z-index: 2;
+    @@keyframes musclePulseAnim {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
     }
 
-    .body-map-label-text {
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--text-secondary);
-        white-space: nowrap;
+    .muscle-group[data-status="needs-work"] {
+        animation: musclePulseAnim 2.5s ease-in-out infinite;
     }
 
-    .body-map-label-line {
-        display: block;
-        width: 20px;
-        height: 1px;
-        background: rgba(255,255,255,0.15);
-    }
-
-    /* Info panel */
-    .body-map-info {
+    /* Info panel right side */
+    .body-map-info-panel {
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 1.25rem;
     }
 
-    .body-map-info-title {
-        font-size: 0.8rem;
+    .bm-card {
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 12px;
+        padding: 1.35rem;
+    }
+
+    .bm-card-title {
+        font-size: 0.75rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         color: var(--text-secondary);
         margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
+        padding-bottom: 0.6rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
     }
 
-    .legend-items {
+    .bm-legend {
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
     }
 
-    .legend-item {
+    .bm-legend-item {
         display: flex;
         align-items: center;
         gap: 0.75rem;
     }
 
     .legend-dot {
-        width: 12px;
-        height: 12px;
+        width: 10px;
+        height: 10px;
         border-radius: 50%;
         flex-shrink: 0;
     }
 
-    .legend-dot--strong { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
-    .legend-dot--moderate { background: #ff6b35; box-shadow: 0 0 8px rgba(255,107,53,0.4); }
-    .legend-dot--needs-work { background: #e63946; box-shadow: 0 0 8px rgba(230,57,70,0.4); }
+    .legend-dot--strong { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.5); }
+    .legend-dot--moderate { background: #ff6b35; box-shadow: 0 0 8px rgba(255,107,53,0.5); }
+    .legend-dot--needs-work { background: #e63946; box-shadow: 0 0 8px rgba(230,57,70,0.5); }
 
-    .legend-text {
-        font-size: 0.9rem;
+    .bm-legend-label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
         color: var(--text-primary);
+        line-height: 1.2;
     }
 
-    .legend-desc {
+    .bm-legend-desc {
+        display: block;
+        font-size: 0.75rem;
         color: var(--text-secondary);
-        font-size: 0.8rem;
     }
 
-    /* Detail panel */
-    .muscle-detail-panel {
-        background: var(--bg-card);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 12px;
-        padding: 1.5rem;
-        min-height: 200px;
-        transition: all 0.3s ease;
+    /* Detail card */
+    .bm-detail-card {
+        min-height: 180px;
     }
 
     .muscle-detail-empty {
@@ -1331,76 +1779,79 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: 160px;
+        min-height: 130px;
+        gap: 0.6rem;
         color: var(--text-secondary);
-        gap: 0.75rem;
     }
 
     .muscle-detail-empty i {
-        font-size: 2rem;
-        opacity: 0.4;
+        font-size: 1.8rem;
+        opacity: 0.3;
     }
 
     .muscle-detail-empty p {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         text-align: center;
+        margin: 0;
     }
 
     .muscle-detail-name {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         font-weight: 800;
         text-transform: uppercase;
+        letter-spacing: 0.02em;
         margin-bottom: 0.5rem;
     }
 
     .muscle-detail-status {
         display: inline-block;
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        padding: 0.25rem 0.75rem;
+        padding: 0.22rem 0.7rem;
         border-radius: 20px;
         margin-bottom: 1rem;
     }
 
     .muscle-detail-status.status--strong {
-        background: rgba(34,197,94,0.15);
+        background: rgba(34,197,94,0.12);
         color: #22c55e;
-        border: 1px solid rgba(34,197,94,0.3);
+        border: 1px solid rgba(34,197,94,0.25);
     }
 
     .muscle-detail-status.status--moderate {
-        background: rgba(255,107,53,0.15);
+        background: rgba(255,107,53,0.12);
         color: #ff6b35;
-        border: 1px solid rgba(255,107,53,0.3);
+        border: 1px solid rgba(255,107,53,0.25);
     }
 
     .muscle-detail-status.status--needs-work {
-        background: rgba(230,57,70,0.15);
+        background: rgba(230,57,70,0.12);
         color: #e63946;
-        border: 1px solid rgba(230,57,70,0.3);
+        border: 1px solid rgba(230,57,70,0.25);
     }
 
-    .muscle-detail-stats {
+    .muscle-detail-rows {
         display: flex;
         flex-direction: column;
-        gap: 0.6rem;
-        margin-bottom: 1.25rem;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
     }
 
     .muscle-detail-row {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        font-size: 0.88rem;
+        font-size: 0.83rem;
         color: var(--text-secondary);
     }
 
     .muscle-detail-row i {
-        width: 18px;
+        width: 16px;
         text-align: center;
         color: var(--accent);
+        font-size: 0.8rem;
     }
 
     .muscle-detail-row strong {
@@ -1408,206 +1859,115 @@
         margin-left: auto;
     }
 
-    .muscle-detail-btn {
-        display: inline-flex;
+    .muscle-detail-cta {
         width: 100%;
         justify-content: center;
     }
 
-    /* Summary */
-    .body-map-summary {
-        background: var(--bg-card);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 12px;
-        padding: 1.5rem;
+    /* Overview */
+    .bm-overview-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
     }
 
-    .summary-stat-row {
+    .bm-overview-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.5rem 0;
+        padding: 0.45rem 0;
         border-bottom: 1px solid rgba(255,255,255,0.04);
+        font-size: 0.83rem;
     }
 
-    .summary-stat-row:last-of-type {
+    .bm-overview-row:last-child {
         border-bottom: none;
     }
 
-    .summary-label {
-        font-size: 0.85rem;
+    .bm-overview-row span {
         color: var(--text-secondary);
     }
 
-    .summary-value {
-        font-weight: 700;
-        font-size: 0.95rem;
+    .bm-overview-row strong {
+        font-weight: 800;
     }
 
-    .summary-value--strong { color: #22c55e; }
-    .summary-value--moderate { color: #ff6b35; }
-    .summary-value--needs-work { color: #e63946; }
+    .text--strong { color: #22c55e; }
+    .text--moderate { color: #ff6b35; }
+    .text--needs-work { color: #e63946; }
 
-    .summary-progress-bar {
+    .bm-overview-bar {
         display: flex;
-        height: 6px;
-        border-radius: 6px;
+        height: 5px;
+        border-radius: 5px;
         overflow: hidden;
         margin-top: 1rem;
         gap: 2px;
     }
 
-    .summary-progress-segment {
+    .bm-bar-seg {
         height: 100%;
         border-radius: 3px;
         transition: width 1s ease;
     }
 
-    .summary-progress--strong { background: #22c55e; }
-    .summary-progress--moderate { background: #ff6b35; }
-    .summary-progress--needs-work { background: #e63946; }
+    .bm-bar-seg--strong { background: #22c55e; }
+    .bm-bar-seg--moderate { background: #ff6b35; }
+    .bm-bar-seg--needs-work { background: #e63946; }
 
-    .body-map-hint {
-        text-align: center;
-        color: var(--text-secondary);
-        font-size: 0.85rem;
-        margin-top: 2rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid rgba(255,255,255,0.04);
-    }
-
-    .body-map-hint i {
-        color: var(--accent);
-        margin-right: 0.3rem;
-    }
-
-
-    /* ==================== ACTIVITY LIST ==================== */
-    .activity-list {
+    /* Status summary pills (section header) */
+    .status-summary-pills {
         display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        align-items: center;
     }
 
-    .activity-card {
+    .status-pill {
         display: flex;
         align-items: center;
-        gap: 1.25rem;
-        padding: 1.25rem 1.5rem;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        border: 1px solid rgba(255,255,255,0.04);
-    }
-
-    .activity-card:hover {
-        border-color: rgba(230,57,70,0.15);
-        transform: translateX(4px);
-    }
-
-    .activity-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1rem;
-        flex-shrink: 0;
-    }
-
-    .activity-icon--push { background: rgba(230,57,70,0.12); color: #e63946; }
-    .activity-icon--legs { background: rgba(255,107,53,0.12); color: #ff6b35; }
-    .activity-icon--pull { background: rgba(34,197,94,0.12); color: #22c55e; }
-    .activity-icon--arms { background: rgba(255,209,102,0.12); color: #ffd166; }
-    .activity-icon--hiit { background: rgba(230,57,70,0.12); color: #e63946; }
-
-    .activity-info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .activity-name {
-        font-size: 1rem;
-        font-weight: 700;
-        margin-bottom: 0.15rem;
-    }
-
-    .activity-date {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-    }
-
-    .activity-meta {
-        display: flex;
-        gap: 1.25rem;
-    }
-
-    .activity-meta-item {
-        font-size: 0.82rem;
-        color: var(--text-secondary);
-        display: flex;
-        align-items: center;
-        gap: 0.35rem;
-        white-space: nowrap;
-    }
-
-    .activity-meta-item i {
+        gap: 0.4rem;
         font-size: 0.75rem;
-        color: rgba(255,255,255,0.3);
-    }
-
-    .activity-intensity {
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
+        font-weight: 600;
         padding: 0.3rem 0.75rem;
         border-radius: 20px;
-        display: flex;
-        align-items: center;
-        gap: 0.35rem;
-        white-space: nowrap;
-        flex-shrink: 0;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.06);
     }
 
-    .activity-intensity--high {
-        background: rgba(255,107,53,0.12);
-        color: #ff6b35;
-        border: 1px solid rgba(255,107,53,0.25);
+    .spill-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        display: inline-block;
     }
 
-    .activity-intensity--extreme {
-        background: rgba(230,57,70,0.12);
-        color: #e63946;
-        border: 1px solid rgba(230,57,70,0.25);
-    }
-
-    .activity-intensity--medium {
-        background: rgba(255,209,102,0.12);
-        color: #ffd166;
-        border: 1px solid rgba(255,209,102,0.25);
-    }
+    .status-pill--strong .spill-dot { background: #22c55e; }
+    .status-pill--moderate .spill-dot { background: #ff6b35; }
+    .status-pill--needs-work .spill-dot { background: #e63946; }
 
 
     /* ==================== WEEKLY CHART ==================== */
+    .weekly-section {
+        padding: 4rem 0;
+    }
+
     .weekly-layout {
         display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 1.5rem;
+        grid-template-columns: 1fr 260px;
+        gap: 1.25rem;
         align-items: start;
     }
 
     .weekly-chart {
-        padding: 2rem;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.05);
+        padding: 1.75rem;
     }
 
     .chart-area {
         display: flex;
         gap: 1rem;
         align-items: flex-end;
-        height: 280px;
+        height: 240px;
     }
 
     .chart-y-axis {
@@ -1615,19 +1975,19 @@
         flex-direction: column;
         justify-content: space-between;
         height: 100%;
-        padding-bottom: 28px;
+        padding-bottom: 26px;
     }
 
     .chart-y-axis span {
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         color: var(--text-secondary);
         text-align: right;
-        min-width: 28px;
+        min-width: 26px;
     }
 
     .chart-bars {
         display: flex;
-        gap: 0.75rem;
+        gap: 0.6rem;
         flex: 1;
         align-items: flex-end;
         height: 100%;
@@ -1645,25 +2005,26 @@
 
     .chart-bar {
         width: 100%;
-        max-width: 48px;
-        border-radius: 6px 6px 2px 2px;
+        max-width: 44px;
+        border-radius: 5px 5px 2px 2px;
         position: relative;
         transition: all 0.3s ease;
         cursor: pointer;
     }
 
     .chart-bar--active {
-        background: var(--gradient-primary);
-        box-shadow: 0 2px 12px rgba(230,57,70,0.2);
+        background: linear-gradient(180deg, #ff6b35, #e63946);
+        box-shadow: 0 2px 10px rgba(230,57,70,0.18);
     }
 
     .chart-bar--active:hover {
-        box-shadow: 0 4px 20px rgba(230,57,70,0.35);
+        box-shadow: 0 4px 20px rgba(230,57,70,0.3);
         filter: brightness(1.15);
     }
 
     .chart-bar--best {
-        box-shadow: 0 2px 16px rgba(255,107,53,0.3);
+        background: linear-gradient(180deg, #ffd166, #ff6b35);
+        box-shadow: 0 2px 14px rgba(255,107,53,0.25);
     }
 
     .chart-bar--rest {
@@ -1675,12 +2036,12 @@
         top: -28px;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         font-weight: 700;
         color: var(--text-primary);
-        background: var(--bg-card);
+        background: var(--bg-secondary);
         border: 1px solid rgba(255,255,255,0.1);
-        padding: 0.2rem 0.5rem;
+        padding: 0.18rem 0.45rem;
         border-radius: 4px;
         white-space: nowrap;
         opacity: 0;
@@ -1693,15 +2054,14 @@
     }
 
     .chart-day {
-        font-size: 0.75rem;
+        font-size: 0.68rem;
         font-weight: 600;
         color: var(--text-secondary);
         text-transform: uppercase;
+        letter-spacing: 0.04em;
     }
 
-    .chart-day--rest {
-        opacity: 0.4;
-    }
+    .chart-day--rest { opacity: 0.35; }
 
     /* Weekly side stats */
     .weekly-stats {
@@ -1710,397 +2070,126 @@
         gap: 0.75rem;
     }
 
-    .weekly-stat-card {
+    .weekly-stat-item {
         display: flex;
         align-items: center;
-        gap: 1rem;
-        padding: 1.1rem 1.25rem;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.05);
-        transition: all 0.3s ease;
+        gap: 0.85rem;
+        padding: 1rem 1.1rem;
+        transition: all 0.2s;
     }
 
-    .weekly-stat-card:hover {
+    .weekly-stat-item:hover {
         border-color: rgba(230,57,70,0.15);
     }
 
-    .weekly-stat-icon {
-        width: 40px;
-        height: 40px;
+    .wstat-icon {
+        width: 36px;
+        height: 36px;
         border-radius: 8px;
         background: rgba(230,57,70,0.1);
+        color: var(--accent);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--accent);
-        font-size: 1rem;
+        font-size: 0.9rem;
         flex-shrink: 0;
     }
 
-    .weekly-stat-info {
-        flex: 1;
+    .wstat-icon--up {
+        background: rgba(34,197,94,0.1);
+        color: #22c55e;
     }
 
-    .weekly-stat-value {
+    .wstat-value {
         display: block;
-        font-size: 1.3rem;
+        font-size: 1.15rem;
         font-weight: 800;
+        line-height: 1.2;
     }
 
-    .weekly-stat-unit {
-        font-size: 0.75rem;
+    .wstat-value--up { color: #22c55e; }
+
+    .wstat-unit {
+        font-size: 0.72rem;
         font-weight: 500;
         color: var(--text-secondary);
     }
 
-    .weekly-stat-label {
-        font-size: 0.75rem;
+    .wstat-label {
+        display: block;
+        font-size: 0.7rem;
         color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.05em;
-    }
-
-
-    /* ==================== ACHIEVEMENTS ==================== */
-    .achievements-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1.5rem;
-    }
-
-    .achievement-card {
-        position: relative;
-        border-radius: 12px;
-        padding: 1.75rem 1.5rem;
-        text-align: center;
-        border: 1px solid rgba(255,255,255,0.05);
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-
-    .achievement-card:hover {
-        transform: translateY(-3px);
-    }
-
-    .achievement--unlocked.achievement--gold {
-        border-color: rgba(255,209,102,0.3);
-    }
-
-    .achievement--gold:hover {
-        box-shadow: 0 0 30px rgba(255,209,102,0.15);
-    }
-
-    .achievement-glow {
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(ellipse at center, rgba(255,209,102,0.06) 0%, transparent 70%);
-        pointer-events: none;
-    }
-
-    .achievement--locked {
-        opacity: 0.5;
-    }
-
-    .achievement-lock-overlay {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 3;
-        pointer-events: none;
-    }
-
-    .achievement-lock-overlay i {
-        font-size: 2.5rem;
-        color: rgba(255,255,255,0.08);
-    }
-
-    .achievement-icon-area {
-        margin-bottom: 1rem;
-        position: relative;
-        z-index: 1;
-    }
-
-    .achievement-icon-ring {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.4rem;
-    }
-
-    .achievement-icon-ring--gold {
-        background: rgba(255,209,102,0.12);
-        border: 2px solid rgba(255,209,102,0.4);
-        color: #ffd166;
-        box-shadow: 0 0 20px rgba(255,209,102,0.15);
-    }
-
-    .achievement-icon-ring--accent {
-        background: rgba(230,57,70,0.1);
-        border: 2px solid rgba(230,57,70,0.3);
-        color: var(--accent);
-    }
-
-    .achievement-icon-ring--locked {
-        background: rgba(255,255,255,0.04);
-        border: 2px solid rgba(255,255,255,0.08);
-        color: rgba(255,255,255,0.2);
-    }
-
-    .achievement-title {
-        font-size: 1.05rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        margin-bottom: 0.35rem;
-        position: relative;
-        z-index: 1;
-    }
-
-    .achievement-desc {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-        margin-bottom: 0.75rem;
-        position: relative;
-        z-index: 1;
-    }
-
-    .achievement-status {
-        position: relative;
-        z-index: 1;
-    }
-
-    .achievement-badge {
-        font-size: 0.65rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        padding: 0.2rem 0.6rem;
-        border-radius: 20px;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .achievement-badge--unlocked {
-        background: rgba(34,197,94,0.12);
-        color: #22c55e;
-        border: 1px solid rgba(34,197,94,0.25);
-    }
-
-    .achievement-badge--progress {
-        background: rgba(255,107,53,0.12);
-        color: #ff6b35;
-        border: 1px solid rgba(255,107,53,0.25);
-    }
-
-    .achievement-badge--locked {
-        background: rgba(255,255,255,0.05);
-        color: rgba(255,255,255,0.3);
-        border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .achievement-progress-bar {
-        height: 5px;
-        background: rgba(255,255,255,0.06);
-        border-radius: 5px;
-        margin-top: 1rem;
-        overflow: hidden;
-        position: relative;
-        z-index: 1;
-    }
-
-    .achievement-progress-fill {
-        height: 100%;
-        border-radius: 5px;
-        background: var(--gradient-primary);
-        transition: width 1.5s ease;
-    }
-
-    .achievement-progress--complete .achievement-progress-fill {
-        background: linear-gradient(135deg, #22c55e, #16a34a);
-    }
-
-    .achievement-progress--locked .achievement-progress-fill {
-        background: rgba(255,255,255,0.06);
-    }
-
-    .achievement-progress-text {
-        font-size: 0.72rem;
-        color: var(--text-secondary);
-        margin-top: 0.4rem;
-        display: block;
-        position: relative;
-        z-index: 1;
+        margin-top: 0.1rem;
     }
 
 
     /* ==================== FOOTER CTA ==================== */
-    .footer-cta-section {
+    .footer-cta {
         position: relative;
-        padding: 6rem 0;
-        text-align: center;
+        padding: 5rem 0;
         overflow: hidden;
-        background: linear-gradient(180deg, var(--bg-primary) 0%, rgba(22,22,31,0.8) 100%);
     }
 
-    .footer-cta-container {
+    .footer-cta-bg {
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(ellipse 600px 300px at 70% 50%, rgba(230,57,70,0.06) 0%, transparent 70%),
+            radial-gradient(ellipse 400px 400px at 20% 50%, rgba(255,107,53,0.04) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .footer-cta-inner {
         position: relative;
-        z-index: 2;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        flex-wrap: wrap;
+        padding-top: 3rem;
+        border-top: 1px solid rgba(255,255,255,0.05);
     }
 
     .footer-cta-heading {
-        font-size: clamp(2rem, 4vw, 3rem);
+        font-size: clamp(1.6rem, 3vw, 2.4rem);
         font-weight: 900;
-        margin-bottom: 0.75rem;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.4rem;
+        line-height: 1.15;
     }
 
-    .footer-cta-subtitle {
-        font-size: 1.1rem;
+    .footer-cta-sub {
+        font-size: 0.92rem;
         color: var(--text-secondary);
-        margin-bottom: 2rem;
-    }
-
-    .footer-cta-orb {
-        position: absolute;
-        border-radius: 50%;
-        pointer-events: none;
-        filter: blur(80px);
-    }
-
-    .footer-cta-orb--1 {
-        width: 400px;
-        height: 400px;
-        background: rgba(230,57,70,0.08);
-        top: -100px;
-        right: -100px;
-    }
-
-    .footer-cta-orb--2 {
-        width: 300px;
-        height: 300px;
-        background: rgba(255,107,53,0.06);
-        bottom: -80px;
-        left: -80px;
-    }
-
-    .footer-cta-orb--3 {
-        width: 200px;
-        height: 200px;
-        background: rgba(255,209,102,0.04);
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-
-
-    /* ==================== BUTTONS ==================== */
-    .btn-accent {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: var(--gradient-primary);
-        color: #fff;
-        font-weight: 700;
-        border: none;
-        border-radius: 8px;
-        padding: 0.75rem 1.5rem;
-        font-size: 0.9rem;
-        text-decoration: none;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .btn-accent:hover {
-        filter: brightness(1.1);
-        box-shadow: 0 4px 20px rgba(230,57,70,0.3);
-        transform: translateY(-1px);
-        color: #fff;
-        text-decoration: none;
-    }
-
-    .btn-ghost {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: transparent;
-        color: var(--text-primary);
-        font-weight: 700;
-        border: 1px solid rgba(255,255,255,0.15);
-        border-radius: 8px;
-        padding: 0.75rem 1.5rem;
-        font-size: 0.9rem;
-        text-decoration: none;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .btn-ghost:hover {
-        border-color: rgba(230,57,70,0.4);
-        background: rgba(230,57,70,0.08);
-        color: var(--text-primary);
-        text-decoration: none;
-    }
-
-    .btn-lg {
-        padding: 0.9rem 2rem;
-        font-size: 1rem;
-    }
-
-    .btn-xl {
-        padding: 1.1rem 2.5rem;
-        font-size: 1.1rem;
-        border-radius: 10px;
-    }
-
-    .btn-sm {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-    }
-
-
-    /* ==================== SCROLL REVEAL ==================== */
-    .reveal,
-    .reveal-up {
-        opacity: 0;
-        transition: opacity 0.8s ease, transform 0.8s ease;
-    }
-
-    .reveal {
-        transform: translateY(0);
-    }
-
-    .reveal-up {
-        transform: translateY(40px);
-    }
-
-    .reveal.revealed,
-    .reveal-up.revealed {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-
-    /* ==================== NEEDS-WORK PULSE ==================== */
-    @@keyframes musclePulseAnim {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.55; }
-    }
-
-    .muscle-group[data-status="needs-work"] {
-        animation: musclePulseAnim 2.5s ease-in-out infinite;
+        margin: 0;
     }
 
 
     /* ==================== RESPONSIVE ==================== */
-    @@media (max-width: 1024px) {
+    @@media (max-width: 1100px) {
+        .main-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .main-right {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .weekly-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .weekly-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 900px) {
         .stat-grid {
             grid-template-columns: repeat(2, 1fr);
         }
@@ -2109,86 +2198,58 @@
             grid-template-columns: 1fr;
         }
 
-        .weekly-layout {
-            grid-template-columns: 1fr;
-        }
-
-        .achievements-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .hero-visual {
-            display: none;
+        .body-map-container {
+            max-width: 320px;
+            margin: 0 auto;
         }
     }
 
-    @@media (max-width: 768px) {
-        .hero-heading {
-            font-size: 2.4rem;
-        }
-
-        .hero-cta-group {
-            flex-direction: column;
-        }
-
-        .activity-card {
-            flex-wrap: wrap;
-            gap: 0.75rem;
-        }
-
-        .activity-meta {
-            order: 4;
-            width: 100%;
-            gap: 1rem;
-        }
-
-        .activity-intensity {
-            margin-left: auto;
-        }
-
-        .chart-area {
-            height: 200px;
-        }
-
-        .weekly-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .section-padding {
-            padding: 3rem 0;
-        }
-    }
-
-    @@media (max-width: 480px) {
+    @@media (max-width: 640px) {
         .stat-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .achievements-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .ticker-inner {
-            flex-direction: column;
+            grid-template-columns: 1fr 1fr;
             gap: 0.75rem;
         }
 
-        .ticker-divider {
-            width: 40px;
-            height: 1px;
+        .welcome-inner {
+            flex-direction: column;
+            align-items: flex-start;
         }
 
-        .weekly-stats {
+        .main-right {
+            grid-template-columns: 1fr;
+        }
+
+        .section-header {
+            flex-direction: column;
+        }
+
+        .footer-cta-inner {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .workout-row {
+            flex-wrap: wrap;
+        }
+
+        .workout-row-meta {
+            text-align: left;
+            order: 3;
+        }
+
+        .intensity-badge {
+            order: 4;
+        }
+    }
+
+    @@media (max-width: 420px) {
+        .stat-grid {
             grid-template-columns: 1fr;
         }
     }
 </style>
 
 
-<!-- ============================================================
-     PAGE-SPECIFIC SCRIPTS
-     ============================================================ -->
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -2215,8 +2276,26 @@
                 'needs-work': 'status--needs-work'
             };
 
+            var muscleRoutes = {
+                'Chest (Left)': '/Home/Chest',
+                'Chest (Right)': '/Home/Chest',
+                'Left Bicep': '/Home/Arms',
+                'Right Bicep': '/Home/Arms',
+                'Left Forearm': '/Home/Arms',
+                'Right Forearm': '/Home/Arms',
+                'Left Quad': '/Home/Legs',
+                'Right Quad': '/Home/Legs',
+                'Left Calf': '/Home/Legs',
+                'Right Calf': '/Home/Legs',
+                'Traps': '/Home/Back',
+                'Left Shoulder': '/Home/Back',
+                'Right Shoulder': '/Home/Back',
+                'Abs': '/Home/Chest',
+                'Left Oblique': '/Home/Chest',
+                'Right Oblique': '/Home/Chest'
+            };
+
             muscleGroups.forEach(function (muscle) {
-                // Hover enter
                 muscle.addEventListener('mouseenter', function () {
                     var name = this.getAttribute('data-muscle');
                     var status = this.getAttribute('data-status');
@@ -2231,32 +2310,33 @@
                     muscleStatus.className = 'muscle-detail-status ' + (statusClasses[status] || '');
                     muscleLastTrained.textContent = lastTrained;
                     muscleExercises.textContent = exercises;
+
+                    if (muscleTrainBtn && muscleRoutes[name]) {
+                        muscleTrainBtn.href = muscleRoutes[name];
+                    }
                 });
 
-                // Hover leave
                 muscle.addEventListener('mouseleave', function () {
                     detailEmpty.style.display = 'flex';
                     detailContent.style.display = 'none';
                 });
 
-                // Click
                 muscle.addEventListener('click', function () {
                     var name = this.getAttribute('data-muscle');
-                    console.log('Navigate to muscle detail:', name);
+                    if (muscleRoutes[name]) {
+                        window.location.href = muscleRoutes[name];
+                    }
                 });
             });
 
 
-            // ===== SCROLL REVEAL ANIMATION =====
-            var revealElements = document.querySelectorAll('.reveal, .reveal-up');
+            // ===== SCROLL REVEAL =====
+            var revealEls = document.querySelectorAll('.reveal, .reveal-up');
 
             function checkReveal() {
-                var windowHeight = window.innerHeight;
-                var revealPoint = 100;
-
-                revealElements.forEach(function (el) {
-                    var elementTop = el.getBoundingClientRect().top;
-                    if (elementTop < windowHeight - revealPoint) {
+                var vh = window.innerHeight;
+                revealEls.forEach(function (el) {
+                    if (el.getBoundingClientRect().top < vh - 80) {
                         el.classList.add('revealed');
                     }
                 });
@@ -2266,52 +2346,62 @@
             window.addEventListener('scroll', checkReveal, { passive: true });
 
 
-            // ===== CHART BAR ENTRANCE ANIMATION =====
+            // ===== CHART BAR ENTRANCE =====
             var chartSection = document.getElementById('weekly-progress');
             if (chartSection) {
                 var chartObserver = new IntersectionObserver(function (entries) {
                     entries.forEach(function (entry) {
                         if (entry.isIntersecting) {
                             var bars = entry.target.querySelectorAll('.chart-bar');
-                            bars.forEach(function (bar, index) {
-                                var targetHeight = bar.style.height;
+                            bars.forEach(function (bar, i) {
+                                var targetH = bar.style.height;
                                 bar.style.height = '0%';
                                 setTimeout(function () {
-                                    bar.style.transition = 'height 0.6s ease';
-                                    bar.style.height = targetHeight;
-                                }, index * 100);
+                                    bar.style.transition = 'height 0.55s ease';
+                                    bar.style.height = targetH;
+                                }, i * 90);
                             });
                             chartObserver.unobserve(entry.target);
                         }
                     });
-                }, { threshold: 0.3 });
-
+                }, { threshold: 0.25 });
                 chartObserver.observe(chartSection);
             }
 
 
-            // ===== STAT CARD COUNTER ANIMATION =====
-            var statSection = document.getElementById('quick-stats');
-            if (statSection) {
+            // ===== STAT CARD STAGGER =====
+            var statsSection = document.getElementById('quick-stats');
+            if (statsSection) {
                 var statObserver = new IntersectionObserver(function (entries) {
                     entries.forEach(function (entry) {
                         if (entry.isIntersecting) {
                             entry.target.querySelectorAll('.stat-card').forEach(function (card, i) {
                                 card.style.opacity = '0';
-                                card.style.transform = 'translateY(20px)';
+                                card.style.transform = 'translateY(16px)';
                                 setTimeout(function () {
-                                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                                    card.style.transition = 'opacity 0.45s ease, transform 0.45s ease';
                                     card.style.opacity = '1';
                                     card.style.transform = 'translateY(0)';
-                                }, i * 120);
+                                }, i * 100);
                             });
                             statObserver.unobserve(entry.target);
                         }
                     });
-                }, { threshold: 0.2 });
-
-                statObserver.observe(statSection);
+                }, { threshold: 0.15 });
+                statObserver.observe(statsSection);
             }
+
+
+            // ===== SMOOTH SCROLL FOR ANCHOR LINKS =====
+            document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
+                anchor.addEventListener('click', function (e) {
+                    var target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        e.preventDefault();
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
 
         });
     </script>
