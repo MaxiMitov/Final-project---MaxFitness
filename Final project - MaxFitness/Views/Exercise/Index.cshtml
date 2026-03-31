@@ -1,0 +1,435 @@
+@using Final_project___MaxFitness.Models
+@{
+    ViewData["Title"] = "Exercise Library";
+    var exerciseGroups = ViewBag.ExerciseGroups as Dictionary<string, List<Exercise>> ?? new Dictionary<string, List<Exercise>>();
+
+    string TypeBadgeClass(string type) => type switch {
+        "Compound"   => "badge-compound",
+        "Isolation"  => "badge-isolation",
+        "Bodyweight" => "badge-bodyweight",
+        _            => "badge-compound"
+    };
+
+    string MuscleIcon(string muscle) => muscle.ToLower() switch {
+        "chest"     => "fa-heart-pulse",
+        "back"      => "fa-person",
+        "legs"      => "fa-person-walking",
+        "arms"      => "fa-hand-fist",
+        "shoulders" => "fa-arrow-up-wide-short",
+        "abs"       => "fa-circle-dot",
+        "forearms"  => "fa-hand",
+        "triceps"   => "fa-hand-back-fist",
+        "biceps"    => "fa-dumbbell",
+        _           => "fa-dumbbell"
+    };
+}
+
+<style>
+    /* ── PAGE LAYOUT ──────────────────────────────────── */
+    .ex-page {
+        padding-top: 96px;
+        padding-bottom: 60px;
+        min-height: 100vh;
+        background: #0a0a0f;
+    }
+
+    /* ── HEADER ───────────────────────────────────────── */
+    .ex-header {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 36px;
+        animation: fadeSlideDown 0.5s ease both;
+    }
+
+    @@keyframes fadeSlideDown {
+        from { opacity: 0; transform: translateY(-18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @@keyframes fadeSlideUp {
+        from { opacity: 0; transform: translateY(22px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @@keyframes cardPop {
+        from { opacity: 0; transform: scale(0.94) translateY(12px); }
+        to   { opacity: 1; transform: scale(1)    translateY(0); }
+    }
+
+    @@keyframes shimmer {
+        0%   { background-position: -200% center; }
+        100% { background-position:  200% center; }
+    }
+
+    .ex-header-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #e63946, #ff6b35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 4px 20px rgba(230, 57, 70, 0.4);
+    }
+
+    .ex-title {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #f0f0f0;
+        letter-spacing: 1px;
+        margin: 0 0 4px;
+        text-transform: uppercase;
+    }
+
+    .ex-subtitle {
+        color: #888;
+        font-size: 0.92rem;
+        margin: 0;
+    }
+
+    .text-gradient {
+        background: linear-gradient(90deg, #e63946, #ff6b35, #ffd60a);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: shimmer 3s linear infinite;
+    }
+
+    /* ── SEARCH BAR ───────────────────────────────────── */
+    .ex-search-wrap {
+        position: relative;
+        max-width: 480px;
+        margin-bottom: 36px;
+        animation: fadeSlideDown 0.55s ease both;
+    }
+
+    .ex-search-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #555;
+        font-size: 0.95rem;
+        pointer-events: none;
+    }
+
+    .ex-search {
+        width: 100%;
+        padding: 12px 16px 12px 44px;
+        background: #16161e;
+        border: 1.5px solid #2a2a3a;
+        border-radius: 12px;
+        color: #e0e0e0;
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .ex-search:focus {
+        border-color: #e63946;
+        box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15);
+    }
+
+    .ex-search::placeholder { color: #555; }
+
+    /* ── STATS STRIP ──────────────────────────────────── */
+    .ex-stats-strip {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 36px;
+        flex-wrap: wrap;
+        animation: fadeSlideUp 0.5s ease both;
+    }
+
+    .ex-stat-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 18px;
+        background: #16161e;
+        border: 1px solid #2a2a3a;
+        border-radius: 50px;
+        color: #bbb;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .ex-stat-pill i { color: #e63946; }
+
+    /* ── MUSCLE GROUP SECTION ─────────────────────────── */
+    .ex-group {
+        margin-bottom: 20px;
+        border: 1.5px solid #2a2a3a;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #12121a;
+        animation: fadeSlideUp 0.5s ease both;
+    }
+
+    .ex-group-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 22px;
+        cursor: pointer;
+        user-select: none;
+        background: #16161e;
+        transition: background 0.2s;
+    }
+
+    .ex-group-header:hover { background: #1c1c28; }
+
+    .ex-group-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .ex-group-muscle-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #e63946 0%, #ff6b35 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .ex-group-name {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #f0f0f0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .ex-group-count {
+        font-size: 0.78rem;
+        color: #666;
+        margin-top: 2px;
+    }
+
+    .ex-group-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .ex-group-total-badge {
+        padding: 4px 12px;
+        background: #1e1e2c;
+        border: 1px solid #2a2a3a;
+        border-radius: 50px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #e63946;
+    }
+
+    .ex-chevron {
+        color: #555;
+        font-size: 0.85rem;
+        transition: transform 0.25s ease;
+    }
+
+    .ex-group.open .ex-chevron { transform: rotate(180deg); }
+
+    /* ── EXERCISE GRID ────────────────────────────────── */
+    .ex-grid {
+        display: none;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 14px;
+        padding: 18px 22px 22px;
+    }
+
+    .ex-group.open .ex-grid { display: grid; }
+
+    .ex-card {
+        background: #1a1a26;
+        border: 1px solid #252535;
+        border-radius: 12px;
+        padding: 16px;
+        transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+        animation: cardPop 0.3s ease both;
+    }
+
+    .ex-card:hover {
+        border-color: #e63946;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(230, 57, 70, 0.18);
+    }
+
+    .ex-card-name {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #e8e8e8;
+        margin-bottom: 10px;
+        line-height: 1.3;
+    }
+
+    /* ── TYPE BADGES ──────────────────────────────────── */
+    .ex-type-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+    }
+
+    .badge-compound {
+        background: rgba(255, 107, 53, 0.18);
+        color: #ff6b35;
+        border: 1px solid rgba(255, 107, 53, 0.35);
+    }
+
+    .badge-isolation {
+        background: rgba(58, 134, 255, 0.18);
+        color: #3a86ff;
+        border: 1px solid rgba(58, 134, 255, 0.35);
+    }
+
+    .badge-bodyweight {
+        background: rgba(56, 176, 0, 0.18);
+        color: #38b000;
+        border: 1px solid rgba(56, 176, 0, 0.35);
+    }
+
+    /* ── EMPTY STATE ──────────────────────────────────── */
+    .ex-empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: #555;
+    }
+
+    .ex-empty i {
+        font-size: 3rem;
+        margin-bottom: 14px;
+        display: block;
+        color: #333;
+    }
+
+    /* ── SEARCH: HIDE NON-MATCHING ────────────────────── */
+    .ex-card.hidden  { display: none; }
+    .ex-group.hidden { display: none; }
+</style>
+
+<div class="ex-page">
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="ex-header">
+            <div class="ex-header-icon">
+                <i class="fa-solid fa-dumbbell"></i>
+            </div>
+            <div>
+                <h1 class="ex-title">EXERCISE <span class="text-gradient">LIBRARY</span></h1>
+                <p class="ex-subtitle">Browse all exercises grouped by muscle group</p>
+            </div>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="ex-search-wrap">
+            <i class="fa-solid fa-magnifying-glass ex-search-icon"></i>
+            <input type="text" class="ex-search" id="exerciseSearch" placeholder="Search exercises..." autocomplete="off" />
+        </div>
+
+        <!-- STATS STRIP -->
+        @{
+            int totalExercises  = exerciseGroups.Values.Sum(l => l.Count);
+            int totalGroups     = exerciseGroups.Count;
+            int compoundCount   = exerciseGroups.Values.SelectMany(l => l).Count(e => e.Type == "Compound");
+            int isolationCount  = exerciseGroups.Values.SelectMany(l => l).Count(e => e.Type == "Isolation");
+            int bodyweightCount = exerciseGroups.Values.SelectMany(l => l).Count(e => e.Type == "Bodyweight");
+        }
+        <div class="ex-stats-strip">
+            <div class="ex-stat-pill"><i class="fa-solid fa-list-check"></i> @totalExercises Exercises</div>
+            <div class="ex-stat-pill"><i class="fa-solid fa-layer-group"></i> @totalGroups Muscle Groups</div>
+            <div class="ex-stat-pill"><i class="fa-solid fa-circle" style="color:#ff6b35"></i> @compoundCount Compound</div>
+            <div class="ex-stat-pill"><i class="fa-solid fa-circle" style="color:#3a86ff"></i> @isolationCount Isolation</div>
+            <div class="ex-stat-pill"><i class="fa-solid fa-circle" style="color:#38b000"></i> @bodyweightCount Bodyweight</div>
+        </div>
+
+        <!-- MUSCLE GROUPS -->
+        @if (exerciseGroups.Count == 0)
+        {
+            <div class="ex-empty">
+                <i class="fa-solid fa-dumbbell"></i>
+                <p>No exercises found in the database.</p>
+            </div>
+        }
+        else
+        {
+            int groupIndex = 0;
+            foreach (var group in exerciseGroups)
+            {
+                var delay = groupIndex * 60;
+                groupIndex++;
+                <div class="ex-group open" style="animation-delay: @(delay)ms" data-group="@group.Key.ToLower()">
+                    <div class="ex-group-header" onclick="toggleGroup(this)">
+                        <div class="ex-group-left">
+                            <div class="ex-group-muscle-icon">
+                                <i class="fa-solid @MuscleIcon(group.Key)"></i>
+                            </div>
+                            <div>
+                                <div class="ex-group-name">@group.Key</div>
+                                <div class="ex-group-count">@group.Value.Count exercise@(group.Value.Count != 1 ? "s" : "")</div>
+                            </div>
+                        </div>
+                        <div class="ex-group-right">
+                            <span class="ex-group-total-badge">@group.Value.Count</span>
+                            <i class="fa-solid fa-chevron-down ex-chevron"></i>
+                        </div>
+                    </div>
+                    <div class="ex-grid">
+                        @foreach (var exercise in group.Value)
+                        {
+                            <div class="ex-card" data-name="@exercise.Name.ToLower()" data-type="@exercise.Type.ToLower()">
+                                <div class="ex-card-name">@exercise.Name</div>
+                                <span class="ex-type-badge @TypeBadgeClass(exercise.Type)">@exercise.Type</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+
+    </div>
+</div>
+
+<script>
+    function toggleGroup(header) {
+        const group = header.closest('.ex-group');
+        group.classList.toggle('open');
+    }
+
+    const searchInput = document.getElementById('exerciseSearch');
+    searchInput.addEventListener('input', function () {
+        const q = this.value.trim().toLowerCase();
+
+        document.querySelectorAll('.ex-group').forEach(group => {
+            let anyVisible = false;
+
+            group.querySelectorAll('.ex-card').forEach(card => {
+                const name = card.dataset.name || '';
+                const type = card.dataset.type || '';
+                const match = !q || name.includes(q) || type.includes(q);
+                card.classList.toggle('hidden', !match);
+                if (match) anyVisible = true;
+            });
+
+            group.classList.toggle('hidden', !anyVisible);
+
+            // Auto-open groups with results when searching
+            if (q && anyVisible) group.classList.add('open');
+        });
+    });
+</script>
