@@ -500,6 +500,19 @@ namespace Final_project___MaxFitness.Controllers
             return Json(new { success = true });
         }
 
+        [AllowAnonymous]
+        [Route("Home/Error/{statusCode}")]
+        public IActionResult HttpStatusCodeHandler(int statusCode)
+        {
+            switch (statusCode)
+            {
+                case 404:
+                    return View("NotFound");
+                default:
+                    return View("ServerError");
+            }
+        }
+
         public IActionResult Privacy()
         {
             return View();
