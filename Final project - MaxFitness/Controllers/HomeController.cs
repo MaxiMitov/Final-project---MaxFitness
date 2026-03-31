@@ -78,7 +78,7 @@ namespace Final_project___MaxFitness.Controllers
 
             ViewBag.UserName = user.UserName ?? "User";
             ViewBag.UserEmail = user.Email ?? "";
-            ViewBag.JoinDate = user.LockoutEnd?.DateTime.ToString("MMMM yyyy") ?? "2024";
+            ViewBag.JoinDate = "March 2026";
             ViewBag.TotalWorkouts = profileStats.MuscleTrainingCounts.Sum(m => m.Count);
             ViewBag.ProfileStats = profileStats;
 
