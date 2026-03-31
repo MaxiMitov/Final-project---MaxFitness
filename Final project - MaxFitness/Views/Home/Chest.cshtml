@@ -1,10 +1,27 @@
 @{
     var muscleName = ViewBag.MuscleName ?? "Muscle";
     ViewData["Title"] = muscleName + " Performance";
-    var muscle = ViewBag.Muscle;
-    var currentPR = muscle?.CurrentPR ?? "-- lbs";
-    var progressPct = (int)(muscle?.ProgressPercentage ?? 0);
-    var exercises = ViewBag.Exercises as List<dynamic>;
+    var muscle = ViewBag.Muscle as Final_project___MaxFitness.Models.MuscleProgress;
+    var currentPR = muscle?.CurrentPR ?? "No data";
+    var progressPct = muscle?.ProgressPercentage ?? 0;
+    var exercises = ViewBag.Exercises as List<Final_project___MaxFitness.Models.ExerciseDetail>;
+    var weeklySets = muscle?.WeeklySets ?? 0;
+    var recoveryStatus = muscle?.RecoveryStatus ?? "Unknown";
+    var nextSession = muscle?.NextSession ?? "N/A";
+    var totalExercises = muscle?.TotalExercises ?? 0;
+    var compoundCount = muscle?.CompoundCount ?? 0;
+    var isolationCount = muscle?.IsolationCount ?? 0;
+    var bodyweightCount = muscle?.BodyweightCount ?? 0;
+    var personalRecords = muscle?.PersonalRecords ?? new List<Final_project___MaxFitness.Models.PersonalRecord>();
+    var monthlyProgress = muscle?.MonthlyProgress ?? new List<Final_project___MaxFitness.Models.WeeklyVolume>();
+    var trendPct = muscle?.TrendPercent ?? "0";
+
+    var recoveryBadgeClass = recoveryStatus switch {
+        "Optimal" => "badge-recovery--good",
+        "Almost Ready" => "badge-recovery--warn",
+        "Recovering" => "badge-recovery--rest",
+        _ => "badge-recovery--good"
+    };
 }
 
 <style>
@@ -32,9 +49,12 @@
     .stat-progress-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; margin-top: 0.75rem; overflow: hidden; }
     .stat-progress-fill { height: 100%; background: var(--gradient-primary); border-radius: 3px; transition: width 1.2s ease; }
 
-    .badge-recovery { display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(46,204,113,0.12); color: #2ecc71; padding: 0.2rem 0.7rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem; }
+    .badge-recovery { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.7rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem; }
+    .badge-recovery--good { background: rgba(46,204,113,0.12); color: #2ecc71; }
+    .badge-recovery--warn { background: rgba(255,209,102,0.12); color: #ffd166; }
+    .badge-recovery--rest { background: rgba(230,57,70,0.12); color: #e63946; }
 
-    .main-content { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; margin-bottom: 3rem; }
+    .muscle-main-content { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; margin-bottom: 3rem; }
 
     .exercise-library-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
     .exercise-library-header h2 { font-size: 1.3rem; font-weight: 700; }
@@ -56,7 +76,7 @@
     .intensity-segment.active { background: var(--accent); }
     .intensity-segment.active.mid { background: var(--accent-secondary); }
     .intensity-segment.active.low { background: var(--accent-tertiary); }
-    .btn-start-sm { background: transparent; border: 1px solid rgba(230,57,70,0.3); color: var(--accent); padding: 0.4rem 1rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
+    .btn-start-sm { background: transparent; border: 1px solid rgba(230,57,70,0.3); color: var(--accent); padding: 0.4rem 1rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; text-decoration: none; }
     .btn-start-sm:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
     .exercise-placeholder { background: var(--bg-card); border: 1px dashed rgba(255,255,255,0.08); border-radius: 1rem; padding: 3rem 2rem; text-align: center; color: var(--text-secondary); }
@@ -89,19 +109,26 @@
     .pr-entry:first-child::before { background: var(--accent); }
     .pr-weight { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); }
     .pr-date { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.1rem; }
+    .pr-empty { color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 1rem 0; }
 
     .chart-section { margin-bottom: 3rem; }
     .chart-section h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; }
     .chart-container { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 1rem; padding: 2rem; }
     .chart-bars { display: flex; align-items: flex-end; justify-content: space-around; height: 200px; gap: 1.5rem; padding: 0 1rem; }
     .chart-bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
-    .chart-bar { width: 100%; max-width: 80px; border-radius: 0.5rem 0.5rem 0 0; background: var(--gradient-primary); position: relative; transition: height 1s ease; min-height: 4px; }
-    .chart-bar::after { content: attr(data-value); position: absolute; top: -1.6rem; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+    .mp-chart-bar { width: 100%; max-width: 80px; border-radius: 0.5rem 0.5rem 0 0; background: var(--gradient-primary); position: relative; transition: height 1s ease; min-height: 4px; }
+    .mp-chart-bar::after { content: attr(data-value); position: absolute; top: -1.6rem; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+    .mp-chart-bar--empty { background: rgba(255,255,255,0.04); }
     .chart-bar-label { margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-secondary); }
     .chart-legend { display: flex; justify-content: center; gap: 2rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.04); }
     .chart-legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); }
     .chart-legend-dot { width: 10px; height: 10px; border-radius: 3px; background: var(--gradient-primary); }
-    .trend-badge { display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(46,204,113,0.12); color: #2ecc71; padding: 0.2rem 0.7rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600; margin-left: 0.75rem; }
+    .trend-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.7rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600; margin-left: 0.75rem; }
+    .trend-badge--up { background: rgba(46,204,113,0.12); color: #2ecc71; }
+    .trend-badge--down { background: rgba(230,57,70,0.12); color: #e63946; }
+    .trend-badge--flat { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+    .chart-empty { text-align: center; padding: 3rem 2rem; color: var(--text-secondary); }
+    .chart-empty i { font-size: 2rem; opacity: 0.3; margin-bottom: 0.75rem; display: block; }
 
     .bottom-cta { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 1.25rem; padding: 3rem; text-align: center; position: relative; overflow: hidden; }
     .bottom-cta::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--gradient-primary); }
@@ -110,7 +137,7 @@
     .bottom-cta-buttons { display: flex; justify-content: center; gap: 1rem; }
 
     @@media (max-width: 992px) {
-        .main-content { grid-template-columns: 1fr; }
+        .muscle-main-content { grid-template-columns: 1fr; }
         .stats-grid { grid-template-columns: repeat(2, 1fr); }
         .page-header { flex-direction: column; }
     }
@@ -125,7 +152,7 @@
 <section class="muscle-page">
     <div class="container">
 
-        <!-- Breadcrumb Navigation -->
+        <!-- Breadcrumb -->
         <nav class="breadcrumb-nav reveal">
             <a asp-action="Index"><i class="fas fa-th-large"></i> Dashboard</a>
             <span class="separator"><i class="fas fa-chevron-right"></i></span>
@@ -144,11 +171,11 @@
             </div>
             <div class="page-header-right">
                 <span class="badge-updated">
-                    <i class="fas fa-circle"></i> Last Updated: Today
+                    <i class="fas fa-circle"></i> Live Data
                 </span>
-                <button class="btn-accent" style="padding: 0.6rem 1.5rem; border-radius: 0.6rem; font-weight: 600;">
+                <a asp-controller="Workout" asp-action="Index" class="btn-accent" style="padding: 0.6rem 1.5rem; border-radius: 0.6rem; font-weight: 600; text-decoration: none;">
                     <i class="fas fa-plus"></i> Log Workout
-                </button>
+                </a>
             </div>
         </div>
 
@@ -159,7 +186,7 @@
                     <i class="fas fa-trophy"></i> Current PR
                 </div>
                 <div class="stat-value text-gradient">@currentPR</div>
-                <div class="stat-sub">Personal best lift</div>
+                <div class="stat-sub">Best volume in a single exercise</div>
             </div>
 
             <div class="stat-item">
@@ -170,15 +197,15 @@
                 <div class="stat-progress-bar">
                     <div class="stat-progress-fill" style="width: @(progressPct)%;"></div>
                 </div>
-                <div class="stat-sub">Toward next milestone</div>
+                <div class="stat-sub">Based on @(progressPct / 10) sessions logged</div>
             </div>
 
             <div class="stat-item">
                 <div class="stat-label">
                     <i class="fas fa-layer-group"></i> Weekly Volume
                 </div>
-                <div class="stat-value">12 <span style="font-size: 1rem; color: var(--text-secondary);">Sets</span></div>
-                <div class="stat-sub">This Week</div>
+                <div class="stat-value">@weeklySets <span style="font-size: 1rem; color: var(--text-secondary);">Sets</span></div>
+                <div class="stat-sub">This week</div>
             </div>
 
             <div class="stat-item">
@@ -186,17 +213,17 @@
                     <i class="fas fa-heart-pulse"></i> Recovery
                 </div>
                 <div class="stat-value">
-                    Optimal
-                    <span class="badge-recovery"><i class="fas fa-check"></i> Good</span>
+                    @recoveryStatus
+                    <span class="badge-recovery @recoveryBadgeClass"><i class="fas fa-check"></i> @recoveryStatus</span>
                 </div>
-                <div class="stat-sub">Next session: Tomorrow</div>
+                <div class="stat-sub">Next session: @nextSession</div>
             </div>
         </div>
 
-        <!-- Main Content: Two Columns -->
-        <div class="main-content">
+        <!-- Main Content -->
+        <div class="muscle-main-content">
 
-            <!-- Left Column: Exercise Library -->
+            <!-- Left: Exercise Library -->
             <div class="left-column">
                 <div class="exercise-library-header reveal">
                     <h2><i class="fas fa-dumbbell" style="color: var(--accent); margin-right: 0.5rem;"></i> Recommended Exercises</h2>
@@ -210,11 +237,10 @@
                 {
                     @foreach (var exercise in exercises)
                     {
-                        var difficultyStr = ((string)(exercise.Difficulty ?? "Beginner")).ToLower();
+                        var difficultyStr = (exercise.Difficulty ?? "Beginner").ToLower();
                         var difficultyClass = difficultyStr == "advanced" ? "difficulty-advanced"
                             : difficultyStr == "intermediate" ? "difficulty-intermediate"
                             : "difficulty-beginner";
-                        var intensityVal = (int)(exercise.Intensity ?? 3);
 
                         <div class="exercise-card reveal reveal-up">
                             <div class="exercise-card-info">
@@ -222,21 +248,14 @@
                                 <div class="exercise-card-meta">
                                     <span class="difficulty-badge @difficultyClass">@exercise.Difficulty</span>
                                     <span class="exercise-meta-item">
-                                        <i class="fas fa-repeat"></i> @exercise.TargetReps reps
+                                        <i class="fas fa-repeat"></i> @exercise.TargetReps
                                     </span>
                                     <span class="exercise-meta-item">
-                                        <i class="fas fa-fire"></i>
-                                        <span class="intensity-bar">
-                                            @for (int i = 1; i <= 5; i++)
-                                            {
-                                                var segClass = i <= intensityVal ? "intensity-segment active" : "intensity-segment";
-                                                <span class="@segClass"></span>
-                                            }
-                                        </span>
+                                        <i class="fas fa-fire"></i> @exercise.Intensity
                                     </span>
                                 </div>
                             </div>
-                            <button class="btn-start-sm"><i class="fas fa-play"></i> Start</button>
+                            <a asp-controller="Workout" asp-action="Index" class="btn-start-sm"><i class="fas fa-play"></i> Start</a>
                         </div>
                     }
                 }
@@ -244,16 +263,16 @@
                 {
                     <div class="exercise-placeholder reveal">
                         <i class="fas fa-dumbbell"></i>
-                        <p style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">No exercises loaded yet</p>
-                        <p>Exercises for @muscleName will appear here once configured by your training program.</p>
+                        <p style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">No exercises found</p>
+                        <p>No exercises are available for @muscleName yet.</p>
                     </div>
                 }
             </div>
 
-            <!-- Right Column: Sidebar -->
+            <!-- Right: Sidebar -->
             <div class="right-column">
 
-                <!-- Muscle Info Panel -->
+                <!-- Muscle Overview -->
                 <div class="sidebar-panel reveal reveal-up">
                     <h3><i class="fas fa-crosshairs"></i> Muscle Overview</h3>
 
@@ -265,85 +284,52 @@
                                     <rect x="10" y="20" width="65" height="75" rx="20" fill="url(#chestGrad)" opacity="0.85"/>
                                     <rect x="85" y="20" width="65" height="75" rx="20" fill="url(#chestGrad)" opacity="0.85"/>
                                     <line x1="80" y1="25" x2="80" y2="90" stroke="#08080d" stroke-width="3" stroke-linecap="round"/>
-                                    <line x1="25" y1="45" x2="65" y2="55" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-linecap="round"/>
-                                    <line x1="25" y1="60" x2="65" y2="68" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-linecap="round"/>
-                                    <line x1="135" y1="45" x2="95" y2="55" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-linecap="round"/>
-                                    <line x1="135" y1="60" x2="95" y2="68" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-linecap="round"/>
-                                    <defs>
-                                        <linearGradient id="chestGrad" x1="0" y1="0" x2="160" y2="120">
-                                            <stop offset="0%" stop-color="#e63946"/>
-                                            <stop offset="100%" stop-color="#ff6b35"/>
-                                        </linearGradient>
-                                    </defs>
+                                    <defs><linearGradient id="chestGrad" x1="0" y1="0" x2="160" y2="120"><stop offset="0%" stop-color="#e63946"/><stop offset="100%" stop-color="#ff6b35"/></linearGradient></defs>
                                 </svg>
                                 break;
-
                             case "back":
                                 <svg width="160" height="130" viewBox="0 0 160 130" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M30 15 Q80 5 130 15 L140 100 Q80 115 20 100 Z" fill="url(#backGrad)" opacity="0.85"/>
                                     <line x1="80" y1="10" x2="80" y2="105" stroke="#08080d" stroke-width="3" stroke-linecap="round"/>
-                                    <line x1="35" y1="35" x2="75" y2="45" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
-                                    <line x1="30" y1="55" x2="75" y2="62" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
-                                    <line x1="28" y1="75" x2="75" y2="78" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
-                                    <line x1="125" y1="35" x2="85" y2="45" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
-                                    <line x1="130" y1="55" x2="85" y2="62" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
-                                    <line x1="132" y1="75" x2="85" y2="78" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
-                                    <defs>
-                                        <linearGradient id="backGrad" x1="0" y1="0" x2="160" y2="130">
-                                            <stop offset="0%" stop-color="#e63946"/>
-                                            <stop offset="100%" stop-color="#ff6b35"/>
-                                        </linearGradient>
-                                    </defs>
+                                    <defs><linearGradient id="backGrad" x1="0" y1="0" x2="160" y2="130"><stop offset="0%" stop-color="#e63946"/><stop offset="100%" stop-color="#ff6b35"/></linearGradient></defs>
                                 </svg>
                                 break;
-
                             case "legs":
                                 <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <rect x="15" y="10" width="45" height="120" rx="16" fill="url(#legsGrad)" opacity="0.85"/>
                                     <rect x="80" y="10" width="45" height="120" rx="16" fill="url(#legsGrad)" opacity="0.85"/>
-                                    <line x1="25" y1="40" x2="50" y2="42" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
-                                    <line x1="25" y1="70" x2="50" y2="72" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
-                                    <line x1="25" y1="100" x2="50" y2="98" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
-                                    <line x1="90" y1="40" x2="115" y2="42" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
-                                    <line x1="90" y1="70" x2="115" y2="72" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
-                                    <line x1="90" y1="100" x2="115" y2="98" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
-                                    <defs>
-                                        <linearGradient id="legsGrad" x1="0" y1="0" x2="140" y2="140">
-                                            <stop offset="0%" stop-color="#e63946"/>
-                                            <stop offset="100%" stop-color="#ff6b35"/>
-                                        </linearGradient>
-                                    </defs>
+                                    <defs><linearGradient id="legsGrad" x1="0" y1="0" x2="140" y2="140"><stop offset="0%" stop-color="#e63946"/><stop offset="100%" stop-color="#ff6b35"/></linearGradient></defs>
                                 </svg>
                                 break;
-
-                            case "arms":
+                            case "arms": case "biceps": case "triceps":
                                 <svg width="150" height="120" viewBox="0 0 150 120" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <ellipse cx="42" cy="60" rx="28" ry="45" fill="url(#armsGrad)" opacity="0.85"/>
                                     <ellipse cx="108" cy="60" rx="28" ry="45" fill="url(#armsGrad)" opacity="0.85"/>
-                                    <path d="M20 35 Q42 15 64 35" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="none"/>
-                                    <path d="M86 35 Q108 15 130 35" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="none"/>
-                                    <line x1="28" y1="55" x2="56" y2="55" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
-                                    <line x1="94" y1="55" x2="122" y2="55" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
-                                    <defs>
-                                        <linearGradient id="armsGrad" x1="0" y1="0" x2="150" y2="120">
-                                            <stop offset="0%" stop-color="#e63946"/>
-                                            <stop offset="100%" stop-color="#ff6b35"/>
-                                        </linearGradient>
-                                    </defs>
+                                    <defs><linearGradient id="armsGrad" x1="0" y1="0" x2="150" y2="120"><stop offset="0%" stop-color="#e63946"/><stop offset="100%" stop-color="#ff6b35"/></linearGradient></defs>
                                 </svg>
                                 break;
-
+                            case "shoulders":
+                                <svg width="160" height="100" viewBox="0 0 160 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <ellipse cx="40" cy="50" rx="35" ry="30" fill="url(#shoulderGrad)" opacity="0.85"/>
+                                    <ellipse cx="120" cy="50" rx="35" ry="30" fill="url(#shoulderGrad)" opacity="0.85"/>
+                                    <defs><linearGradient id="shoulderGrad" x1="0" y1="0" x2="160" y2="100"><stop offset="0%" stop-color="#e63946"/><stop offset="100%" stop-color="#ff6b35"/></linearGradient></defs>
+                                </svg>
+                                break;
+                            case "abs":
+                                <svg width="100" height="140" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="10" y="10" width="35" height="30" rx="8" fill="url(#absGrad)" opacity="0.85"/>
+                                    <rect x="55" y="10" width="35" height="30" rx="8" fill="url(#absGrad)" opacity="0.85"/>
+                                    <rect x="10" y="50" width="35" height="30" rx="8" fill="url(#absGrad)" opacity="0.85"/>
+                                    <rect x="55" y="50" width="35" height="30" rx="8" fill="url(#absGrad)" opacity="0.85"/>
+                                    <rect x="10" y="90" width="35" height="30" rx="8" fill="url(#absGrad)" opacity="0.75"/>
+                                    <rect x="55" y="90" width="35" height="30" rx="8" fill="url(#absGrad)" opacity="0.75"/>
+                                    <defs><linearGradient id="absGrad" x1="0" y1="0" x2="100" y2="140"><stop offset="0%" stop-color="#e63946"/><stop offset="100%" stop-color="#ff6b35"/></linearGradient></defs>
+                                </svg>
+                                break;
                             default:
                                 <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <circle cx="60" cy="60" r="50" fill="url(#defaultGrad)" opacity="0.85"/>
-                                    <line x1="30" y1="50" x2="90" y2="50" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
-                                    <line x1="30" y1="70" x2="90" y2="70" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
-                                    <defs>
-                                        <linearGradient id="defaultGrad" x1="0" y1="0" x2="120" y2="120">
-                                            <stop offset="0%" stop-color="#e63946"/>
-                                            <stop offset="100%" stop-color="#ff6b35"/>
-                                        </linearGradient>
-                                    </defs>
+                                    <defs><linearGradient id="defaultGrad" x1="0" y1="0" x2="120" y2="120"><stop offset="0%" stop-color="#e63946"/><stop offset="100%" stop-color="#ff6b35"/></linearGradient></defs>
                                 </svg>
                                 break;
                         }
@@ -351,17 +337,24 @@
 
                     <ul class="muscle-facts">
                         <li>
-                            <span class="fact-label">Primary Exercises</span>
-                            <span class="fact-value">8</span>
+                            <span class="fact-label">Total Exercises</span>
+                            <span class="fact-value">@totalExercises</span>
                         </li>
                         <li>
                             <span class="fact-label">Compound Movements</span>
-                            <span class="fact-value">5</span>
+                            <span class="fact-value">@compoundCount</span>
                         </li>
                         <li>
                             <span class="fact-label">Isolation Exercises</span>
-                            <span class="fact-value">3</span>
+                            <span class="fact-value">@isolationCount</span>
                         </li>
+                        @if (bodyweightCount > 0)
+                        {
+                            <li>
+                                <span class="fact-label">Bodyweight Exercises</span>
+                                <span class="fact-value">@bodyweightCount</span>
+                            </li>
+                        }
                         <li>
                             <span class="fact-label">Recommended Weekly Sets</span>
                             <span class="fact-value">12-16</span>
@@ -372,7 +365,6 @@
                 <!-- Training Tips -->
                 <div class="sidebar-panel reveal reveal-up">
                     <h3><i class="fas fa-lightbulb"></i> Training Tips</h3>
-
                     <div class="tip-item">
                         <div class="tip-icon"><i class="fas fa-check"></i></div>
                         <div class="tip-text">Focus on mind-muscle connection during every rep to maximize fiber recruitment and growth stimulus.</div>
@@ -387,68 +379,77 @@
                     </div>
                 </div>
 
-                <!-- Personal Records History -->
+                <!-- Personal Records -->
                 <div class="sidebar-panel reveal reveal-up">
                     <h3><i class="fas fa-medal"></i> Personal Records</h3>
 
-                    <div class="pr-timeline">
-                        <div class="pr-entry">
-                            <div class="pr-weight">225 lbs</div>
-                            <div class="pr-date">Feb 2026</div>
+                    @if (personalRecords.Count > 0)
+                    {
+                        <div class="pr-timeline">
+                            @foreach (var pr in personalRecords)
+                            {
+                                <div class="pr-entry">
+                                    <div class="pr-weight">@pr.Weight</div>
+                                    <div class="pr-date">@pr.Date</div>
+                                </div>
+                            }
                         </div>
-                        <div class="pr-entry">
-                            <div class="pr-weight">215 lbs</div>
-                            <div class="pr-date">Jan 2026</div>
-                        </div>
-                        <div class="pr-entry">
-                            <div class="pr-weight">200 lbs</div>
-                            <div class="pr-date">Dec 2025</div>
-                        </div>
-                        <div class="pr-entry">
-                            <div class="pr-weight">185 lbs</div>
-                            <div class="pr-date">Nov 2025</div>
-                        </div>
-                    </div>
+                    }
+                    else
+                    {
+                        <p class="pr-empty">
+                            <i class="fas fa-medal" style="opacity: 0.3; margin-right: 0.3rem;"></i>
+                            No records yet. Start training to set your first PR!
+                        </p>
+                    }
                 </div>
 
             </div>
         </div>
 
-        <!-- Progress Chart Section -->
+        <!-- Monthly Progress Chart -->
         <div class="chart-section reveal reveal-up">
             <h2>
                 <i class="fas fa-chart-bar" style="color: var(--accent); margin-right: 0.5rem;"></i>
                 Monthly Progress
-                <span class="trend-badge"><i class="fas fa-arrow-trend-up"></i> +75%</span>
+                @{
+                    var trendClass = trendPct.StartsWith("+") ? "trend-badge--up" : trendPct.StartsWith("-") ? "trend-badge--down" : "trend-badge--flat";
+                    var trendIcon = trendPct.StartsWith("+") ? "fa-arrow-trend-up" : trendPct.StartsWith("-") ? "fa-arrow-trend-down" : "fa-minus";
+                }
+                <span class="trend-badge @trendClass"><i class="fas @trendIcon"></i> @(trendPct)%</span>
             </h2>
-            <div class="chart-container">
-                <div class="chart-bars">
-                    <div class="chart-bar-group">
-                        <div class="chart-bar" style="height: 57%;" data-value="8 sets"></div>
-                        <div class="chart-bar-label">Week 1</div>
+
+            @if (monthlyProgress.Any(w => w.Sets > 0))
+            {
+                <div class="chart-container">
+                    <div class="chart-bars">
+                        @foreach (var week in monthlyProgress)
+                        {
+                            var barClass = week.Sets > 0 ? "mp-chart-bar" : "mp-chart-bar mp-chart-bar--empty";
+                            var barHeight = week.Sets > 0 ? week.HeightPercent : 4;
+                            <div class="chart-bar-group">
+                                <div class="@barClass" style="height: @(barHeight)%;" data-value="@week.Sets sets"></div>
+                                <div class="chart-bar-label">@week.Label</div>
+                            </div>
+                        }
                     </div>
-                    <div class="chart-bar-group">
-                        <div class="chart-bar" style="height: 71%;" data-value="10 sets"></div>
-                        <div class="chart-bar-label">Week 2</div>
-                    </div>
-                    <div class="chart-bar-group">
-                        <div class="chart-bar" style="height: 86%;" data-value="12 sets"></div>
-                        <div class="chart-bar-label">Week 3</div>
-                    </div>
-                    <div class="chart-bar-group">
-                        <div class="chart-bar" style="height: 100%;" data-value="14 sets"></div>
-                        <div class="chart-bar-label">Week 4</div>
-                    </div>
-                </div>
-                <div class="chart-legend">
-                    <div class="chart-legend-item">
-                        <span class="chart-legend-dot"></span> Total Sets per Week
-                    </div>
-                    <div class="chart-legend-item">
-                        <i class="fas fa-arrow-trend-up" style="color: #2ecc71;"></i> Upward Trend
+                    <div class="chart-legend">
+                        <div class="chart-legend-item">
+                            <span class="chart-legend-dot"></span> Total Sets per Week
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
+            else
+            {
+                <div class="chart-container">
+                    <div class="chart-empty">
+                        <i class="fas fa-chart-bar"></i>
+                        <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">No training data yet</p>
+                        <p>Complete workouts targeting @muscleName.ToString().ToLower() to see your weekly progress here.</p>
+                    </div>
+                </div>
+            }
         </div>
 
         <!-- Bottom CTA -->
@@ -456,9 +457,9 @@
             <h2>Ready for your next <span class="text-gradient">@muscleName</span> session?</h2>
             <p>Push past your limits and set a new personal record today.</p>
             <div class="bottom-cta-buttons">
-                <button class="btn-accent" style="padding: 0.75rem 2.5rem; border-radius: 0.6rem; font-size: 1rem; font-weight: 700;">
+                <a asp-controller="Workout" asp-action="Index" class="btn-accent" style="padding: 0.75rem 2.5rem; border-radius: 0.6rem; font-size: 1rem; font-weight: 700; text-decoration: none;">
                     <i class="fas fa-bolt"></i> Start Workout
-                </button>
+                </a>
                 <a asp-action="Index" class="btn-ghost" style="padding: 0.75rem 2rem; border-radius: 0.6rem; font-size: 1rem; font-weight: 600; text-decoration: none;">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                 </a>
