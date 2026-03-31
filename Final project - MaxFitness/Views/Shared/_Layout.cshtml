@@ -28,14 +28,11 @@
                     <a class="nav-link-maxfit" asp-area="" asp-controller="Home" asp-action="Index">
                         <i class="fa-solid fa-house"></i> <span>Dashboard</span>
                     </a>
-                    @if (SignInManager.IsSignedIn(User))
-                    {
-                        <a class="nav-link-maxfit" asp-area="" asp-controller="Workout" asp-action="Index">
-                            <i class="fa-solid fa-book-open"></i> <span>My Log</span>
-                        </a>
-                    }
-                    <a class="nav-link-maxfit" asp-area="" asp-controller="Home" asp-action="Index">
-                        <i class="fa-solid fa-chart-line"></i> <span>Overview</span>
+                    <a class="nav-link-maxfit" asp-area="" asp-controller="Home" asp-action="Leaderboard">
+                        <i class="fa-solid fa-ranking-star"></i> <span>Leaderboard</span>
+                    </a>
+                    <a class="nav-link-maxfit" asp-area="" asp-controller="Home" asp-action="Community">
+                        <i class="fa-solid fa-users"></i> <span>Community</span>
                     </a>
                 </div>
 
