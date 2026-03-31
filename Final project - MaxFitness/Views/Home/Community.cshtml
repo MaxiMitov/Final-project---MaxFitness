@@ -177,6 +177,8 @@
                         var comments     = GetProp<int>   (post, "Comments",     0);
                         var photoUrl     = GetProp<string>(post, "PhotoUrl",     "");
                         var progressSnap = GetProp<string>(post, "ProgressSnapshot", "");
+                        var postId       = GetProp<int>   (post, "PostId",       0);
+                        var isLiked      = GetProp<bool>  (post, "IsLiked",      false);
                         var isWorkout    = !string.IsNullOrEmpty(workoutName);
                         var postLetter   = userName.Length > 0 ? userName[0].ToString().ToUpper() : "?";
                         var isMe         = userName == currentUser;
@@ -290,13 +292,13 @@
 
                             <!-- Action Row -->
                             <div class="cm-post-actions">
-                                <button class="cm-action-btn cm-like-btn" onclick="toggleLike(this)" type="button">
-                                    <i class="fa-regular fa-heart"></i>
+                                <button class="cm-action-btn cm-like-btn @(isLiked ? "liked" : "")" onclick="toggleLike(this)" data-post-id="@postId" type="button">
+                                    <i class="@(isLiked ? "fa-solid" : "fa-regular") fa-heart"></i>
                                     <span class="cm-like-count">@likes</span>
                                 </button>
-                                <button class="cm-action-btn" type="button">
+                                <button class="cm-action-btn cm-comment-toggle" onclick="toggleComments(this)" data-post-id="@postId" type="button">
                                     <i class="fa-regular fa-comment"></i>
-                                    <span>@comments</span>
+                                    <span class="cm-comment-count">@comments</span>
                                 </button>
                                 <button class="cm-action-btn" type="button">
                                     <i class="fa-solid fa-arrow-up-from-bracket"></i>
@@ -305,6 +307,20 @@
                                 <button class="cm-action-btn cm-bookmark-btn" onclick="toggleBookmark(this)" type="button">
                                     <i class="fa-regular fa-bookmark"></i>
                                 </button>
+                            </div>
+
+                            <!-- Comments Section (hidden by default) -->
+                            <div class="cm-comments-section" id="comments-@postId" style="display: none;">
+                                <div class="cm-comments-list" id="comments-list-@postId">
+                                    <div class="cm-comments-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading comments...</div>
+                                </div>
+                                <div class="cm-comment-form">
+                                    <div class="cm-avatar cm-avatar-sm">@(currentUser.Length > 0 ? currentUser[0].ToString().ToUpper() : "U")</div>
+                                    <input type="text" class="cm-comment-input" id="comment-input-@postId" placeholder="Write a comment..." onkeydown="if(event.key==='Enter')submitComment(@postId, this)" />
+                                    <button class="cm-comment-send" onclick="submitComment(@postId, document.getElementById('comment-input-@postId'))" type="button">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                    </button>
+                                </div>
                             </div>
                         </article>
                         postIndex++;
@@ -1629,6 +1645,113 @@
     }
 }
 
+/* ── COMMENTS SECTION ──────────────────────────────── */
+.cm-comments-section {
+    border-top: 1px solid rgba(255,255,255,0.04);
+    padding: 1rem 1.25rem;
+}
+.cm-comments-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 0.75rem;
+}
+.cm-comments-loading {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 0.5rem;
+}
+.cm-comment-item {
+    display: flex;
+    gap: 0.65rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.cm-comment-item:last-child { border-bottom: none; }
+.cm-comment-avatar {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 50%;
+    background: rgba(230,57,70,0.15);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+.cm-comment-body {
+    flex: 1;
+}
+.cm-comment-author {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-right: 0.5rem;
+}
+.cm-comment-time {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+.cm-comment-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.15rem;
+    line-height: 1.4;
+}
+.cm-comment-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.cm-avatar-sm {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    font-size: 0.7rem;
+}
+.cm-comment-input {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 2rem;
+    padding: 0.45rem 1rem;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+.cm-comment-input:focus {
+    border-color: rgba(230,57,70,0.4);
+}
+.cm-comment-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+.cm-comment-send {
+    background: var(--accent);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: opacity 0.2s;
+}
+.cm-comment-send:hover { opacity: 0.85; }
+.cm-no-comments {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 0.5rem;
+    opacity: 0.6;
+}
+
 </style>
 
 @section Scripts {
@@ -1860,17 +1983,108 @@
         });
     };
 
-    /* ── Existing UI helpers ───────────────────────────────────── */
+    /* ── Like toggle (saved to DB) ─────────────────────────────── */
     window.toggleLike = function (btn) {
+        var postId = parseInt(btn.dataset.postId, 10);
+        if (!postId) return;
         var countEl = btn.querySelector('.cm-like-count');
-        var count   = parseInt(countEl.textContent, 10) || 0;
-        if (btn.classList.contains('liked')) {
-            btn.classList.remove('liked');
-            countEl.textContent = count - 1;
+        var iconEl = btn.querySelector('i');
+
+        fetch('/Home/ToggleLike', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ postId: postId })
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data.success) {
+                countEl.textContent = data.likes;
+                if (data.liked) {
+                    btn.classList.add('liked');
+                    iconEl.className = 'fa-solid fa-heart';
+                } else {
+                    btn.classList.remove('liked');
+                    iconEl.className = 'fa-regular fa-heart';
+                }
+            }
+        })
+        .catch(function (err) { console.error('Like failed:', err); });
+    };
+
+    /* ── Comments (toggle, load, submit) ────────────────────── */
+    window.toggleComments = function (btn) {
+        var postId = parseInt(btn.dataset.postId, 10);
+        var section = document.getElementById('comments-' + postId);
+        if (!section) return;
+
+        if (section.style.display === 'none' || section.style.display === '') {
+            section.style.display = 'block';
+            loadComments(postId);
         } else {
-            btn.classList.add('liked');
-            countEl.textContent = count + 1;
+            section.style.display = 'none';
         }
+    };
+
+    function loadComments(postId) {
+        var listEl = document.getElementById('comments-list-' + postId);
+        listEl.innerHTML = '<div class="cm-comments-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+
+        fetch('/Home/GetComments?postId=' + postId)
+        .then(function (res) { return res.json(); })
+        .then(function (comments) {
+            if (comments.length === 0) {
+                listEl.innerHTML = '<div class="cm-no-comments">No comments yet. Be the first!</div>';
+                return;
+            }
+            listEl.innerHTML = '';
+            comments.forEach(function (c) {
+                var letter = c.userName && c.userName.length > 0 ? c.userName[0].toUpperCase() : '?';
+                var item = document.createElement('div');
+                item.className = 'cm-comment-item';
+                item.innerHTML =
+                    '<div class="cm-comment-avatar">' + escHtml(letter) + '</div>' +
+                    '<div class="cm-comment-body">' +
+                        '<span class="cm-comment-author">' + escHtml(c.userName) + '</span>' +
+                        '<span class="cm-comment-time">' + escHtml(c.timeAgo) + '</span>' +
+                        '<div class="cm-comment-text">' + escHtml(c.content) + '</div>' +
+                    '</div>';
+                listEl.appendChild(item);
+            });
+        })
+        .catch(function () {
+            listEl.innerHTML = '<div class="cm-no-comments">Failed to load comments.</div>';
+        });
+    }
+
+    window.submitComment = function (postId, inputEl) {
+        var content = inputEl.value.trim();
+        if (!content) return;
+
+        inputEl.disabled = true;
+
+        fetch('/Home/AddComment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ postId: postId, content: content })
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data.success) {
+                inputEl.value = '';
+                inputEl.disabled = false;
+                // Update comment count on the button
+                var article = inputEl.closest('article');
+                if (article) {
+                    var countEl = article.querySelector('.cm-comment-count');
+                    if (countEl) countEl.textContent = data.comments;
+                }
+                loadComments(postId);
+            }
+        })
+        .catch(function (err) {
+            console.error('Comment failed:', err);
+            inputEl.disabled = false;
+        });
     };
 
     window.toggleBookmark = function (btn) {
