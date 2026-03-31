@@ -1,0 +1,1204 @@
+@{
+    ViewData["Title"] = "Admin Console";
+
+    T GetProp<T>(object obj, string prop, T fallback = default) {
+        if (obj == null) return fallback;
+        var pi = obj.GetType().GetProperty(prop);
+        if (pi == null) return fallback;
+        var val = pi.GetValue(obj);
+        if (val == null) return fallback;
+        try { return (T)Convert.ChangeType(val, typeof(T)); } catch { return fallback; }
+    }
+
+    var totalUsers      = ViewBag.TotalUsers      as int? ?? 0;
+    var totalWorkouts   = ViewBag.TotalWorkouts   as int? ?? 0;
+    var totalPosts      = ViewBag.TotalPosts      as int? ?? 0;
+    var totalChallenges = ViewBag.TotalChallenges as int? ?? 0;
+    var totalVolume     = ViewBag.TotalVolume     as double? ?? 0.0;
+    var totalCalories   = ViewBag.TotalCalories   as int? ?? 0;
+    var totalExLogs     = ViewBag.TotalExerciseLogs as int? ?? 0;
+    var totalComments   = ViewBag.TotalComments   as int? ?? 0;
+    var totalLikes      = ViewBag.TotalLikes      as int? ?? 0;
+    var workoutsWeek    = ViewBag.WorkoutsThisWeek as int? ?? 0;
+    var postsWeek       = ViewBag.PostsThisWeek   as int? ?? 0;
+
+    var users      = ViewBag.Users      as IEnumerable<object> ?? Enumerable.Empty<object>();
+    var recentPosts = ViewBag.RecentPosts as IEnumerable<object> ?? Enumerable.Empty<object>();
+    var challenges  = ViewBag.Challenges  as IEnumerable<object> ?? Enumerable.Empty<object>();
+    var muscleStats = ViewBag.MuscleStats as IEnumerable<object> ?? Enumerable.Empty<object>();
+
+    int maxMuscleCount = 1;
+    foreach (var m in muscleStats) {
+        var c = GetProp<int>(m, "Count", 0);
+        if (c > maxMuscleCount) maxMuscleCount = c;
+    }
+}
+
+<style>
+    :root {
+        --bg-primary: #08080d;
+        --bg-secondary: #111118;
+        --bg-card: #16161f;
+        --accent: #e63946;
+        --accent-secondary: #ff6b35;
+        --accent-tertiary: #ffd166;
+        --text-primary: #f8f8f8;
+        --text-secondary: #8b8b9e;
+        --border-color: #1e1e2a;
+        --border-bright: #2a2a3a;
+    }
+
+    .admin-page {
+        background: var(--bg-primary);
+        min-height: 100vh;
+        padding: 2rem 0 4rem;
+        font-family: 'Inter', sans-serif;
+        color: var(--text-primary);
+    }
+
+    /* ---- Header ---- */
+    .admin-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .admin-header-icon {
+        width: 52px;
+        height: 52px;
+        background: linear-gradient(135deg, rgba(230,57,70,.25), rgba(230,57,70,.08));
+        border: 1px solid rgba(230,57,70,.4);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: var(--accent);
+        box-shadow: 0 0 20px rgba(230,57,70,.2);
+        flex-shrink: 0;
+    }
+
+    .admin-header-text h1 {
+        font-size: 1.65rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--text-primary);
+        margin: 0 0 .2rem;
+        line-height: 1;
+    }
+
+    .admin-header-text p {
+        color: var(--text-secondary);
+        font-size: .85rem;
+        margin: 0;
+        letter-spacing: .02em;
+    }
+
+    .admin-badge {
+        background: linear-gradient(135deg, var(--accent), #c1121f);
+        color: #fff;
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        padding: .25rem .6rem;
+        border-radius: 4px;
+        text-transform: uppercase;
+        box-shadow: 0 0 12px rgba(230,57,70,.5);
+        animation: admin-pulse 2.4s ease-in-out infinite;
+        margin-left: .5rem;
+        vertical-align: middle;
+    }
+
+    @@keyframes admin-pulse {
+        0%, 100% { box-shadow: 0 0 10px rgba(230,57,70,.45); }
+        50%       { box-shadow: 0 0 22px rgba(230,57,70,.85); }
+    }
+
+    /* ---- Section title ---- */
+    .section-label {
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border-color);
+    }
+
+    /* ---- Card ---- */
+    .admin-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        transition: border-color .2s;
+    }
+
+    .admin-card:hover {
+        border-color: var(--border-bright);
+    }
+
+    .admin-card-title {
+        font-size: .8rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .admin-card-title i {
+        color: var(--accent);
+        font-size: .9rem;
+    }
+
+    /* ---- Stat Cards ---- */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    @@media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+    @@media (max-width: 700px)  { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 1.25rem 1rem 1.1rem;
+        position: relative;
+        overflow: hidden;
+        transition: transform .18s, border-color .18s, box-shadow .18s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--border-bright);
+        box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 3px;
+        border-radius: 14px 0 0 14px;
+    }
+
+    .stat-card.c-red::before    { background: var(--accent); }
+    .stat-card.c-orange::before { background: var(--accent-secondary); }
+    .stat-card.c-yellow::before { background: var(--accent-tertiary); }
+    .stat-card.c-blue::before   { background: #4a9eff; }
+    .stat-card.c-green::before  { background: #2dc653; }
+    .stat-card.c-purple::before { background: #9d4edd; }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .9rem;
+        margin-bottom: .75rem;
+    }
+
+    .stat-card.c-red    .stat-icon { background: rgba(230,57,70,.15);   color: var(--accent); }
+    .stat-card.c-orange .stat-icon { background: rgba(255,107,53,.15);  color: var(--accent-secondary); }
+    .stat-card.c-yellow .stat-icon { background: rgba(255,209,102,.15); color: var(--accent-tertiary); }
+    .stat-card.c-blue   .stat-icon { background: rgba(74,158,255,.15);  color: #4a9eff; }
+    .stat-card.c-green  .stat-icon { background: rgba(45,198,83,.15);   color: #2dc653; }
+    .stat-card.c-purple .stat-icon { background: rgba(157,78,221,.15);  color: #9d4edd; }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1;
+        margin-bottom: .3rem;
+    }
+
+    .stat-label {
+        font-size: .72rem;
+        color: var(--text-secondary);
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    /* ---- Activity Row ---- */
+    .activity-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: .75rem;
+        margin-bottom: 2.5rem;
+    }
+
+    @@media (max-width: 700px) { .activity-row { grid-template-columns: repeat(2, 1fr); } }
+
+    .activity-mini {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: .9rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .activity-mini-icon {
+        font-size: 1.1rem;
+        width: 32px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+
+    .activity-mini-val {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1;
+    }
+
+    .activity-mini-label {
+        font-size: .68rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    /* ---- Two column layout ---- */
+    .admin-two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+    @@media (max-width: 1000px) { .admin-two-col { grid-template-columns: 1fr; } }
+
+    /* ---- Table ---- */
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .8rem;
+    }
+
+    .admin-table th {
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: .68rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        padding: .6rem .75rem;
+        border-bottom: 1px solid var(--border-color);
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .admin-table td {
+        padding: .65rem .75rem;
+        border-bottom: 1px solid rgba(30,30,42,.6);
+        vertical-align: middle;
+        color: var(--text-primary);
+    }
+
+    .admin-table tr:last-child td { border-bottom: none; }
+
+    .admin-table tr:hover td { background: rgba(255,255,255,.025); }
+
+    .user-avatar-sm {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .72rem;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .role-badge {
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        padding: .2rem .5rem;
+        border-radius: 4px;
+    }
+
+    .role-badge.admin-role {
+        background: rgba(255,209,102,.15);
+        color: var(--accent-tertiary);
+        border: 1px solid rgba(255,209,102,.3);
+    }
+
+    .role-badge.user-role {
+        background: rgba(139,139,158,.1);
+        color: var(--text-secondary);
+        border: 1px solid rgba(139,139,158,.2);
+    }
+
+    /* ---- Buttons ---- */
+    .btn-admin {
+        font-size: .7rem;
+        font-weight: 600;
+        letter-spacing: .04em;
+        padding: .3rem .65rem;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: all .15s;
+        white-space: nowrap;
+    }
+
+    .btn-admin-red {
+        background: rgba(230,57,70,.15);
+        color: var(--accent);
+        border: 1px solid rgba(230,57,70,.3);
+    }
+
+    .btn-admin-red:hover {
+        background: rgba(230,57,70,.28);
+        border-color: rgba(230,57,70,.55);
+        box-shadow: 0 0 10px rgba(230,57,70,.25);
+    }
+
+    .btn-admin-yellow {
+        background: rgba(255,209,102,.1);
+        color: var(--accent-tertiary);
+        border: 1px solid rgba(255,209,102,.25);
+    }
+
+    .btn-admin-yellow:hover {
+        background: rgba(255,209,102,.2);
+        border-color: rgba(255,209,102,.45);
+    }
+
+    .btn-admin-ghost {
+        background: rgba(255,255,255,.05);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-admin-ghost:hover {
+        background: rgba(255,255,255,.1);
+        color: var(--text-primary);
+    }
+
+    .btn-admin-green {
+        background: rgba(45,198,83,.12);
+        color: #2dc653;
+        border: 1px solid rgba(45,198,83,.25);
+    }
+
+    .btn-admin-green:hover {
+        background: rgba(45,198,83,.22);
+        border-color: rgba(45,198,83,.45);
+    }
+
+    /* ---- Post items ---- */
+    .post-item {
+        padding: .9rem 0;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        gap: .75rem;
+        align-items: flex-start;
+    }
+
+    .post-item:last-child { border-bottom: none; }
+
+    .post-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .72rem;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+        margin-top: .1rem;
+    }
+
+    .post-meta-row {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        flex-wrap: wrap;
+        margin-bottom: .3rem;
+    }
+
+    .post-username {
+        font-size: .78rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .post-date {
+        font-size: .68rem;
+        color: var(--text-secondary);
+    }
+
+    .post-content {
+        font-size: .78rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        margin-bottom: .4rem;
+    }
+
+    .post-stats {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        font-size: .68rem;
+        color: var(--text-secondary);
+    }
+
+    .post-stats i { margin-right: .25rem; }
+
+    .post-tag {
+        font-size: .6rem;
+        font-weight: 600;
+        padding: .15rem .4rem;
+        border-radius: 3px;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
+
+    .tag-workout {
+        background: rgba(74,158,255,.12);
+        color: #4a9eff;
+        border: 1px solid rgba(74,158,255,.25);
+    }
+
+    .tag-photo {
+        background: rgba(45,198,83,.1);
+        color: #2dc653;
+        border: 1px solid rgba(45,198,83,.25);
+    }
+
+    /* ---- Challenge items ---- */
+    .challenge-item {
+        padding: .85rem 0;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .challenge-item:last-child { border-bottom: none; }
+
+    .challenge-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .challenge-name {
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        flex: 1;
+        min-width: 0;
+    }
+
+    .challenge-meta {
+        font-size: .68rem;
+        color: var(--text-secondary);
+        margin-top: .1rem;
+    }
+
+    .difficulty-badge {
+        font-size: .58rem;
+        font-weight: 700;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: .18rem .45rem;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+
+    .diff-easy   { background: rgba(45,198,83,.12);   color: #2dc653;  border: 1px solid rgba(45,198,83,.25); }
+    .diff-medium { background: rgba(255,209,102,.12); color: var(--accent-tertiary); border: 1px solid rgba(255,209,102,.25); }
+    .diff-hard   { background: rgba(255,107,53,.12);  color: var(--accent-secondary); border: 1px solid rgba(255,107,53,.25); }
+    .diff-elite  { background: rgba(230,57,70,.12);   color: var(--accent); border: 1px solid rgba(230,57,70,.25); }
+
+    /* ---- Create challenge form ---- */
+    .challenge-form-wrap {
+        display: none;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-bright);
+        border-radius: 10px;
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+        animation: slideDown .2s ease;
+    }
+
+    @@keyframes slideDown {
+        from { opacity: 0; transform: translateY(-8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .challenge-form-wrap.open { display: block; }
+
+    .form-row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem;
+    }
+
+    .admin-form-group { margin-bottom: .75rem; }
+
+    .admin-form-label {
+        display: block;
+        font-size: .68rem;
+        font-weight: 600;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: .3rem;
+    }
+
+    .admin-form-control {
+        width: 100%;
+        background: var(--bg-card);
+        border: 1px solid var(--border-bright);
+        border-radius: 7px;
+        padding: .45rem .75rem;
+        color: var(--text-primary);
+        font-size: .8rem;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        transition: border-color .15s;
+    }
+
+    .admin-form-control:focus {
+        border-color: rgba(230,57,70,.5);
+        box-shadow: 0 0 0 2px rgba(230,57,70,.1);
+    }
+
+    .admin-form-control option { background: var(--bg-card); }
+
+    textarea.admin-form-control { resize: vertical; min-height: 70px; }
+
+    /* ---- Muscle bars ---- */
+    .muscle-row {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin-bottom: .75rem;
+    }
+
+    .muscle-row:last-child { margin-bottom: 0; }
+
+    .muscle-label {
+        font-size: .75rem;
+        color: var(--text-secondary);
+        width: 110px;
+        flex-shrink: 0;
+        text-transform: capitalize;
+    }
+
+    .muscle-bar-track {
+        flex: 1;
+        height: 8px;
+        background: var(--bg-secondary);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .muscle-bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width .6s cubic-bezier(.4,0,.2,1);
+    }
+
+    .muscle-count {
+        font-size: .72rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        width: 32px;
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    /* ---- Toast ---- */
+    .admin-toast {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-bright);
+        border-radius: 10px;
+        padding: .8rem 1.1rem;
+        font-size: .78rem;
+        color: var(--text-primary);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        box-shadow: 0 8px 30px rgba(0,0,0,.5);
+        transform: translateY(100px);
+        opacity: 0;
+        transition: transform .25s ease, opacity .25s ease;
+    }
+
+    .admin-toast.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .admin-toast.toast-success { border-left: 3px solid #2dc653; }
+    .admin-toast.toast-error   { border-left: 3px solid var(--accent); }
+
+    /* ---- Misc ---- */
+    .btn-create-challenge {
+        background: linear-gradient(135deg, rgba(230,57,70,.2), rgba(255,107,53,.15));
+        color: var(--accent);
+        border: 1px solid rgba(230,57,70,.35);
+        padding: .4rem .9rem;
+        border-radius: 7px;
+        font-size: .75rem;
+        font-weight: 600;
+        letter-spacing: .04em;
+        cursor: pointer;
+        transition: all .15s;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .btn-create-challenge:hover {
+        background: linear-gradient(135deg, rgba(230,57,70,.3), rgba(255,107,53,.22));
+        box-shadow: 0 0 14px rgba(230,57,70,.25);
+    }
+
+    .card-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+    }
+
+    .card-header-row .admin-card-title { margin-bottom: 0; }
+
+    .table-wrap { overflow-x: auto; }
+
+    .empty-state {
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: var(--text-secondary);
+        font-size: .82rem;
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        opacity: .3;
+        display: block;
+        margin-bottom: .75rem;
+    }
+
+    .spinner-sm {
+        width: 14px; height: 14px;
+        border: 2px solid rgba(255,255,255,.15);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        display: inline-block;
+        animation: spin .6s linear infinite;
+        vertical-align: middle;
+    }
+
+    @@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<div class="admin-page">
+    <div class="container-lg px-3 px-md-4">
+
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="admin-header-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="admin-header-text">
+                <h1>Admin Console <span class="admin-badge">Admin</span></h1>
+                <p>System overview and management</p>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="section-label"><i class="fa-solid fa-chart-bar me-1"></i> Platform Stats</div>
+        <div class="stats-grid mb-3">
+            <div class="stat-card c-red">
+                <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-value">@totalUsers</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card c-orange">
+                <div class="stat-icon"><i class="fa-solid fa-dumbbell"></i></div>
+                <div class="stat-value">@totalWorkouts</div>
+                <div class="stat-label">Total Workouts</div>
+            </div>
+            <div class="stat-card c-yellow">
+                <div class="stat-icon"><i class="fa-solid fa-comments"></i></div>
+                <div class="stat-value">@totalPosts</div>
+                <div class="stat-label">Total Posts</div>
+            </div>
+            <div class="stat-card c-blue">
+                <div class="stat-icon"><i class="fa-solid fa-flag"></i></div>
+                <div class="stat-value">@totalChallenges</div>
+                <div class="stat-label">Total Challenges</div>
+            </div>
+            <div class="stat-card c-green">
+                <div class="stat-icon"><i class="fa-solid fa-weight-hanging"></i></div>
+                <div class="stat-value">@(totalVolume >= 1000 ? $"{(totalVolume / 1000):F1}k" : $"{totalVolume:F0}")</div>
+                <div class="stat-label">Total Volume kg</div>
+            </div>
+            <div class="stat-card c-purple">
+                <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
+                <div class="stat-value">@(totalCalories >= 1000000 ? $"{(totalCalories / 1000000.0):F1}M" : totalCalories >= 1000 ? $"{(totalCalories / 1000):F0}k" : totalCalories.ToString())</div>
+                <div class="stat-label">Total Calories</div>
+            </div>
+        </div>
+
+        <!-- This Week Activity -->
+        <div class="activity-row mb-4">
+            <div class="activity-mini">
+                <div class="activity-mini-icon" style="color:#4a9eff;"><i class="fa-solid fa-dumbbell"></i></div>
+                <div>
+                    <div class="activity-mini-val">@workoutsWeek</div>
+                    <div class="activity-mini-label">Workouts This Week</div>
+                </div>
+            </div>
+            <div class="activity-mini">
+                <div class="activity-mini-icon" style="color:var(--accent-tertiary);"><i class="fa-solid fa-pen-to-square"></i></div>
+                <div>
+                    <div class="activity-mini-val">@postsWeek</div>
+                    <div class="activity-mini-label">Posts This Week</div>
+                </div>
+            </div>
+            <div class="activity-mini">
+                <div class="activity-mini-icon" style="color:var(--accent);"><i class="fa-solid fa-heart"></i></div>
+                <div>
+                    <div class="activity-mini-val">@totalLikes</div>
+                    <div class="activity-mini-label">Total Likes</div>
+                </div>
+            </div>
+            <div class="activity-mini">
+                <div class="activity-mini-icon" style="color:#2dc653;"><i class="fa-solid fa-comment"></i></div>
+                <div>
+                    <div class="activity-mini-val">@totalComments</div>
+                    <div class="activity-mini-label">Total Comments</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Management sections -->
+        <div class="section-label mb-3"><i class="fa-solid fa-sliders me-1"></i> Management</div>
+        <div class="admin-two-col">
+
+            <!-- User Management -->
+            <div class="admin-card">
+                <div class="admin-card-title"><i class="fa-solid fa-users"></i> Users</div>
+                <div class="table-wrap">
+                    @if (!users.Any())
+                    {
+                        <div class="empty-state"><i class="fa-solid fa-users"></i>No users found.</div>
+                    }
+                    else
+                    {
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>WOs</th>
+                                    <th>Posts</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in users)
+                                {
+                                    var userId       = GetProp<string>(user, "Id", "");
+                                    var userName     = GetProp<string>(user, "UserName", "?");
+                                    var userEmail    = GetProp<string>(user, "Email", "");
+                                    var isAdmin      = GetProp<bool>(user, "IsAdmin", false);
+                                    var wCount       = GetProp<int>(user, "WorkoutCount", 0);
+                                    var pCount       = GetProp<int>(user, "PostCount", 0);
+                                    var initial      = userName.Length > 0 ? userName.Substring(0, 1).ToUpper() : "?";
+                                    <tr>
+                                        <td>
+                                            <div class="user-avatar-sm">@initial</div>
+                                        </td>
+                                        <td style="font-weight:600; max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">@userName</td>
+                                        <td style="color:var(--text-secondary); font-size:.73rem; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">@userEmail</td>
+                                        <td>
+                                            @if (isAdmin)
+                                            {
+                                                <span class="role-badge admin-role">Admin</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="role-badge user-role">User</span>
+                                            }
+                                        </td>
+                                        <td style="color:var(--text-secondary);">@wCount</td>
+                                        <td style="color:var(--text-secondary);">@pCount</td>
+                                        <td style="white-space:nowrap;">
+                                            <button class="btn-admin btn-admin-yellow me-1"
+                                                    onclick="toggleAdmin('@userId', '@Html.Raw(userName.Replace("'","\\\'"))')">
+                                                <i class="fa-solid fa-user-shield"></i>
+                                            </button>
+                                            <button class="btn-admin btn-admin-red"
+                                                    onclick="deleteUser('@userId', '@Html.Raw(userName.Replace("'","\\\'"))')">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+
+            <!-- Post Moderation -->
+            <div class="admin-card">
+                <div class="admin-card-title"><i class="fa-solid fa-comments"></i> Recent Posts</div>
+                @if (!recentPosts.Any())
+                {
+                    <div class="empty-state"><i class="fa-solid fa-comments"></i>No posts found.</div>
+                }
+                else
+                {
+                    <div style="max-height:420px; overflow-y:auto; padding-right:.25rem;">
+                        @foreach (var post in recentPosts)
+                        {
+                            var postId      = GetProp<int>(post, "Id", 0);
+                            var postUser    = GetProp<string>(post, "UserName", "Unknown");
+                            var content     = GetProp<string>(post, "Content", "");
+                            var createdAt   = GetProp<DateTime>(post, "CreatedAt", DateTime.MinValue);
+                            var likes       = GetProp<int>(post, "Likes", 0);
+                            var comments    = GetProp<int>(post, "Comments", 0);
+                            var hasWorkout  = GetProp<bool>(post, "HasWorkout", false);
+                            var hasPhoto    = GetProp<bool>(post, "HasPhoto", false);
+                            var initial     = postUser.Length > 0 ? postUser.Substring(0, 1).ToUpper() : "?";
+                            var truncated   = content.Length > 100 ? content.Substring(0, 100) + "..." : content;
+                            <div class="post-item">
+                                <div class="post-avatar">@initial</div>
+                                <div style="flex:1; min-width:0;">
+                                    <div class="post-meta-row">
+                                        <span class="post-username">@postUser</span>
+                                        <span class="post-date">@createdAt.ToString("MMM d, yyyy")</span>
+                                        @if (hasWorkout) { <span class="post-tag tag-workout"><i class="fa-solid fa-dumbbell me-1"></i>Workout</span> }
+                                        @if (hasPhoto)   { <span class="post-tag tag-photo"><i class="fa-solid fa-image me-1"></i>Photo</span> }
+                                    </div>
+                                    <div class="post-content">@truncated</div>
+                                    <div class="post-stats">
+                                        <span><i class="fa-solid fa-heart" style="color:var(--accent);"></i>@likes</span>
+                                        <span><i class="fa-solid fa-comment" style="color:#4a9eff;"></i>@comments</span>
+                                        <button class="btn-admin btn-admin-red ms-auto" onclick="deletePost(@postId)">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Challenges + Muscle Stats -->
+        <div class="admin-two-col">
+
+            <!-- Challenge Management -->
+            <div class="admin-card">
+                <div class="card-header-row">
+                    <div class="admin-card-title"><i class="fa-solid fa-flag"></i> Challenges</div>
+                    <button class="btn-create-challenge" id="toggleChallengeForm">
+                        <i class="fa-solid fa-plus"></i> Create Challenge
+                    </button>
+                </div>
+
+                <!-- Create Challenge Form -->
+                <div class="challenge-form-wrap" id="challengeFormWrap">
+                    <form id="createChallengeForm">
+                        <div class="form-row-2">
+                            <div class="admin-form-group">
+                                <label class="admin-form-label">Name</label>
+                                <input type="text" name="name" class="admin-form-control" placeholder="Challenge name" required />
+                            </div>
+                            <div class="admin-form-group">
+                                <label class="admin-form-label">Icon (FA class)</label>
+                                <input type="text" name="icon" class="admin-form-control" placeholder="e.g. fa-fire" />
+                            </div>
+                        </div>
+                        <div class="form-row-2">
+                            <div class="admin-form-group">
+                                <label class="admin-form-label">Duration (days)</label>
+                                <input type="number" name="durationDays" class="admin-form-control" placeholder="30" min="1" required />
+                            </div>
+                            <div class="admin-form-group">
+                                <label class="admin-form-label">Difficulty</label>
+                                <select name="difficulty" class="admin-form-control">
+                                    <option value="Easy">Easy</option>
+                                    <option value="Medium" selected>Medium</option>
+                                    <option value="Hard">Hard</option>
+                                    <option value="Elite">Elite</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row-2">
+                            <div class="admin-form-group">
+                                <label class="admin-form-label">Color</label>
+                                <input type="color" name="color" class="admin-form-control" value="#e63946" style="height:36px; padding:.2rem .4rem;" />
+                            </div>
+                            <div class="admin-form-group">
+                                <label class="admin-form-label">Description</label>
+                                <input type="text" name="description" class="admin-form-control" placeholder="Short description" />
+                            </div>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Rules</label>
+                            <textarea name="rules" class="admin-form-control" placeholder="Challenge rules..."></textarea>
+                        </div>
+                        <div style="display:flex; gap:.5rem; justify-content:flex-end; margin-top:.25rem;">
+                            <button type="button" class="btn-admin btn-admin-ghost" id="cancelChallengeForm">Cancel</button>
+                            <button type="submit" class="btn-admin btn-admin-green"><i class="fa-solid fa-check me-1"></i>Create</button>
+                        </div>
+                    </form>
+                </div>
+
+                @if (!challenges.Any())
+                {
+                    <div class="empty-state"><i class="fa-solid fa-flag"></i>No challenges yet.</div>
+                }
+                else
+                {
+                    <div style="max-height:380px; overflow-y:auto; padding-right:.2rem;">
+                        @foreach (var ch in challenges)
+                        {
+                            var chId         = GetProp<int>(ch, "Id", 0);
+                            var chName       = GetProp<string>(ch, "Name", "Unknown");
+                            var chParts      = GetProp<int>(ch, "ParticipantCount", 0);
+                            var chDiff       = GetProp<string>(ch, "Difficulty", "Medium");
+                            var chDays       = GetProp<int>(ch, "DurationDays", 0);
+                            var chColor      = GetProp<string>(ch, "Color", "#e63946");
+                            var diffClass    = chDiff?.ToLower() switch {
+                                "easy"  => "diff-easy",
+                                "hard"  => "diff-hard",
+                                "elite" => "diff-elite",
+                                _       => "diff-medium"
+                            };
+                            <div class="challenge-item">
+                                <div class="challenge-dot" style="background:@chColor;"></div>
+                                <div style="flex:1; min-width:0;">
+                                    <div class="challenge-name text-truncate">@chName</div>
+                                    <div class="challenge-meta">
+                                        <i class="fa-solid fa-users me-1"></i>@chParts participants &nbsp;&bull;&nbsp;
+                                        <i class="fa-solid fa-calendar-days me-1"></i>@chDays days
+                                    </div>
+                                </div>
+                                <span class="difficulty-badge @diffClass">@chDiff</span>
+                                <button class="btn-admin btn-admin-red ms-2" onclick="deleteChallenge(@chId, '@Html.Raw(chName.Replace("'","\\\'"))')">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Muscle Group Analytics -->
+            <div class="admin-card">
+                <div class="admin-card-title"><i class="fa-solid fa-chart-bar"></i> Muscle Group Analytics</div>
+                @if (!muscleStats.Any())
+                {
+                    <div class="empty-state"><i class="fa-solid fa-dumbbell"></i>No workout data yet.</div>
+                }
+                else
+                {
+                    var muscleColors = new[] { "#e63946", "#ff6b35", "#ffd166", "#4a9eff", "#2dc653", "#9d4edd", "#06d6a0", "#ef476f" };
+                    var idx = 0;
+                    @foreach (var m in muscleStats)
+                    {
+                        var muscle = GetProp<string>(m, "Muscle", "Unknown");
+                        var count  = GetProp<int>(m, "Count", 0);
+                        var pct    = maxMuscleCount > 0 ? (count * 100.0 / maxMuscleCount) : 0;
+                        var barColor = muscleColors[idx % muscleColors.Length];
+                        idx++;
+                        <div class="muscle-row">
+                            <div class="muscle-label">@muscle</div>
+                            <div class="muscle-bar-track">
+                                <div class="muscle-bar-fill" style="width:@(pct.ToString("F1"))%; background: linear-gradient(90deg, @barColor, @barColor + '99');"></div>
+                            </div>
+                            <div class="muscle-count">@count</div>
+                        </div>
+                    }
+                }
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="admin-toast" id="adminToast">
+    <i class="fa-solid fa-circle-check" id="toastIcon"></i>
+    <span id="toastMsg">Action completed.</span>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    // ---- Toast ----
+    function showToast(msg, type) {
+        var toast = document.getElementById('adminToast');
+        var icon  = document.getElementById('toastIcon');
+        var text  = document.getElementById('toastMsg');
+        toast.className = 'admin-toast ' + (type === 'error' ? 'toast-error' : 'toast-success');
+        icon.className  = type === 'error' ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check';
+        icon.style.color = type === 'error' ? '#e63946' : '#2dc653';
+        text.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(function () { toast.classList.remove('show'); }, 3200);
+    }
+
+    // ---- Generic POST helper ----
+    function adminPost(url, data, successMsg, errorMsg) {
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')
+                    ? document.querySelector('input[name="__RequestVerificationToken"]').value
+                    : ''
+            },
+            body: JSON.stringify(data)
+        })
+        .then(function (r) {
+            if (r.ok) {
+                showToast(successMsg || 'Done.', 'success');
+                setTimeout(function () { window.location.reload(); }, 1000);
+            } else {
+                return r.text().then(function (t) {
+                    showToast(errorMsg || ('Error: ' + r.status), 'error');
+                });
+            }
+        })
+        .catch(function (e) {
+            showToast(errorMsg || 'Network error.', 'error');
+        });
+    }
+
+    // ---- Toggle Admin ----
+    window.toggleAdmin = function (userId, userName) {
+        if (!confirm('Toggle admin role for "' + userName + '"?')) return;
+        adminPost('/Admin/ToggleAdmin', { id: userId },
+            'Admin role toggled for ' + userName + '.',
+            'Failed to toggle admin role.');
+    };
+
+    // ---- Delete User ----
+    window.deleteUser = function (userId, userName) {
+        if (!confirm('Permanently delete user "' + userName + '"? This cannot be undone.')) return;
+        adminPost('/Admin/DeleteUser', { id: userId },
+            'User "' + userName + '" deleted.',
+            'Failed to delete user.');
+    };
+
+    // ---- Delete Post ----
+    window.deletePost = function (postId) {
+        if (!confirm('Delete this post permanently?')) return;
+        adminPost('/Admin/DeletePost', { id: postId },
+            'Post deleted.',
+            'Failed to delete post.');
+    };
+
+    // ---- Delete Challenge ----
+    window.deleteChallenge = function (challengeId, name) {
+        if (!confirm('Delete challenge "' + name + '"? This cannot be undone.')) return;
+        adminPost('/Admin/DeleteChallenge', { id: challengeId },
+            'Challenge "' + name + '" deleted.',
+            'Failed to delete challenge.');
+    };
+
+    // ---- Create Challenge Form toggle ----
+    var toggleBtn = document.getElementById('toggleChallengeForm');
+    var formWrap  = document.getElementById('challengeFormWrap');
+    var cancelBtn = document.getElementById('cancelChallengeForm');
+
+    if (toggleBtn && formWrap) {
+        toggleBtn.addEventListener('click', function () {
+            formWrap.classList.toggle('open');
+        });
+    }
+    if (cancelBtn && formWrap) {
+        cancelBtn.addEventListener('click', function () {
+            formWrap.classList.remove('open');
+        });
+    }
+
+    // ---- Create Challenge submit ----
+    var createForm = document.getElementById('createChallengeForm');
+    if (createForm) {
+        createForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var fd = new FormData(createForm);
+            var payload = {
+                name:        fd.get('name'),
+                description: fd.get('description'),
+                icon:        fd.get('icon'),
+                color:       fd.get('color'),
+                durationDays: parseInt(fd.get('durationDays')) || 30,
+                difficulty:  fd.get('difficulty'),
+                rules:       fd.get('rules')
+            };
+            adminPost('/Admin/CreateChallenge', payload,
+                'Challenge "' + payload.name + '" created!',
+                'Failed to create challenge.');
+        });
+    }
+
+    // ---- Animate muscle bars on load ----
+    var bars = document.querySelectorAll('.muscle-bar-fill');
+    bars.forEach(function (bar) {
+        var target = bar.style.width;
+        bar.style.width = '0';
+        requestAnimationFrame(function () {
+            setTimeout(function () { bar.style.width = target; }, 80);
+        });
+    });
+
+})();
+</script>
+}
