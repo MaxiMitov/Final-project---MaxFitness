@@ -273,6 +273,44 @@ namespace Final_project___MaxFitness.Controllers
             var stats = await _workoutStatsService.GetDashboardStatsAsync(userId);
             ViewBag.UserStats = stats;
 
+            // Load challenges from DB
+            var challenges = await _context.Challenges
+                .Include(c => c.Participants)
+                .OrderByDescending(c => c.ParticipantCount)
+                .ToListAsync();
+
+            var joinedIds = challenges
+                .Where(c => c.Participants.Any(p => p.UserId == userId))
+                .Select(c => c.Id)
+                .ToHashSet();
+
+            ViewBag.Challenges = challenges.Select(c => (object)new
+            {
+                c.Id, c.Name, c.Icon, c.Color, c.DurationDays, c.Difficulty,
+                ParticipantCount = c.ParticipantCount,
+                IsJoined = joinedIds.Contains(c.Id)
+            }).ToList();
+
+            // Real active users (users with workouts in last 7 days)
+            var recentActiveUsers = await _context.WorkoutSessions
+                .Where(s => s.CompletedAt >= DateTime.UtcNow.AddDays(-7))
+                .Include(s => s.User)
+                .Select(s => s.User!.UserName)
+                .Distinct()
+                .Take(8)
+                .ToListAsync();
+            ViewBag.ActiveUsers = recentActiveUsers;
+
+            // Real top contributors (by workout count)
+            var topContributors = await _context.WorkoutSessions
+                .Include(s => s.User)
+                .GroupBy(s => s.UserId)
+                .Select(g => new { UserId = g.Key, UserName = g.First().User!.UserName, Workouts = g.Count() })
+                .OrderByDescending(x => x.Workouts)
+                .Take(3)
+                .ToListAsync();
+            ViewBag.TopContributors = topContributors.Select((c, i) => (object)new { Name = c.UserName ?? "Unknown", Workouts = c.Workouts, Rank = i + 1 }).ToList();
+
             return View();
         }
 
@@ -382,6 +420,84 @@ namespace Final_project___MaxFitness.Controllers
             if (diff.TotalDays < 1.5) return "Yesterday";
             if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
             return $"{(int)(diff.TotalDays / 7)}w ago";
+        }
+
+        public async Task<IActionResult> ChallengeDetail(int id)
+        {
+            var userId = _userManager.GetUserId(User) ?? "";
+            var currentUser = User.Identity?.Name ?? "User";
+
+            var challenge = await _context.Challenges
+                .Include(c => c.Participants)
+                    .ThenInclude(p => p.User)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (challenge == null) return RedirectToAction("Community");
+
+            ViewBag.CurrentUser = currentUser;
+            ViewBag.IsJoined = challenge.Participants.Any(p => p.UserId == userId);
+            ViewBag.Challenge = new
+            {
+                challenge.Id, challenge.Name, challenge.Description, challenge.Icon, challenge.Color,
+                challenge.DurationDays, challenge.StartDate, challenge.EndDate,
+                challenge.Rules, challenge.Difficulty, challenge.ParticipantCount
+            };
+            ViewBag.Participants = challenge.Participants.Select(p => (object)new
+            {
+                UserName = p.User?.UserName ?? "Unknown",
+                JoinedAt = p.JoinedAt.ToString("MMM d, yyyy"),
+                Progress = p.Progress
+            }).ToList();
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> JoinChallenge([FromBody] ChallengeIdRequest request)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var challenge = await _context.Challenges.FindAsync(request.ChallengeId);
+            if (challenge == null) return NotFound();
+
+            var existing = await _context.ChallengeParticipants
+                .FirstOrDefaultAsync(p => p.ChallengeId == request.ChallengeId && p.UserId == userId);
+
+            if (existing == null)
+            {
+                _context.ChallengeParticipants.Add(new ChallengeParticipant
+                {
+                    ChallengeId = request.ChallengeId,
+                    UserId = userId
+                });
+                challenge.ParticipantCount++;
+                await _context.SaveChangesAsync();
+            }
+
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LeaveChallenge([FromBody] ChallengeIdRequest request)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var challenge = await _context.Challenges.FindAsync(request.ChallengeId);
+            if (challenge == null) return NotFound();
+
+            var existing = await _context.ChallengeParticipants
+                .FirstOrDefaultAsync(p => p.ChallengeId == request.ChallengeId && p.UserId == userId);
+
+            if (existing != null)
+            {
+                _context.ChallengeParticipants.Remove(existing);
+                challenge.ParticipantCount = Math.Max(0, challenge.ParticipantCount - 1);
+                await _context.SaveChangesAsync();
+            }
+
+            return Json(new { success = true });
         }
 
         public IActionResult Privacy()
