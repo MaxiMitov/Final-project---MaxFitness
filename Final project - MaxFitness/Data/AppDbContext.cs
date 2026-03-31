@@ -16,6 +16,8 @@ namespace Final_project___MaxFitness.Data
         public DbSet<CommunityPost> CommunityPosts { get; set; }
         public DbSet<PostComment> PostComments { get; set; }
         public DbSet<PostLike> PostLikes { get; set; }
+        public DbSet<Challenge> Challenges { get; set; }
+        public DbSet<ChallengeParticipant> ChallengeParticipants { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -78,6 +80,15 @@ namespace Final_project___MaxFitness.Data
                 new Exercise { Id = 38, Name = "Reverse Wrist Curls", MuscleGroup = "forearms", Type = "Isolation" },
                 new Exercise { Id = 39, Name = "Farmer's Walk", MuscleGroup = "forearms", Type = "Compound" },
                 new Exercise { Id = 40, Name = "Plate Pinch", MuscleGroup = "forearms", Type = "Isolation" }
+            );
+
+            // Seed Challenges
+            modelBuilder.Entity<Challenge>().HasData(
+                new Challenge { Id = 1, Name = "30-Day Squat Challenge", Description = "Complete a squat variation every day for 30 days. Start with bodyweight and progressively add weight. Build insane leg strength and discipline.", Icon = "fa-person-running", Color = "#e63946", DurationDays = 30, StartDate = new DateTime(2026, 3, 1), EndDate = new DateTime(2026, 3, 31), Rules = "Do at least one set of squats every day;Minimum 10 reps per set;Rest days allowed but must make up the next day;Log every session in MaxFitness", Difficulty = "Intermediate" },
+                new Challenge { Id = 2, Name = "5K Steps Daily", Description = "Hit 5,000 steps minimum every single day. A simple but powerful habit that keeps you moving even on rest days. Perfect for active recovery.", Icon = "fa-shoe-prints", Color = "#ff6b35", DurationDays = 30, StartDate = new DateTime(2026, 3, 1), EndDate = new DateTime(2026, 3, 31), Rules = "Walk at least 5,000 steps every day;Track with any step counter or fitness watch;Post your daily count in the community;Miss a day and you're out", Difficulty = "Beginner" },
+                new Challenge { Id = 3, Name = "No Rest Day Week", Description = "Train every single day for 7 days straight. Mix up muscle groups, intensity, and workout types. Test your mental and physical limits.", Icon = "fa-fire", Color = "#ffd166", DurationDays = 7, StartDate = new DateTime(2026, 3, 24), EndDate = new DateTime(2026, 3, 31), Rules = "Work out every day for 7 consecutive days;Each session must be at least 30 minutes;Vary muscle groups to prevent overtraining;Log all sessions in MaxFitness", Difficulty = "Advanced" },
+                new Challenge { Id = 4, Name = "Push-Up Master", Description = "Work your way up to 100 push-ups in a single session. Start wherever you are and build up over 4 weeks. Upper body gains guaranteed.", Icon = "fa-hand-fist", Color = "#22c55e", DurationDays = 28, StartDate = new DateTime(2026, 3, 3), EndDate = new DateTime(2026, 3, 31), Rules = "Do push-ups at least 5 days per week;Track your max set each session;Goal is 100 push-ups in one session by day 28;Any push-up variation counts", Difficulty = "Intermediate" },
+                new Challenge { Id = 5, Name = "Iron Streak", Description = "Maintain a 14-day consecutive workout streak. No excuses, no skipping. Build the habit that separates the dedicated from the rest.", Icon = "fa-link", Color = "#8b5cf6", DurationDays = 14, StartDate = new DateTime(2026, 3, 17), EndDate = new DateTime(2026, 3, 31), Rules = "Work out every day for 14 days;Minimum 20 minutes per session;Any workout type counts;Log in MaxFitness to track your streak", Difficulty = "Advanced" }
             );
         }
     }
