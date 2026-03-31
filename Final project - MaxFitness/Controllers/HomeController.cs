@@ -100,24 +100,69 @@ namespace Final_project___MaxFitness.Controllers
             return View();
         }
 
-        public IActionResult Leaderboard()
+        public async Task<IActionResult> Leaderboard()
         {
             var currentUser = User.Identity?.Name ?? "User";
             ViewBag.CurrentUser = currentUser;
 
-            var leaders = new List<object>
-            {
-                new { Rank = 1, UserName = "FitBeast99", TotalWorkouts = 247, Streak = 34, TotalVolume = 128450.0, CaloriesBurned = 89200, TopMuscle = "Chest" },
-                new { Rank = 2, UserName = "IronWolf", TotalWorkouts = 231, Streak = 28, TotalVolume = 115800.0, CaloriesBurned = 81500, TopMuscle = "Back" },
-                new { Rank = 3, UserName = "GymSharK", TotalWorkouts = 198, Streak = 21, TotalVolume = 98200.0, CaloriesBurned = 72400, TopMuscle = "Legs" },
-                new { Rank = 4, UserName = currentUser, TotalWorkouts = 42, Streak = 5, TotalVolume = 24500.0, CaloriesBurned = 18900, TopMuscle = "Chest" },
-                new { Rank = 5, UserName = "LiftQueen", TotalWorkouts = 175, Streak = 14, TotalVolume = 87600.0, CaloriesBurned = 64300, TopMuscle = "Shoulders" },
-                new { Rank = 6, UserName = "BeastMode_X", TotalWorkouts = 163, Streak = 11, TotalVolume = 79400.0, CaloriesBurned = 58700, TopMuscle = "Arms" },
-                new { Rank = 7, UserName = "RepKing", TotalWorkouts = 148, Streak = 9, TotalVolume = 71200.0, CaloriesBurned = 52100, TopMuscle = "Back" },
-                new { Rank = 8, UserName = "SwolePatrol", TotalWorkouts = 134, Streak = 7, TotalVolume = 65800.0, CaloriesBurned = 47800, TopMuscle = "Legs" },
-                new { Rank = 9, UserName = "PumpMaster", TotalWorkouts = 121, Streak = 4, TotalVolume = 58900.0, CaloriesBurned = 41200, TopMuscle = "Chest" },
-                new { Rank = 10, UserName = "GainzFactory", TotalWorkouts = 108, Streak = 3, TotalVolume = 52100.0, CaloriesBurned = 36500, TopMuscle = "Shoulders" }
-            };
+            // Get all users with their workout data
+            var userSessions = await _context.WorkoutSessions
+                .Include(s => s.ExerciseLogs)
+                .Include(s => s.User)
+                .ToListAsync();
+
+            // Group by user and calculate stats
+            var userStats = userSessions
+                .GroupBy(s => s.UserId)
+                .Select(g =>
+                {
+                    var sessions = g.ToList();
+                    var userName = sessions.First().User?.UserName ?? "Unknown";
+                    var totalWorkouts = sessions.Count;
+                    var totalVolume = sessions.Sum(s => s.TotalVolume);
+                    var caloriesBurned = sessions.Sum(s => s.CaloriesBurned);
+
+                    // Calculate streak
+                    var uniqueDates = sessions
+                        .Select(s => s.CompletedAt.Date)
+                        .Distinct()
+                        .OrderByDescending(d => d)
+                        .ToList();
+
+                    var streak = 0;
+                    if (uniqueDates.Count > 0)
+                    {
+                        var today = DateTime.UtcNow.Date;
+                        if (uniqueDates[0] >= today.AddDays(-1))
+                        {
+                            streak = 1;
+                            for (int i = 1; i < uniqueDates.Count; i++)
+                            {
+                                if ((uniqueDates[i - 1] - uniqueDates[i]).Days == 1)
+                                    streak++;
+                                else
+                                    break;
+                            }
+                        }
+                    }
+
+                    // Find top muscle group
+                    var topMuscle = sessions
+                        .SelectMany(s => s.ExerciseLogs)
+                        .GroupBy(l => l.MuscleGroup)
+                        .OrderByDescending(mg => mg.Count())
+                        .Select(mg => char.ToUpper(mg.Key[0]) + mg.Key.Substring(1))
+                        .FirstOrDefault() ?? "N/A";
+
+                    return new { UserName = userName, TotalWorkouts = totalWorkouts, Streak = streak, TotalVolume = totalVolume, CaloriesBurned = caloriesBurned, TopMuscle = topMuscle };
+                })
+                .OrderByDescending(u => u.TotalWorkouts)
+                .ToList();
+
+            // Assign ranks
+            var leaders = userStats
+                .Select((u, i) => (object)new { Rank = i + 1, u.UserName, u.TotalWorkouts, u.Streak, u.TotalVolume, u.CaloriesBurned, u.TopMuscle })
+                .ToList();
 
             ViewBag.Leaders = leaders;
             return View();
