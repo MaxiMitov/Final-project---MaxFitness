@@ -100,18 +100,33 @@ namespace Final_project___MaxFitness.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Leaderboard()
+        public async Task<IActionResult> Leaderboard(string period = "all")
         {
             var currentUser = User.Identity?.Name ?? "User";
             ViewBag.CurrentUser = currentUser;
+            ViewBag.Period = period;
 
-            // Get all users with their workout data
-            var userSessions = await _context.WorkoutSessions
+            // Determine date filter
+            var now = DateTime.UtcNow;
+            DateTime? cutoff = period switch
+            {
+                "week" => now.Date.AddDays(-(int)now.DayOfWeek + (int)DayOfWeek.Monday + (now.DayOfWeek == DayOfWeek.Sunday ? -7 : 0)),
+                "month" => new DateTime(now.Year, now.Month, 1),
+                _ => null
+            };
+
+            // Query sessions with optional date filter
+            var query = _context.WorkoutSessions
                 .Include(s => s.ExerciseLogs)
                 .Include(s => s.User)
-                .ToListAsync();
+                .AsQueryable();
 
-            // Group by user and calculate stats
+            if (cutoff.HasValue)
+                query = query.Where(s => s.CompletedAt >= cutoff.Value);
+
+            var userSessions = await query.ToListAsync();
+
+            // Group by user and calculate stats, ranked by total volume
             var userStats = userSessions
                 .GroupBy(s => s.UserId)
                 .Select(g =>
@@ -122,7 +137,7 @@ namespace Final_project___MaxFitness.Controllers
                     var totalVolume = sessions.Sum(s => s.TotalVolume);
                     var caloriesBurned = sessions.Sum(s => s.CaloriesBurned);
 
-                    // Calculate streak
+                    // Calculate streak from ALL sessions (not filtered)
                     var uniqueDates = sessions
                         .Select(s => s.CompletedAt.Date)
                         .Distinct()
@@ -146,7 +161,6 @@ namespace Final_project___MaxFitness.Controllers
                         }
                     }
 
-                    // Find top muscle group
                     var topMuscle = sessions
                         .SelectMany(s => s.ExerciseLogs)
                         .GroupBy(l => l.MuscleGroup)
@@ -156,10 +170,9 @@ namespace Final_project___MaxFitness.Controllers
 
                     return new { UserName = userName, TotalWorkouts = totalWorkouts, Streak = streak, TotalVolume = totalVolume, CaloriesBurned = caloriesBurned, TopMuscle = topMuscle };
                 })
-                .OrderByDescending(u => u.TotalWorkouts)
+                .OrderByDescending(u => u.TotalVolume)
                 .ToList();
 
-            // Assign ranks
             var leaders = userStats
                 .Select((u, i) => (object)new { Rank = i + 1, u.UserName, u.TotalWorkouts, u.Streak, u.TotalVolume, u.CaloriesBurned, u.TopMuscle })
                 .ToList();
