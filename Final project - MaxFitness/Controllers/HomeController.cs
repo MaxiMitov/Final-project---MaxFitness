@@ -96,6 +96,47 @@ namespace Final_project___MaxFitness.Controllers
             return View();
         }
 
+        public IActionResult Leaderboard()
+        {
+            var currentUser = User.Identity?.Name ?? "User";
+            ViewBag.CurrentUser = currentUser;
+
+            var leaders = new List<object>
+            {
+                new { Rank = 1, UserName = "FitBeast99", TotalWorkouts = 247, Streak = 34, TotalVolume = 128450.0, CaloriesBurned = 89200, TopMuscle = "Chest" },
+                new { Rank = 2, UserName = "IronWolf", TotalWorkouts = 231, Streak = 28, TotalVolume = 115800.0, CaloriesBurned = 81500, TopMuscle = "Back" },
+                new { Rank = 3, UserName = "GymSharK", TotalWorkouts = 198, Streak = 21, TotalVolume = 98200.0, CaloriesBurned = 72400, TopMuscle = "Legs" },
+                new { Rank = 4, UserName = currentUser, TotalWorkouts = 42, Streak = 5, TotalVolume = 24500.0, CaloriesBurned = 18900, TopMuscle = "Chest" },
+                new { Rank = 5, UserName = "LiftQueen", TotalWorkouts = 175, Streak = 14, TotalVolume = 87600.0, CaloriesBurned = 64300, TopMuscle = "Shoulders" },
+                new { Rank = 6, UserName = "BeastMode_X", TotalWorkouts = 163, Streak = 11, TotalVolume = 79400.0, CaloriesBurned = 58700, TopMuscle = "Arms" },
+                new { Rank = 7, UserName = "RepKing", TotalWorkouts = 148, Streak = 9, TotalVolume = 71200.0, CaloriesBurned = 52100, TopMuscle = "Back" },
+                new { Rank = 8, UserName = "SwolePatrol", TotalWorkouts = 134, Streak = 7, TotalVolume = 65800.0, CaloriesBurned = 47800, TopMuscle = "Legs" },
+                new { Rank = 9, UserName = "PumpMaster", TotalWorkouts = 121, Streak = 4, TotalVolume = 58900.0, CaloriesBurned = 41200, TopMuscle = "Chest" },
+                new { Rank = 10, UserName = "GainzFactory", TotalWorkouts = 108, Streak = 3, TotalVolume = 52100.0, CaloriesBurned = 36500, TopMuscle = "Shoulders" }
+            };
+
+            ViewBag.Leaders = leaders;
+            return View();
+        }
+
+        public IActionResult Community()
+        {
+            var currentUser = User.Identity?.Name ?? "User";
+            ViewBag.CurrentUser = currentUser;
+
+            var posts = new List<object>
+            {
+                new { UserName = "FitBeast99", TimeAgo = "2h ago", Content = "Just crushed a new PR on bench press! 225 lbs for 3 reps. Feeling unstoppable today.", WorkoutName = "Push Day", Duration = 65, ExerciseCount = 6, Intensity = "High", Likes = 24, Comments = 8, MuscleGroups = new List<string> { "chest", "shoulders", "triceps" } },
+                new { UserName = "IronWolf", TimeAgo = "4h ago", Content = "Back day is best day. Nothing beats the pump from heavy deadlifts.", WorkoutName = "Pull Day", Duration = 55, ExerciseCount = 5, Intensity = "Extreme", Likes = 18, Comments = 5, MuscleGroups = new List<string> { "back", "biceps" } },
+                new { UserName = "GymSharK", TimeAgo = "6h ago", Content = "Leg day done. Can barely walk but it was worth it. Squats + lunges combo is brutal.", WorkoutName = "Leg Day", Duration = 70, ExerciseCount = 7, Intensity = "High", Likes = 31, Comments = 12, MuscleGroups = new List<string> { "legs" } },
+                new { UserName = "LiftQueen", TimeAgo = "1d ago", Content = "7-day streak complete! Consistency is everything. Keep showing up.", WorkoutName = "", Duration = 0, ExerciseCount = 0, Intensity = "", Likes = 45, Comments = 15, MuscleGroups = new List<string>() },
+                new { UserName = currentUser, TimeAgo = "1d ago", Content = "Started tracking my workouts with MaxFitness. Excited to see where this goes!", WorkoutName = "Full Body", Duration = 45, ExerciseCount = 4, Intensity = "Moderate", Likes = 12, Comments = 3, MuscleGroups = new List<string> { "chest", "back", "legs" } }
+            };
+
+            ViewBag.Posts = posts;
+            return View();
+        }
+
         public IActionResult Privacy()
         {
             return View();
