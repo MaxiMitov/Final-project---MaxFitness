@@ -1,9 +1,11 @@
+using Final_project___MaxFitness.Data;
 using Final_project___MaxFitness.Models;
 using Final_project___MaxFitness.Services;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using System.Diagnostics;
 
@@ -16,13 +18,15 @@ namespace Final_project___MaxFitness.Controllers
         private readonly IMuscleService _muscleService;
         private readonly IWorkoutStatsService _workoutStatsService;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly AppDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger, IMuscleService muscleService, IWorkoutStatsService workoutStatsService, UserManager<IdentityUser> userManager)
+        public HomeController(ILogger<HomeController> logger, IMuscleService muscleService, IWorkoutStatsService workoutStatsService, UserManager<IdentityUser> userManager, AppDbContext context)
         {
             _logger = logger;
             _muscleService = muscleService;
             _workoutStatsService = workoutStatsService;
             _userManager = userManager;
+            _context = context;
         }
 
         public async Task<IActionResult> Index()
