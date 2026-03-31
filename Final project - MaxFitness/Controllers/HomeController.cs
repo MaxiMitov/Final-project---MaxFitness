@@ -196,6 +196,12 @@ namespace Final_project___MaxFitness.Controllers
                 .Take(50)
                 .ToListAsync();
 
+            // Get user's liked post IDs
+            var likedPostIds = await _context.PostLikes
+                .Where(l => l.UserId == userId)
+                .Select(l => l.PostId)
+                .ToListAsync();
+
             var posts = dbPosts.Select(p =>
             {
                 var ws = p.WorkoutSession;
@@ -224,6 +230,7 @@ namespace Final_project___MaxFitness.Controllers
 
                 return (object)new
                 {
+                    PostId = p.Id,
                     UserName = p.User?.UserName ?? "Unknown",
                     TimeAgo = timeAgo,
                     Content = p.Content,
@@ -235,7 +242,8 @@ namespace Final_project___MaxFitness.Controllers
                     Comments = p.Comments,
                     MuscleGroups = muscleGroups,
                     PhotoUrl = p.PhotoUrl ?? "",
-                    ProgressSnapshot = p.ProgressSnapshot ?? ""
+                    ProgressSnapshot = p.ProgressSnapshot ?? "",
+                    IsLiked = likedPostIds.Contains(p.Id)
                 };
             }).ToList();
 
@@ -289,6 +297,91 @@ namespace Final_project___MaxFitness.Controllers
             await _context.SaveChangesAsync();
 
             return Json(new { success = true, postId = post.Id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleLike([FromBody] ToggleLikeRequest request)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var existing = await _context.PostLikes
+                .FirstOrDefaultAsync(l => l.PostId == request.PostId && l.UserId == userId);
+
+            var post = await _context.CommunityPosts.FindAsync(request.PostId);
+            if (post == null) return NotFound();
+
+            bool liked;
+            if (existing != null)
+            {
+                _context.PostLikes.Remove(existing);
+                post.Likes = Math.Max(0, post.Likes - 1);
+                liked = false;
+            }
+            else
+            {
+                _context.PostLikes.Add(new PostLike { PostId = request.PostId, UserId = userId });
+                post.Likes++;
+                liked = true;
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, liked, likes = post.Likes });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddComment([FromBody] AddCommentRequest request)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var post = await _context.CommunityPosts.FindAsync(request.PostId);
+            if (post == null) return NotFound();
+
+            var comment = new PostComment
+            {
+                PostId = request.PostId,
+                UserId = userId,
+                Content = request.Content ?? "",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.PostComments.Add(comment);
+            post.Comments++;
+            await _context.SaveChangesAsync();
+
+            var userName = User.Identity?.Name ?? "User";
+            return Json(new { success = true, commentId = comment.Id, userName, content = comment.Content, comments = post.Comments });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetComments(int postId)
+        {
+            var comments = await _context.PostComments
+                .Include(c => c.User)
+                .Where(c => c.PostId == postId)
+                .OrderBy(c => c.CreatedAt)
+                .Select(c => new
+                {
+                    userName = c.User != null ? c.User.UserName : "Unknown",
+                    content = c.Content,
+                    timeAgo = FormatTimeAgo(c.CreatedAt)
+                })
+                .ToListAsync();
+
+            return Json(comments);
+        }
+
+        private static string FormatTimeAgo(DateTime dt)
+        {
+            var diff = DateTime.UtcNow - dt;
+            if (diff.TotalMinutes < 60) return "Just now";
+            if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+            if (diff.TotalDays < 1.5) return "Yesterday";
+            if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
+            return $"{(int)(diff.TotalDays / 7)}w ago";
         }
 
         public IActionResult Privacy()
