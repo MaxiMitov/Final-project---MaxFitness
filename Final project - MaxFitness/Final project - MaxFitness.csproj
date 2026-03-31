@@ -5,7 +5,8 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>Final_project___MaxFitness</RootNamespace>
-	</PropertyGroup>
+	  <UserSecretsId>61cb7058-a273-4d5b-8e5e-b5f0879c1d30</UserSecretsId>
+  </PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.2" />
