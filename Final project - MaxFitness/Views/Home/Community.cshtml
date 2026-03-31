@@ -14,24 +14,14 @@
 
     var currentLetter = currentUser.Length > 0 ? currentUser[0].ToString().ToUpper() : "U";
 
-    // Fake active-now users
-    var activeNow = new[] {
-        "IronMike92", "SarahLifts", "BeastModeBen", "QuadKillerK", "NightOwlRex", "CardioQueen"
-    };
+    // Real active users from ViewBag
+    var activeNow = ViewBag.ActiveUsers as List<string> ?? new List<string>();
 
-    // Trending challenges
-    var challenges = new[] {
-        new { Name = "30-Day Squat Challenge", Icon = "fa-person-running", Participants = 1284, Color = "#e63946" },
-        new { Name = "5K Steps Daily",         Icon = "fa-shoe-prints",    Participants = 876,  Color = "#ff6b35" },
-        new { Name = "No Rest Day Week",        Icon = "fa-fire",           Participants = 543,  Color = "#ffd166" }
-    };
+    // Real challenges from ViewBag
+    var challenges = ViewBag.Challenges as List<object> ?? new List<object>();
 
-    // Top contributors
-    var topContributors = new[] {
-        new { Name = "IronMike92",  Workouts = 94, Rank = 1 },
-        new { Name = "QuadKillerK", Workouts = 81, Rank = 2 },
-        new { Name = "SarahLifts",  Workouts = 73, Rank = 3 }
-    };
+    // Real top contributors from ViewBag
+    var topContributors = ViewBag.TopContributors as List<object> ?? new List<object>();
 
     // User workouts for the workout picker
     var userWorkouts = ViewBag.UserWorkouts as System.Collections.IList ?? new List<object>();
@@ -373,20 +363,41 @@
                         <i class="fa-solid fa-bolt" style="color:#ffd166"></i> Trending Challenges
                     </div>
                     <div class="cm-challenges">
-                        @foreach (var ch in challenges)
+                        @if (challenges.Count > 0)
                         {
-                            <div class="cm-challenge-card" style="--ch-color: @ch.Color">
-                                <div class="cm-challenge-icon">
-                                    <i class="fa-solid @ch.Icon"></i>
-                                </div>
-                                <div class="cm-challenge-info">
-                                    <span class="cm-challenge-name">@ch.Name</span>
-                                    <span class="cm-challenge-count">
-                                        <i class="fa-solid fa-users"></i> @ch.Participants.ToString("N0") joined
-                                    </span>
-                                </div>
-                                <button class="cm-join-btn" onclick="toggleJoin(this)" type="button">Join</button>
-                            </div>
+                            @foreach (var ch in challenges)
+                            {
+                                var chId = GetProp<int>(ch, "Id", 0);
+                                var chName = GetProp<string>(ch, "Name", "Challenge");
+                                var chIcon = GetProp<string>(ch, "Icon", "fa-fire");
+                                var chColor = GetProp<string>(ch, "Color", "#e63946");
+                                var chParticipants = GetProp<int>(ch, "ParticipantCount", 0);
+                                var chJoined = GetProp<bool>(ch, "IsJoined", false);
+
+                                <a href="/Home/ChallengeDetail?id=@chId" class="cm-challenge-card" style="--ch-color: @chColor; text-decoration: none; color: inherit;">
+                                    <div class="cm-challenge-icon">
+                                        <i class="fa-solid @chIcon"></i>
+                                    </div>
+                                    <div class="cm-challenge-info">
+                                        <span class="cm-challenge-name">@chName</span>
+                                        <span class="cm-challenge-count">
+                                            <i class="fa-solid fa-users"></i> @chParticipants joined
+                                        </span>
+                                    </div>
+                                    @if (chJoined)
+                                    {
+                                        <span class="cm-join-btn joined" style="pointer-events:none;">✓ Joined</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="cm-join-btn">View</span>
+                                    }
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 0.5rem;">No challenges yet.</p>
                         }
                     </div>
                 </div>
@@ -397,40 +408,35 @@
                         <i class="fa-solid fa-trophy" style="color:#ffd166"></i> Top Contributors
                     </div>
                     <div class="cm-contributors">
-                        @foreach (var contrib in topContributors)
+                        @if (topContributors.Count > 0)
                         {
-                            var cLetter = contrib.Name.Length > 0 ? contrib.Name[0].ToString().ToUpper() : "?";
-                            var rankColors = new[] { "#ffd166", "#c0c0d2", "#cd7f32" };
-                            var rankColor  = rankColors[contrib.Rank - 1];
-                            <div class="cm-contrib-row">
-                                <span class="cm-contrib-rank" style="color: @rankColor">#@contrib.Rank</span>
-                                <div class="cm-avatar cm-avatar-sm cm-avatar-user">@cLetter</div>
-                                <div class="cm-contrib-info">
-                                    <span class="cm-contrib-name">@contrib.Name</span>
-                                    <span class="cm-contrib-count">@contrib.Workouts workouts</span>
+                            var maxWorkouts = GetProp<int>(topContributors[0], "Workouts", 1);
+                            if (maxWorkouts == 0) maxWorkouts = 1;
+                            @foreach (var contrib in topContributors)
+                            {
+                                var cName = GetProp<string>(contrib, "Name", "Unknown");
+                                var cWorkouts = GetProp<int>(contrib, "Workouts", 0);
+                                var cRank = GetProp<int>(contrib, "Rank", 1);
+                                var cLetter = cName.Length > 0 ? cName[0].ToString().ToUpper() : "?";
+                                var rankColors = new[] { "#ffd166", "#c0c0d2", "#cd7f32" };
+                                var rankColor = rankColors[Math.Min(cRank - 1, 2)];
+                                <div class="cm-contrib-row">
+                                    <span class="cm-contrib-rank" style="color: @rankColor">#@cRank</span>
+                                    <div class="cm-avatar cm-avatar-sm cm-avatar-user">@cLetter</div>
+                                    <div class="cm-contrib-info">
+                                        <span class="cm-contrib-name">@cName</span>
+                                        <span class="cm-contrib-count">@cWorkouts workouts</span>
+                                    </div>
+                                    <div class="cm-contrib-bar-wrap">
+                                        <div class="cm-contrib-bar" style="width: @(Math.Round((double)cWorkouts / maxWorkouts * 100))%; background: @rankColor"></div>
+                                    </div>
                                 </div>
-                                <div class="cm-contrib-bar-wrap">
-                                    <div class="cm-contrib-bar" style="width: @(Math.Round((double)contrib.Workouts / topContributors[0].Workouts * 100))%; background: @rankColor"></div>
-                                </div>
-                            </div>
+                            }
                         }
-                    </div>
-                </div>
-
-                <!-- ── HASHTAG SUGGESTION ───────────────────────── -->
-                <div class="cm-sidebar-card reveal-up" style="animation-delay:0.3s">
-                    <div class="cm-sidebar-title">
-                        <i class="fa-solid fa-hashtag" style="color:#ff6b35"></i> Popular Tags
-                    </div>
-                    <div class="cm-tags-cloud">
-                        <span class="cm-cloud-tag">#legday</span>
-                        <span class="cm-cloud-tag">#pushpulllegs</span>
-                        <span class="cm-cloud-tag">#gainz</span>
-                        <span class="cm-cloud-tag">#consistency</span>
-                        <span class="cm-cloud-tag">#chestday</span>
-                        <span class="cm-cloud-tag">#noexcuses</span>
-                        <span class="cm-cloud-tag">#pr</span>
-                        <span class="cm-cloud-tag">#deadlift</span>
+                        else
+                        {
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 0.5rem;">No workouts logged yet.</p>
+                        }
                     </div>
                 </div>
 
