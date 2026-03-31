@@ -1,0 +1,862 @@
+@{
+    ViewData["Title"] = "Leaderboard";
+    var currentUser = ViewBag.CurrentUser as string ?? "";
+    var leaders = ViewBag.Leaders as System.Collections.IList ?? new List<object>();
+
+    // Helper to safely read a property from an anonymous object via reflection
+    T GetProp<T>(object obj, string prop, T fallback = default) {
+        if (obj == null) return fallback;
+        var pi = obj.GetType().GetProperty(prop);
+        if (pi == null) return fallback;
+        var val = pi.GetValue(obj);
+        if (val == null) return fallback;
+        try { return (T)Convert.ChangeType(val, typeof(T)); } catch { return fallback; }
+    }
+
+    // Split leaders into podium (top 3) and rest
+    var podiumList = new List<object>();
+    var tableList  = new List<object>();
+    for (int i = 0; i < leaders.Count; i++) {
+        if (i < 3) podiumList.Add(leaders[i]);
+        else        tableList.Add(leaders[i]);
+    }
+
+    // Find current user entry for sticky card
+    object? userEntry = null;
+    foreach (var item in leaders) {
+        if (GetProp<string>(item, "UserName", "") == currentUser) { userEntry = item; break; }
+    }
+    bool userInTop10 = false;
+    foreach (var item in leaders) {
+        if (GetProp<string>(item, "UserName", "") == currentUser) { userInTop10 = true; break; }
+    }
+
+    // Podium layout: slot order is 2 | 1 | 3 (silver | gold | bronze)
+    object? p1 = podiumList.Count > 0 ? podiumList[0] : null;
+    object? p2 = podiumList.Count > 1 ? podiumList[1] : null;
+    object? p3 = podiumList.Count > 2 ? podiumList[2] : null;
+}
+
+<!-- ============================================================
+     LEADERBOARD PAGE
+     ============================================================ -->
+<div class="lb-page">
+    <div class="container">
+
+        <!-- ── PAGE HEADER ──────────────────────────────────────── -->
+        <header class="lb-header reveal-up">
+            <div class="lb-header-icon">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div class="lb-header-text">
+                <h1 class="lb-title">LEADERBOARD</h1>
+                <p class="lb-subtitle">See how you stack up against the community</p>
+            </div>
+            <div class="lb-header-badge">
+                <i class="fa-solid fa-fire"></i> LIVE
+            </div>
+        </header>
+
+        <!-- ── FILTER TABS ───────────────────────────────────────── -->
+        <div class="lb-filters reveal-up">
+            <button class="lb-filter-btn active" onclick="setFilter(this)">
+                <i class="fa-solid fa-calendar-week"></i> This Week
+            </button>
+            <button class="lb-filter-btn" onclick="setFilter(this)">
+                <i class="fa-solid fa-calendar"></i> This Month
+            </button>
+            <button class="lb-filter-btn" onclick="setFilter(this)">
+                <i class="fa-solid fa-infinity"></i> All Time
+            </button>
+        </div>
+
+        <!-- ── TOP 3 PODIUM ──────────────────────────────────────── -->
+        @if (podiumList.Count > 0)
+        {
+            <section class="lb-podium reveal-up">
+
+                <!-- RANK 2 – SILVER (left) -->
+                @if (p2 != null)
+                {
+                    var uname2  = GetProp<string>(p2, "UserName",      "—");
+                    var wkts2   = GetProp<int>   (p2, "TotalWorkouts", 0);
+                    var streak2 = GetProp<int>   (p2, "Streak",        0);
+                    var muscle2 = GetProp<string>(p2, "TopMuscle",     "—");
+                    var isMe2   = uname2 == currentUser;
+                    var letter2 = uname2.Length > 0 ? uname2[0].ToString().ToUpper() : "?";
+                    <div class="podium-card podium-silver @(isMe2 ? "podium-me" : "")">
+                        <div class="podium-rank-badge silver-badge">2</div>
+                        <div class="podium-medal silver-medal">
+                            <i class="fa-solid fa-medal"></i>
+                        </div>
+                        <div class="podium-avatar silver-avatar">@letter2</div>
+                        <div class="podium-username">@uname2 @(isMe2 ? "(You)" : "")</div>
+                        <div class="podium-workouts">
+                            <span class="pw-num">@wkts2</span>
+                            <span class="pw-label">workouts</span>
+                        </div>
+                        <div class="podium-streak">
+                            <i class="fa-solid fa-fire streak-fire"></i> @streak2 day streak
+                        </div>
+                        <div class="podium-muscle-badge">
+                            <i class="fa-solid fa-dumbbell"></i> @muscle2
+                        </div>
+                        <div class="podium-platform podium-platform-silver"></div>
+                    </div>
+                }
+
+                <!-- RANK 1 – GOLD (center) -->
+                @if (p1 != null)
+                {
+                    var uname1  = GetProp<string>(p1, "UserName",      "—");
+                    var wkts1   = GetProp<int>   (p1, "TotalWorkouts", 0);
+                    var streak1 = GetProp<int>   (p1, "Streak",        0);
+                    var muscle1 = GetProp<string>(p1, "TopMuscle",     "—");
+                    var isMe1   = uname1 == currentUser;
+                    var letter1 = uname1.Length > 0 ? uname1[0].ToString().ToUpper() : "?";
+                    <div class="podium-card podium-gold podium-first @(isMe1 ? "podium-me" : "")">
+                        <div class="podium-crown">
+                            <i class="fa-solid fa-crown"></i>
+                        </div>
+                        <div class="podium-rank-badge gold-badge">1</div>
+                        <div class="podium-medal gold-medal">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <div class="podium-avatar gold-avatar">@letter1</div>
+                        <div class="podium-username">@uname1 @(isMe1 ? "(You)" : "")</div>
+                        <div class="podium-workouts">
+                            <span class="pw-num">@wkts1</span>
+                            <span class="pw-label">workouts</span>
+                        </div>
+                        <div class="podium-streak">
+                            <i class="fa-solid fa-fire streak-fire"></i> @streak1 day streak
+                        </div>
+                        <div class="podium-muscle-badge">
+                            <i class="fa-solid fa-dumbbell"></i> @muscle1
+                        </div>
+                        <div class="podium-platform podium-platform-gold"></div>
+                    </div>
+                }
+
+                <!-- RANK 3 – BRONZE (right) -->
+                @if (p3 != null)
+                {
+                    var uname3  = GetProp<string>(p3, "UserName",      "—");
+                    var wkts3   = GetProp<int>   (p3, "TotalWorkouts", 0);
+                    var streak3 = GetProp<int>   (p3, "Streak",        0);
+                    var muscle3 = GetProp<string>(p3, "TopMuscle",     "—");
+                    var isMe3   = uname3 == currentUser;
+                    var letter3 = uname3.Length > 0 ? uname3[0].ToString().ToUpper() : "?";
+                    <div class="podium-card podium-bronze @(isMe3 ? "podium-me" : "")">
+                        <div class="podium-rank-badge bronze-badge">3</div>
+                        <div class="podium-medal bronze-medal">
+                            <i class="fa-solid fa-medal"></i>
+                        </div>
+                        <div class="podium-avatar bronze-avatar">@letter3</div>
+                        <div class="podium-username">@uname3 @(isMe3 ? "(You)" : "")</div>
+                        <div class="podium-workouts">
+                            <span class="pw-num">@wkts3</span>
+                            <span class="pw-label">workouts</span>
+                        </div>
+                        <div class="podium-streak">
+                            <i class="fa-solid fa-fire streak-fire"></i> @streak3 day streak
+                        </div>
+                        <div class="podium-muscle-badge">
+                            <i class="fa-solid fa-dumbbell"></i> @muscle3
+                        </div>
+                        <div class="podium-platform podium-platform-bronze"></div>
+                    </div>
+                }
+
+            </section>
+        }
+
+        <!-- ── FULL RANKINGS TABLE (rank 4+) ────────────────────── -->
+        @if (tableList.Count > 0)
+        {
+            <section class="lb-table-section reveal-up">
+                <div class="lb-table-header">
+                    <div class="lbth-col lbth-rank">Rank</div>
+                    <div class="lbth-col lbth-user">Athlete</div>
+                    <div class="lbth-col lbth-stat">Workouts</div>
+                    <div class="lbth-col lbth-stat">Streak</div>
+                    <div class="lbth-col lbth-stat lbth-hide-sm">Volume (kg)</div>
+                    <div class="lbth-col lbth-stat lbth-hide-sm">Calories</div>
+                </div>
+
+                <div class="lb-table-body">
+                    @foreach (var entry in tableList)
+                    {
+                        var rank    = GetProp<int>   (entry, "Rank",           0);
+                        var uname   = GetProp<string>(entry, "UserName",       "—");
+                        var wkts    = GetProp<int>   (entry, "TotalWorkouts",  0);
+                        var streak  = GetProp<int>   (entry, "Streak",         0);
+                        var volume  = GetProp<int>   (entry, "TotalVolume",    0);
+                        var cals    = GetProp<int>   (entry, "CaloriesBurned", 0);
+                        var isMe    = uname == currentUser;
+                        var letter  = uname.Length > 0 ? uname[0].ToString().ToUpper() : "?";
+                        <div class="lb-row @(isMe ? "lb-row-me" : "")">
+                            <div class="lbr-rank">
+                                @if (rank <= 10)
+                                {
+                                    <span class="rank-num rank-top10">@rank</span>
+                                }
+                                else
+                                {
+                                    <span class="rank-num">@rank</span>
+                                }
+                            </div>
+                            <div class="lbr-user">
+                                <div class="lbr-avatar table-avatar">@letter</div>
+                                <div class="lbr-name-wrap">
+                                    <span class="lbr-username">@uname</span>
+                                    @if (isMe) { <span class="you-badge">YOU</span> }
+                                </div>
+                            </div>
+                            <div class="lbr-stat">
+                                <i class="fa-solid fa-dumbbell stat-icon"></i>
+                                <span>@wkts</span>
+                            </div>
+                            <div class="lbr-stat">
+                                <i class="fa-solid fa-fire streak-fire"></i>
+                                <span>@streak d</span>
+                            </div>
+                            <div class="lbr-stat lbth-hide-sm">
+                                <i class="fa-solid fa-weight-hanging stat-icon"></i>
+                                <span>@volume.ToString("N0")</span>
+                            </div>
+                            <div class="lbr-stat lbth-hide-sm">
+                                <i class="fa-solid fa-bolt stat-icon"></i>
+                                <span>@cals.ToString("N0")</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
+        <!-- ── EMPTY STATE ───────────────────────────────────────── -->
+        @if (leaders.Count == 0)
+        {
+            <div class="lb-empty reveal-up">
+                <i class="fa-solid fa-users-slash lb-empty-icon"></i>
+                <h3>No data yet</h3>
+                <p>Complete workouts to appear on the leaderboard.</p>
+            </div>
+        }
+
+        <!-- ── YOUR POSITION STICKY CARD ────────────────────────── -->
+        @if (userEntry != null && !userInTop10 == false && leaders.Count > 10)
+        {
+            var myRank   = GetProp<int>   (userEntry, "Rank",           0);
+            var myWkts   = GetProp<int>   (userEntry, "TotalWorkouts",  0);
+            var myStreak = GetProp<int>   (userEntry, "Streak",         0);
+            var myVol    = GetProp<int>   (userEntry, "TotalVolume",    0);
+            var myCals   = GetProp<int>   (userEntry, "CaloriesBurned", 0);
+            var myLetter = currentUser.Length > 0 ? currentUser[0].ToString().ToUpper() : "?";
+            <div class="lb-sticky-card">
+                <div class="lb-sticky-inner">
+                    <div class="lb-sticky-label">
+                        <i class="fa-solid fa-location-crosshairs"></i> Your Position
+                    </div>
+                    <div class="lb-sticky-rank">#@myRank</div>
+                    <div class="lb-sticky-avatar">@myLetter</div>
+                    <div class="lb-sticky-name">@currentUser</div>
+                    <div class="lb-sticky-stats">
+                        <div class="lb-sticky-stat">
+                            <i class="fa-solid fa-dumbbell"></i>
+                            <span>@myWkts</span>
+                            <small>workouts</small>
+                        </div>
+                        <div class="lb-sticky-stat">
+                            <i class="fa-solid fa-fire streak-fire"></i>
+                            <span>@myStreak</span>
+                            <small>day streak</small>
+                        </div>
+                        <div class="lb-sticky-stat">
+                            <i class="fa-solid fa-bolt"></i>
+                            <span>@myCals.ToString("N0")</span>
+                            <small>calories</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div><!-- /container -->
+</div><!-- /lb-page -->
+
+<!-- ============================================================
+     STYLES
+     ============================================================ -->
+<style>
+
+/* ── Keyframe Animations ──────────────────────────────────────── */
+@@keyframes goldGlow {
+    0%   { box-shadow: 0 0 18px 4px rgba(255, 209, 102, 0.35), 0 0 40px 8px rgba(255, 209, 102, 0.12); }
+    50%  { box-shadow: 0 0 32px 8px rgba(255, 209, 102, 0.55), 0 0 70px 16px rgba(255, 209, 102, 0.22); }
+    100% { box-shadow: 0 0 18px 4px rgba(255, 209, 102, 0.35), 0 0 40px 8px rgba(255, 209, 102, 0.12); }
+}
+
+@@keyframes crownFloat {
+    0%   { transform: translateY(0px) rotate(-5deg); }
+    50%  { transform: translateY(-6px) rotate(5deg); }
+    100% { transform: translateY(0px) rotate(-5deg); }
+}
+
+@@keyframes fireFlicker {
+    0%   { color: #ff6b35; transform: scale(1); }
+    50%  { color: #ffd166; transform: scale(1.15); }
+    100% { color: #ff6b35; transform: scale(1); }
+}
+
+@@keyframes livePulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+
+@@keyframes revealUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@@keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
+}
+
+/* ── Page Shell ───────────────────────────────────────────────── */
+.lb-page {
+    padding: 2.5rem 0 6rem;
+    min-height: 100vh;
+    background: var(--bg-primary);
+}
+
+.reveal-up {
+    animation: revealUp 0.55s ease both;
+}
+
+.lb-page .container > .reveal-up:nth-child(1) { animation-delay: 0.05s; }
+.lb-page .container > .reveal-up:nth-child(2) { animation-delay: 0.15s; }
+.lb-page .container > .reveal-up:nth-child(3) { animation-delay: 0.28s; }
+.lb-page .container > .reveal-up:nth-child(4) { animation-delay: 0.40s; }
+
+/* ── Page Header ──────────────────────────────────────────────── */
+.lb-header {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.lb-header-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #b8860b 0%, #ffd166 50%, #b8860b 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: #08080d;
+    flex-shrink: 0;
+    box-shadow: 0 0 24px rgba(255, 209, 102, 0.4);
+}
+
+.lb-title {
+    font-size: clamp(1.9rem, 5vw, 3rem);
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    margin: 0;
+    background: linear-gradient(90deg, #ffd166 0%, #ff6b35 50%, #e63946 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 4s linear infinite;
+}
+
+.lb-subtitle {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.lb-header-badge {
+    margin-left: auto;
+    background: rgba(230, 57, 70, 0.15);
+    border: 1px solid rgba(230, 57, 70, 0.4);
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    animation: livePulse 2s ease-in-out infinite;
+}
+
+/* ── Filter Tabs ──────────────────────────────────────────────── */
+.lb-filters {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+}
+
+.lb-filter-btn {
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255,255,255,0.07);
+    color: var(--text-secondary);
+    padding: 0.55rem 1.2rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.02em;
+}
+
+.lb-filter-btn:hover {
+    border-color: rgba(255, 209, 102, 0.3);
+    color: var(--text-primary);
+    background: rgba(255, 209, 102, 0.06);
+}
+
+.lb-filter-btn.active {
+    background: linear-gradient(135deg, rgba(255,209,102,0.18), rgba(255,107,53,0.12));
+    border-color: rgba(255, 209, 102, 0.5);
+    color: #ffd166;
+}
+
+/* ── Podium ───────────────────────────────────────────────────── */
+.lb-podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    padding: 0 0.5rem;
+}
+
+/* Individual Podium Card */
+.podium-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: 1.5rem 1rem 0;
+    flex: 1;
+    max-width: 240px;
+    min-width: 130px;
+    transition: transform 0.3s ease;
+    overflow: hidden;
+}
+
+.podium-card:hover { transform: translateY(-6px); }
+
+/* Gold / First place */
+.podium-first {
+    max-width: 280px;
+    padding-top: 2rem;
+    border-color: rgba(255, 209, 102, 0.45) !important;
+    background: linear-gradient(180deg, rgba(255,209,102,0.09) 0%, var(--bg-card) 60%);
+    animation: goldGlow 3s ease-in-out infinite;
+    z-index: 2;
+}
+
+/* Silver */
+.podium-silver {
+    border-color: rgba(192, 192, 210, 0.35);
+    background: linear-gradient(180deg, rgba(192,192,210,0.07) 0%, var(--bg-card) 60%);
+}
+
+/* Bronze */
+.podium-bronze {
+    border-color: rgba(205, 127, 50, 0.35);
+    background: linear-gradient(180deg, rgba(205,127,50,0.07) 0%, var(--bg-card) 60%);
+}
+
+/* Current user highlight */
+.podium-me {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* Crown */
+.podium-crown {
+    position: absolute;
+    top: -4px;
+    font-size: 1.6rem;
+    color: #ffd166;
+    animation: crownFloat 2.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(255,209,102,0.8));
+}
+
+/* Rank badge */
+.podium-rank-badge {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 900;
+}
+
+.gold-badge   { background: #ffd166; color: #08080d; }
+.silver-badge { background: #c0c0d2; color: #08080d; }
+.bronze-badge { background: #cd7f32; color: #fff; }
+
+/* Medal icon */
+.podium-medal { font-size: 1.5rem; margin-bottom: 0.6rem; }
+.gold-medal   { color: #ffd166; filter: drop-shadow(0 0 6px rgba(255,209,102,0.7)); }
+.silver-medal { color: #c0c0d2; }
+.bronze-medal { color: #cd7f32; }
+
+/* Avatar circle */
+.podium-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #08080d;
+    margin-bottom: 0.75rem;
+    flex-shrink: 0;
+}
+
+.gold-avatar   { background: linear-gradient(135deg, #b8860b, #ffd166); box-shadow: 0 0 18px rgba(255,209,102,0.5); }
+.silver-avatar { background: linear-gradient(135deg, #7a7a8f, #c0c0d2); }
+.bronze-avatar { background: linear-gradient(135deg, #8b5e2c, #cd7f32); }
+
+.podium-first .podium-avatar {
+    width: 80px;
+    height: 80px;
+    font-size: 1.9rem;
+}
+
+/* Podium text */
+.podium-username {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: 0.5rem;
+    word-break: break-word;
+}
+
+.podium-first .podium-username { font-size: 1.1rem; }
+
+.podium-workouts {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    margin-bottom: 0.4rem;
+}
+
+.pw-num   { font-size: 1.5rem; font-weight: 900; color: var(--text-primary); }
+.pw-label { font-size: 0.72rem; color: var(--text-secondary); }
+
+.podium-streak {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.7rem;
+}
+
+.podium-muscle-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent-secondary);
+    background: rgba(255, 107, 53, 0.12);
+    border: 1px solid rgba(255, 107, 53, 0.25);
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Platform base */
+.podium-platform {
+    width: 100%;
+    height: 12px;
+    margin-top: auto;
+    border-radius: 0 0 20px 20px;
+}
+
+.podium-platform-gold   { background: linear-gradient(90deg, #b8860b, #ffd166, #b8860b); }
+.podium-platform-silver { background: linear-gradient(90deg, #7a7a8f, #c0c0d2, #7a7a8f); }
+.podium-platform-bronze { background: linear-gradient(90deg, #8b5e2c, #cd7f32, #8b5e2c); }
+
+/* ── Rankings Table ───────────────────────────────────────────── */
+.lb-table-section {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.lb-table-header {
+    display: grid;
+    grid-template-columns: 60px 1fr 90px 80px 110px 110px;
+    padding: 0.85rem 1.25rem;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.lbth-col {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.lbth-rank { text-align: center; }
+.lbth-stat { text-align: center; }
+
+/* Table rows */
+.lb-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 90px 80px 110px 110px;
+    align-items: center;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.2s ease;
+}
+
+.lb-row:last-child { border-bottom: none; }
+.lb-row:nth-child(odd)  { background: rgba(255,255,255,0.015); }
+.lb-row:nth-child(even) { background: transparent; }
+.lb-row:hover { background: rgba(255,255,255,0.04); }
+
+/* Current user row */
+.lb-row-me {
+    border-left: 3px solid var(--accent) !important;
+    background: rgba(230, 57, 70, 0.07) !important;
+}
+
+/* Rank number */
+.lbr-rank { display: flex; justify-content: center; }
+
+.rank-num {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    min-width: 28px;
+    text-align: center;
+}
+
+.rank-top10 { color: var(--accent-secondary); }
+
+/* User column */
+.lbr-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.table-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.lbr-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.lbr-username {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.you-badge {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    background: var(--accent);
+    color: #fff;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+}
+
+/* Stat cells */
+.lbr-stat {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stat-icon { color: var(--text-secondary); font-size: 0.75rem; }
+
+/* ── Fire / Streak Icon ───────────────────────────────────────── */
+.streak-fire {
+    color: #ff6b35;
+    animation: fireFlicker 1.8s ease-in-out infinite;
+}
+
+/* ── Empty State ──────────────────────────────────────────────── */
+.lb-empty {
+    text-align: center;
+    padding: 5rem 2rem;
+    color: var(--text-secondary);
+}
+
+.lb-empty-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.35;
+}
+
+.lb-empty h3 { font-size: 1.3rem; color: var(--text-primary); margin-bottom: 0.4rem; }
+.lb-empty p  { font-size: 0.9rem; }
+
+/* ── Sticky "Your Position" Card ─────────────────────────────── */
+.lb-sticky-card {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    width: min(560px, calc(100vw - 2rem));
+}
+
+.lb-sticky-inner {
+    background: linear-gradient(135deg, rgba(22,22,31,0.97), rgba(17,17,24,0.97));
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(230,57,70,0.25);
+}
+
+.lb-sticky-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    white-space: nowrap;
+}
+
+.lb-sticky-rank {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.lb-sticky-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.lb-sticky-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.lb-sticky-stats {
+    display: flex;
+    gap: 1.25rem;
+    margin-left: auto;
+}
+
+.lb-sticky-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+}
+
+.lb-sticky-stat i    { font-size: 0.75rem; color: var(--text-secondary); }
+.lb-sticky-stat span { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+.lb-sticky-stat small{ font-size: 0.62rem; color: var(--text-secondary); }
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@@media (max-width: 768px) {
+    .lb-table-header,
+    .lb-row {
+        grid-template-columns: 48px 1fr 72px 68px;
+    }
+
+    .lbth-hide-sm { display: none; }
+
+    .lb-podium { gap: 0.5rem; }
+
+    .podium-card  { min-width: 100px; padding: 1.1rem 0.6rem 0; }
+    .podium-first { max-width: 200px; }
+
+    .podium-avatar { width: 52px; height: 52px; font-size: 1.2rem; }
+    .podium-first .podium-avatar { width: 64px; height: 64px; font-size: 1.4rem; }
+
+    .podium-username { font-size: 0.8rem; }
+
+    .lb-sticky-stats { gap: 0.75rem; }
+    .lb-sticky-name  { display: none; }
+}
+
+@@media (max-width: 480px) {
+    .lb-header-icon { width: 48px; height: 48px; font-size: 1.2rem; }
+    .lb-header-badge { display: none; }
+
+    .lb-table-header,
+    .lb-row {
+        grid-template-columns: 40px 1fr 64px 60px;
+    }
+}
+
+</style>
+
+<script>
+function setFilter(btn) {
+    document.querySelectorAll('.lb-filter-btn').forEach(function(b) {
+        b.classList.remove('active');
+    });
+    btn.classList.add('active');
+}
+</script>
