@@ -18,4 +18,9 @@ namespace Final_project___MaxFitness.Models
         public int PostId { get; set; }
         public string? Content { get; set; }
     }
+
+    public class ChallengeIdRequest
+    {
+        public int ChallengeId { get; set; }
+    }
 }
