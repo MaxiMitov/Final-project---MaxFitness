@@ -203,7 +203,7 @@
                             <div class="cm-post-header">
                                 <div class="cm-avatar cm-avatar-user">@postLetter</div>
                                 <div class="cm-post-meta">
-                                    <span class="cm-post-username">@userName @(isMe ? "<span class='you-tag'>YOU</span>" : "")</span>
+                                    <span class="cm-post-username">@userName @if (isMe) { @Html.Raw("<span class='you-tag'>YOU</span>") }</span>
                                     <span class="cm-post-time">
                                         <i class="fa-regular fa-clock"></i> @timeAgo
                                     </span>
