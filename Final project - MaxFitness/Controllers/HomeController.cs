@@ -181,22 +181,114 @@ namespace Final_project___MaxFitness.Controllers
             return View();
         }
 
-        public IActionResult Community()
+        public async Task<IActionResult> Community()
         {
             var currentUser = User.Identity?.Name ?? "User";
+            var userId = _userManager.GetUserId(User) ?? "";
             ViewBag.CurrentUser = currentUser;
 
-            var posts = new List<object>
+            // Load real posts from DB
+            var dbPosts = await _context.CommunityPosts
+                .Include(p => p.User)
+                .Include(p => p.WorkoutSession)
+                    .ThenInclude(ws => ws!.ExerciseLogs)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(50)
+                .ToListAsync();
+
+            var posts = dbPosts.Select(p =>
             {
-                new { UserName = "FitBeast99", TimeAgo = "2h ago", Content = "Just crushed a new PR on bench press! 225 lbs for 3 reps. Feeling unstoppable today.", WorkoutName = "Push Day", Duration = 65, ExerciseCount = 6, Intensity = "High", Likes = 24, Comments = 8, MuscleGroups = new List<string> { "chest", "shoulders", "triceps" } },
-                new { UserName = "IronWolf", TimeAgo = "4h ago", Content = "Back day is best day. Nothing beats the pump from heavy deadlifts.", WorkoutName = "Pull Day", Duration = 55, ExerciseCount = 5, Intensity = "Extreme", Likes = 18, Comments = 5, MuscleGroups = new List<string> { "back", "biceps" } },
-                new { UserName = "GymSharK", TimeAgo = "6h ago", Content = "Leg day done. Can barely walk but it was worth it. Squats + lunges combo is brutal.", WorkoutName = "Leg Day", Duration = 70, ExerciseCount = 7, Intensity = "High", Likes = 31, Comments = 12, MuscleGroups = new List<string> { "legs" } },
-                new { UserName = "LiftQueen", TimeAgo = "1d ago", Content = "7-day streak complete! Consistency is everything. Keep showing up.", WorkoutName = "", Duration = 0, ExerciseCount = 0, Intensity = "", Likes = 45, Comments = 15, MuscleGroups = new List<string>() },
-                new { UserName = currentUser, TimeAgo = "1d ago", Content = "Started tracking my workouts with MaxFitness. Excited to see where this goes!", WorkoutName = "Full Body", Duration = 45, ExerciseCount = 4, Intensity = "Moderate", Likes = 12, Comments = 3, MuscleGroups = new List<string> { "chest", "back", "legs" } }
-            };
+                var ws = p.WorkoutSession;
+                var workoutName = "";
+                var duration = 0;
+                var exerciseCount = 0;
+                var intensity = "";
+                var muscleGroups = new List<string>();
+
+                if (ws != null)
+                {
+                    muscleGroups = ws.ExerciseLogs.Select(l => l.MuscleGroup).Distinct().ToList();
+                    workoutName = string.Join(" & ", muscleGroups.Select(m => char.ToUpper(m[0]) + m.Substring(1)).Take(3));
+                    if (string.IsNullOrEmpty(workoutName)) workoutName = "Workout";
+                    duration = (int)Math.Round(ws.DurationSeconds / 60.0);
+                    exerciseCount = ws.ExerciseLogs.Count;
+                    intensity = ws.IntensityScore <= 25 ? "Light" : ws.IntensityScore <= 50 ? "Moderate" : ws.IntensityScore <= 75 ? "High" : "Extreme";
+                }
+
+                var diff = DateTime.UtcNow - p.CreatedAt;
+                var timeAgo = diff.TotalMinutes < 60 ? "Just now"
+                    : diff.TotalHours < 24 ? $"{(int)diff.TotalHours}h ago"
+                    : diff.TotalDays < 1.5 ? "Yesterday"
+                    : diff.TotalDays < 7 ? $"{(int)diff.TotalDays}d ago"
+                    : $"{(int)(diff.TotalDays / 7)}w ago";
+
+                return (object)new
+                {
+                    UserName = p.User?.UserName ?? "Unknown",
+                    TimeAgo = timeAgo,
+                    Content = p.Content,
+                    WorkoutName = workoutName,
+                    Duration = duration.ToString(),
+                    ExerciseCount = exerciseCount,
+                    Intensity = intensity,
+                    Likes = p.Likes,
+                    Comments = p.Comments,
+                    MuscleGroups = muscleGroups,
+                    PhotoUrl = p.PhotoUrl ?? "",
+                    ProgressSnapshot = p.ProgressSnapshot ?? ""
+                };
+            }).ToList();
 
             ViewBag.Posts = posts;
+
+            // Load user's past workouts for the "Log Workout" picker
+            var userWorkouts = await _context.WorkoutSessions
+                .Include(s => s.ExerciseLogs)
+                .Where(s => s.UserId == userId)
+                .OrderByDescending(s => s.CompletedAt)
+                .Take(20)
+                .ToListAsync();
+
+            var workoutOptions = userWorkouts.Select(ws =>
+            {
+                var muscles = ws.ExerciseLogs.Select(l => l.MuscleGroup).Distinct().ToList();
+                var name = string.Join(" & ", muscles.Select(m => char.ToUpper(m[0]) + m.Substring(1)).Take(3));
+                if (string.IsNullOrEmpty(name)) name = "Workout";
+                var date = ws.CompletedAt.ToString("MMM d");
+                var dur = (int)Math.Round(ws.DurationSeconds / 60.0);
+                return (object)new { Id = ws.Id, Name = name, Date = date, Duration = dur, ExerciseCount = ws.ExerciseLogs.Count };
+            }).ToList();
+
+            ViewBag.UserWorkouts = workoutOptions;
+
+            // User stats for progress snapshot
+            var stats = await _workoutStatsService.GetDashboardStatsAsync(userId);
+            ViewBag.UserStats = stats;
+
             return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreatePost([FromBody] CreatePostRequest request)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var post = new CommunityPost
+            {
+                UserId = userId,
+                Content = request.Content ?? "",
+                WorkoutSessionId = request.WorkoutSessionId,
+                PhotoUrl = request.PhotoUrl,
+                ProgressSnapshot = request.ProgressSnapshot,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.CommunityPosts.Add(post);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, postId = post.Id });
         }
 
         public IActionResult Privacy()
