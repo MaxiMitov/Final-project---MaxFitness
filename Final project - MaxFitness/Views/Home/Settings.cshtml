@@ -1,0 +1,1330 @@
+@{
+    ViewData["Title"] = "Profile & Settings";
+    var userName = ViewBag.UserName as string ?? "Athlete";
+    var userEmail = ViewBag.UserEmail as string ?? "";
+    var joinDate = ViewBag.JoinDate as string ?? "";
+    var totalWorkouts = ViewBag.TotalWorkouts is int tw ? tw : 0;
+    var profileStats = ViewBag.ProfileStats as Final_project___MaxFitness.Models.UserProfileStats;
+    var muscleGroups = profileStats?.MuscleTrainingCounts ?? new List<Final_project___MaxFitness.Models.MuscleTrainingStat>();
+    var achievements = profileStats?.Achievements ?? new List<Final_project___MaxFitness.Models.Achievement>();
+    var mostTrained = profileStats?.MostTrainedMuscle ?? "N/A";
+    var avatarLetter = userName.Length > 0 ? userName[0].ToString().ToUpper() : "A";
+    var maxMuscleCount = muscleGroups.Count > 0 ? muscleGroups.Max(m => m.Count) : 1;
+    if (maxMuscleCount == 0) maxMuscleCount = 1;
+}
+
+<!-- ============================================================
+     SETTINGS / PROFILE PAGE
+     ============================================================ -->
+<div class="settings-page">
+    <div class="container">
+
+        <!-- ── BREADCRUMB ─────────────────────────────────────── -->
+        <nav class="settings-breadcrumb" aria-label="breadcrumb">
+            <a href="/"><i class="fa-solid fa-house"></i> Home</a>
+            <span class="bc-sep"><i class="fa-solid fa-chevron-right"></i></span>
+            <span class="bc-current">Profile & Settings</span>
+        </nav>
+
+        <!-- ── PROFILE HEADER ─────────────────────────────────── -->
+        <section class="profile-header-section reveal-up">
+            <div class="profile-header-card">
+                <div class="profile-header-glow"></div>
+
+                <div class="profile-hero">
+                    <div class="avatar-wrap">
+                        <div class="avatar-ring"></div>
+                        <div class="avatar-circle">
+                            <span class="avatar-letter">@avatarLetter</span>
+                        </div>
+                        <div class="avatar-status-dot"></div>
+                    </div>
+
+                    <div class="profile-info">
+                        <div class="profile-name-row">
+                            <h1 class="profile-username">@userName</h1>
+                            <span class="profile-badge-verified"><i class="fa-solid fa-bolt"></i> Active</span>
+                        </div>
+                        <p class="profile-email"><i class="fa-regular fa-envelope"></i> @userEmail</p>
+                        <p class="profile-joindate"><i class="fa-regular fa-calendar-check"></i> Member since @joinDate</p>
+
+                        <div class="profile-badges-row">
+                            <div class="profile-stat-badge">
+                                <i class="fa-solid fa-dumbbell"></i>
+                                <span class="psb-value">@totalWorkouts</span>
+                                <span class="psb-label">Workouts</span>
+                            </div>
+                            <div class="profile-stat-badge highlight">
+                                <i class="fa-solid fa-fire-flame-curved"></i>
+                                <span class="psb-value">@mostTrained</span>
+                                <span class="psb-label">Top Muscle</span>
+                            </div>
+                            <div class="profile-stat-badge">
+                                <i class="fa-solid fa-trophy"></i>
+                                <span class="psb-value">@achievements.Count(a => a.IsUnlocked)</span>
+                                <span class="psb-label">Achievements</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-actions">
+                        <button class="btn-edit-profile">
+                            <i class="fa-solid fa-pen"></i>
+                            <span>Edit Profile</span>
+                        </button>
+                        <button class="btn-share-profile">
+                            <i class="fa-solid fa-share-nodes"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── MAIN GRID ──────────────────────────────────────── -->
+        <div class="settings-grid">
+
+            <!-- LEFT COLUMN ─────────────────────────────── -->
+            <div class="settings-col-left">
+
+                <!-- TRAINING BREAKDOWN ──────────────────── -->
+                <section class="settings-card reveal-up" style="animation-delay:0.1s">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon-wrap accent-red">
+                                <i class="fa-solid fa-chart-bar"></i>
+                            </div>
+                            <div>
+                                <h2 class="card-title">Training Breakdown</h2>
+                                <p class="card-subtitle">Your muscle group frequency</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="muscle-chart">
+                        @if (muscleGroups.Count == 0)
+                        {
+                            <div class="empty-chart">
+                                <i class="fa-solid fa-chart-simple"></i>
+                                <p>No training data yet.<br/>Log your first workout to see stats.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var mg in muscleGroups.OrderByDescending(m => m.Count))
+                            {
+                                var pct = (int)Math.Round(mg.Count * 100.0 / maxMuscleCount);
+                                var isTop = mg.MuscleGroup == mostTrained;
+                                <div class="muscle-row @(isTop ? "muscle-row-top" : "")">
+                                    <div class="muscle-label">
+                                        @if (isTop)
+                                        {
+                                            <i class="fa-solid fa-star muscle-star"></i>
+                                        }
+                                        <span>@mg.MuscleGroup</span>
+                                    </div>
+                                    <div class="muscle-bar-track">
+                                        <div class="muscle-bar-fill @(isTop ? "muscle-bar-top" : "")"
+                                             style="width: @(pct)%"></div>
+                                    </div>
+                                    <div class="muscle-count">@mg.Count</div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </section>
+
+                <!-- ACHIEVEMENTS ─────────────────────────── -->
+                <section class="settings-card reveal-up" style="animation-delay:0.2s">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon-wrap accent-gold">
+                                <i class="fa-solid fa-trophy"></i>
+                            </div>
+                            <div>
+                                <h2 class="card-title">Achievements</h2>
+                                <p class="card-subtitle">@achievements.Count(a => a.IsUnlocked) / @achievements.Count unlocked</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (achievements.Count == 0)
+                    {
+                        <div class="empty-chart">
+                            <i class="fa-solid fa-trophy"></i>
+                            <p>No achievements available yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="achievements-grid">
+                            @foreach (var ach in achievements)
+                            {
+                                <div class="achievement-card @(ach.IsUnlocked ? "ach-unlocked" : "ach-locked")">
+                                    @if (!ach.IsUnlocked)
+                                    {
+                                        <div class="ach-lock-overlay">
+                                            <i class="fa-solid fa-lock"></i>
+                                        </div>
+                                    }
+                                    @if (ach.IsUnlocked)
+                                    {
+                                        <div class="ach-glow"></div>
+                                    }
+                                    <div class="ach-icon-wrap">
+                                        <i class="@ach.Icon"></i>
+                                    </div>
+                                    <div class="ach-info">
+                                        <p class="ach-name">@ach.Name</p>
+                                        <p class="ach-desc">@ach.Description</p>
+                                    </div>
+                                    @if (ach.IsUnlocked)
+                                    {
+                                        <div class="ach-check"><i class="fa-solid fa-check"></i></div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </section>
+
+            </div>
+
+            <!-- RIGHT COLUMN ────────────────────────────── -->
+            <div class="settings-col-right">
+
+                <!-- PREFERENCES ─────────────────────────── -->
+                <section class="settings-card reveal-up" style="animation-delay:0.15s">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon-wrap accent-orange">
+                                <i class="fa-solid fa-sliders"></i>
+                            </div>
+                            <div>
+                                <h2 class="card-title">Preferences</h2>
+                                <p class="card-subtitle">Personalize your experience</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Goal -->
+                    <div class="pref-group">
+                        <div class="pref-label-row">
+                            <span class="pref-label"><i class="fa-solid fa-bullseye"></i> Weekly Workout Goal</span>
+                            <span class="pref-value-badge" id="goalDisplay">4</span>
+                        </div>
+                        <div class="goal-selector">
+                            @for (int d = 1; d <= 7; d++)
+                            {
+                                <button class="goal-day @(d == 4 ? "goal-day-active" : "")"
+                                        onclick="setGoal(this, @d)">@d</button>
+                            }
+                        </div>
+                        <p class="pref-hint">days per week</p>
+                    </div>
+
+                    <!-- Theme -->
+                    <div class="pref-group">
+                        <div class="pref-label-row">
+                            <span class="pref-label"><i class="fa-solid fa-moon"></i> App Theme</span>
+                        </div>
+                        <div class="theme-toggle-wrap">
+                            <button class="theme-btn theme-btn-active" id="themeLight" onclick="setTheme('dark', this)">
+                                <i class="fa-solid fa-moon"></i> Dark
+                            </button>
+                            <button class="theme-btn" id="themeDark" onclick="setTheme('light', this)">
+                                <i class="fa-solid fa-sun"></i> Light
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Units -->
+                    <div class="pref-group">
+                        <div class="pref-label-row">
+                            <span class="pref-label"><i class="fa-solid fa-weight-hanging"></i> Units</span>
+                        </div>
+                        <div class="units-toggle">
+                            <button class="units-btn units-btn-active" onclick="setUnit('metric', this)">
+                                <i class="fa-solid fa-globe-europe"></i> Metric (kg)
+                            </button>
+                            <button class="units-btn" onclick="setUnit('imperial', this)">
+                                <i class="fa-solid fa-flag-usa"></i> Imperial (lbs)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="pref-group" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                        <div class="pref-label-row" style="margin-bottom: 1rem;">
+                            <span class="pref-label"><i class="fa-solid fa-bell"></i> Notifications</span>
+                        </div>
+                        <div class="notif-list">
+                            <div class="notif-row">
+                                <div class="notif-info">
+                                    <p class="notif-name">Workout Reminders</p>
+                                    <p class="notif-desc">Daily nudge to keep your streak</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked />
+                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                </label>
+                            </div>
+                            <div class="notif-row">
+                                <div class="notif-info">
+                                    <p class="notif-name">Achievement Alerts</p>
+                                    <p class="notif-desc">Get notified when you unlock something</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked />
+                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                </label>
+                            </div>
+                            <div class="notif-row" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                                <div class="notif-info">
+                                    <p class="notif-name">Weekly Summary</p>
+                                    <p class="notif-desc">Your progress digest every Sunday</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" />
+                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ACCOUNT ─────────────────────────────── -->
+                <section class="settings-card reveal-up" style="animation-delay:0.25s">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon-wrap accent-blue">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div>
+                                <h2 class="card-title">Account</h2>
+                                <p class="card-subtitle">Security & data management</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="account-links">
+                        <a asp-area="Identity" asp-page="/Account/Manage/ChangePassword" class="account-link-row">
+                            <div class="acl-left">
+                                <div class="acl-icon"><i class="fa-solid fa-key"></i></div>
+                                <div>
+                                    <p class="acl-title">Change Password</p>
+                                    <p class="acl-sub">Update your login credentials</p>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right acl-arrow"></i>
+                        </a>
+
+                        <a asp-area="Identity" asp-page="/Account/Manage/TwoFactorAuthentication" class="account-link-row">
+                            <div class="acl-left">
+                                <div class="acl-icon acl-icon-green"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                                <div>
+                                    <p class="acl-title">Two-Factor Authentication</p>
+                                    <p class="acl-sub">Add an extra layer of security</p>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right acl-arrow"></i>
+                        </a>
+
+                        <button class="account-link-row" onclick="return false;">
+                            <div class="acl-left">
+                                <div class="acl-icon acl-icon-blue"><i class="fa-solid fa-download"></i></div>
+                                <div>
+                                    <p class="acl-title">Download My Data</p>
+                                    <p class="acl-sub">Export all your fitness data</p>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right acl-arrow"></i>
+                        </button>
+                    </div>
+
+                    <div class="danger-zone">
+                        <div class="danger-zone-header">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>Danger Zone</span>
+                        </div>
+                        <p class="danger-warning">This action is permanent and cannot be undone. All your workout data, progress, and achievements will be deleted forever.</p>
+                        <button class="btn-delete-account">
+                            <i class="fa-solid fa-trash-xmark"></i>
+                            Delete My Account
+                        </button>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function setGoal(el, val) {
+        document.querySelectorAll('.goal-day').forEach(b => b.classList.remove('goal-day-active'));
+        el.classList.add('goal-day-active');
+        document.getElementById('goalDisplay').textContent = val;
+    }
+    function setTheme(theme, el) {
+        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('theme-btn-active'));
+        el.classList.add('theme-btn-active');
+    }
+    function setUnit(unit, el) {
+        document.querySelectorAll('.units-btn').forEach(b => b.classList.remove('units-btn-active'));
+        el.classList.add('units-btn-active');
+    }
+
+    // Reveal animation
+    const reveals = document.querySelectorAll('.reveal-up');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('is-visible');
+                observer.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+</script>
+
+<style>
+    /* ============================================================
+       PAGE SHELL
+       ============================================================ */
+    .settings-page {
+        padding: 2rem 0 5rem;
+        min-height: 100vh;
+    }
+
+    /* ── BREADCRUMB ─────────────────────────────────────────── */
+    .settings-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        font-size: 0.82rem;
+    }
+    .settings-breadcrumb a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: color 0.25s;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .settings-breadcrumb a:hover { color: var(--accent); }
+    .bc-sep { color: var(--text-secondary); opacity: 0.35; font-size: 0.65rem; }
+    .bc-current { color: var(--text-primary); font-weight: 500; }
+
+    /* ── REVEAL ANIMATION ────────────────────────────────────── */
+    .reveal-up {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .reveal-up.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* ============================================================
+       PROFILE HEADER CARD
+       ============================================================ */
+    .profile-header-section {
+        margin-bottom: 2rem;
+    }
+
+    .profile-header-card {
+        position: relative;
+        background: var(--bg-card);
+        border-radius: 1.5rem;
+        border: 1px solid rgba(255,255,255,0.06);
+        padding: 2.5rem;
+        overflow: hidden;
+    }
+
+    .profile-header-glow {
+        position: absolute;
+        top: -80px;
+        left: -80px;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(230,57,70,0.12) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .profile-hero {
+        display: flex;
+        align-items: flex-start;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    /* ── AVATAR ─────────────────────────────────────────────── */
+    .avatar-wrap {
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .avatar-ring {
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-secondary), var(--accent-tertiary));
+        animation: avatarSpin 6s linear infinite;
+        z-index: 0;
+    }
+
+    @@keyframes avatarSpin {
+        0%   { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .avatar-circle {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1e1e2e, #2a2a3e);
+        border: 3px solid var(--bg-card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+    }
+
+    .avatar-letter {
+        font-size: 2.4rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+    }
+
+    .avatar-status-dot {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #22c55e;
+        border: 2px solid var(--bg-card);
+        z-index: 2;
+        animation: statusPulse 2s ease-in-out infinite;
+    }
+
+    @@keyframes statusPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+        50%       { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+    }
+
+    /* ── PROFILE INFO ───────────────────────────────────────── */
+    .profile-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .profile-name-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.4rem;
+    }
+
+    .profile-username {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1.1;
+        background: linear-gradient(135deg, var(--text-primary) 0%, rgba(248,248,248,0.7) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+    }
+
+    .profile-badge-verified {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 2rem;
+        background: rgba(230,57,70,0.15);
+        border: 1px solid rgba(230,57,70,0.3);
+        color: var(--accent);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .profile-email,
+    .profile-joindate {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin: 0.25rem 0;
+    }
+
+    .profile-email i,
+    .profile-joindate i {
+        color: var(--accent);
+        font-size: 0.8rem;
+        width: 14px;
+    }
+
+    /* ── STAT BADGES ─────────────────────────────────────────── */
+    .profile-badges-row {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 1.25rem;
+    }
+
+    .profile-stat-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 0.75rem;
+        backdrop-filter: blur(6px);
+        transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .profile-stat-badge:hover {
+        border-color: rgba(255,255,255,0.14);
+        transform: translateY(-2px);
+    }
+
+    .profile-stat-badge i {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .profile-stat-badge.highlight {
+        background: rgba(230,57,70,0.08);
+        border-color: rgba(230,57,70,0.2);
+    }
+
+    .profile-stat-badge.highlight i {
+        color: var(--accent);
+    }
+
+    .psb-value {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .psb-label {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+    }
+
+    /* ── PROFILE ACTIONS ─────────────────────────────────────── */
+    .profile-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        flex-shrink: 0;
+        align-self: flex-start;
+    }
+
+    .btn-edit-profile {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.4rem;
+        border-radius: 0.75rem;
+        background: linear-gradient(135deg, var(--accent), #c1121f);
+        border: none;
+        color: #fff;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        font-family: inherit;
+        white-space: nowrap;
+    }
+
+    .btn-edit-profile:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(230,57,70,0.35);
+    }
+
+    .btn-share-profile {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 0.6rem;
+        border-radius: 0.75rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background 0.25s, color 0.25s;
+    }
+
+    .btn-share-profile:hover {
+        background: rgba(255,255,255,0.09);
+        color: var(--text-primary);
+    }
+
+    /* ============================================================
+       SETTINGS GRID
+       ============================================================ */
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    /* ============================================================
+       SETTINGS CARD
+       ============================================================ */
+    .settings-card {
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 1.25rem;
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+        transition: border-color 0.3s;
+    }
+
+    .settings-card:hover {
+        border-color: rgba(255,255,255,0.09);
+    }
+
+    .settings-col-left .settings-card:last-child,
+    .settings-col-right .settings-card:last-child {
+        margin-bottom: 0;
+    }
+
+    /* ── CARD HEADER ─────────────────────────────────────────── */
+    .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .card-title-group {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+    }
+
+    .card-icon-wrap {
+        width: 40px;
+        height: 40px;
+        border-radius: 0.65rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .accent-red   { background: rgba(230,57,70,0.15);  color: var(--accent); }
+    .accent-orange{ background: rgba(255,107,53,0.15); color: var(--accent-secondary); }
+    .accent-gold  { background: rgba(255,209,102,0.15); color: var(--accent-tertiary); }
+    .accent-blue  { background: rgba(99,179,237,0.15);  color: #63b3ed; }
+
+    .card-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 0.1rem;
+    }
+
+    .card-subtitle {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    /* ============================================================
+       MUSCLE CHART
+       ============================================================ */
+    .muscle-chart {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .muscle-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .muscle-label {
+        width: 90px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        flex-shrink: 0;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .muscle-row-top .muscle-label {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .muscle-star {
+        color: var(--accent-tertiary);
+        font-size: 0.65rem;
+    }
+
+    .muscle-bar-track {
+        flex: 1;
+        height: 8px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 99px;
+        overflow: hidden;
+    }
+
+    .muscle-bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        background: rgba(139, 139, 158, 0.4);
+        transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .muscle-bar-top {
+        background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+        box-shadow: 0 0 12px rgba(230,57,70,0.4);
+    }
+
+    .muscle-count {
+        width: 28px;
+        text-align: right;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+    }
+
+    .muscle-row-top .muscle-count {
+        color: var(--accent);
+    }
+
+    /* ── EMPTY STATE ─────────────────────────────────────────── */
+    .empty-chart {
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-chart i {
+        font-size: 2rem;
+        opacity: 0.3;
+        display: block;
+        margin-bottom: 0.75rem;
+    }
+
+    .empty-chart p {
+        font-size: 0.875rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* ============================================================
+       ACHIEVEMENTS GRID
+       ============================================================ */
+    .achievements-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .achievement-card {
+        position: relative;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 1rem;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.5rem;
+        overflow: hidden;
+        transition: transform 0.25s, border-color 0.25s;
+    }
+
+    .achievement-card:hover {
+        transform: translateY(-3px);
+    }
+
+    /* Unlocked */
+    .ach-unlocked {
+        border-color: rgba(255,209,102,0.25);
+        background: rgba(255,209,102,0.04);
+    }
+
+    .ach-unlocked:hover {
+        border-color: rgba(255,209,102,0.45);
+    }
+
+    .ach-glow {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 50% 0%, rgba(255,209,102,0.12) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .ach-icon-wrap {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .ach-unlocked .ach-icon-wrap {
+        background: rgba(255,209,102,0.15);
+        color: var(--accent-tertiary);
+        box-shadow: 0 0 16px rgba(255,209,102,0.2);
+    }
+
+    .ach-locked .ach-icon-wrap {
+        background: rgba(255,255,255,0.05);
+        color: rgba(139,139,158,0.4);
+    }
+
+    .ach-info { flex: 1; }
+
+    .ach-name {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 0.2rem;
+    }
+
+    .ach-locked .ach-name {
+        color: var(--text-secondary);
+    }
+
+    .ach-desc {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    /* Lock overlay */
+    .ach-lock-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(8,8,13,0.55);
+        backdrop-filter: blur(1px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: inherit;
+        z-index: 2;
+        color: rgba(139,139,158,0.5);
+        font-size: 1.1rem;
+    }
+
+    /* Check badge */
+    .ach-check {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: rgba(34,197,94,0.2);
+        border: 1px solid rgba(34,197,94,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #22c55e;
+        font-size: 0.55rem;
+    }
+
+    /* ============================================================
+       PREFERENCES SECTION
+       ============================================================ */
+    .pref-group {
+        padding-bottom: 1.4rem;
+        margin-bottom: 1.4rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .pref-label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.9rem;
+    }
+
+    .pref-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .pref-label i {
+        color: var(--accent-secondary);
+        font-size: 0.85rem;
+    }
+
+    .pref-value-badge {
+        padding: 0.2rem 0.65rem;
+        border-radius: 2rem;
+        background: rgba(230,57,70,0.15);
+        border: 1px solid rgba(230,57,70,0.25);
+        color: var(--accent);
+        font-size: 0.8rem;
+        font-weight: 700;
+        min-width: 28px;
+        text-align: center;
+    }
+
+    .pref-hint {
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        margin: 0.4rem 0 0;
+    }
+
+    /* ── GOAL SELECTOR ───────────────────────────────────────── */
+    .goal-selector {
+        display: flex;
+        gap: 0.4rem;
+    }
+
+    .goal-day {
+        flex: 1;
+        padding: 0.55rem 0;
+        border-radius: 0.5rem;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+
+    .goal-day:hover {
+        background: rgba(255,255,255,0.08);
+        color: var(--text-primary);
+    }
+
+    .goal-day-active {
+        background: linear-gradient(135deg, var(--accent), #c1121f) !important;
+        border-color: transparent !important;
+        color: #fff !important;
+        box-shadow: 0 4px 14px rgba(230,57,70,0.3);
+    }
+
+    /* ── THEME TOGGLE ────────────────────────────────────────── */
+    .theme-toggle-wrap,
+    .units-toggle {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .theme-btn,
+    .units-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.6rem;
+        border-radius: 0.65rem;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        color: var(--text-secondary);
+        font-size: 0.82rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+
+    .theme-btn:hover,
+    .units-btn:hover {
+        background: rgba(255,255,255,0.08);
+        color: var(--text-primary);
+    }
+
+    .theme-btn-active,
+    .units-btn-active {
+        background: rgba(255,107,53,0.12) !important;
+        border-color: rgba(255,107,53,0.3) !important;
+        color: var(--accent-secondary) !important;
+    }
+
+    /* ── NOTIFICATION TOGGLES ────────────────────────────────── */
+    .notif-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .notif-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        gap: 1rem;
+    }
+
+    .notif-info { flex: 1; }
+
+    .notif-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.15rem;
+    }
+
+    .notif-desc {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    /* Toggle switch */
+    .toggle-switch {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+    }
+
+    .toggle-track {
+        width: 42px;
+        height: 23px;
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 99px;
+        position: relative;
+        transition: background 0.25s, border-color 0.25s;
+        display: block;
+    }
+
+    .toggle-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 17px;
+        height: 17px;
+        background: var(--text-secondary);
+        border-radius: 50%;
+        transition: transform 0.25s, background 0.25s;
+    }
+
+    .toggle-switch input:checked + .toggle-track {
+        background: rgba(230,57,70,0.3);
+        border-color: rgba(230,57,70,0.5);
+    }
+
+    .toggle-switch input:checked + .toggle-track .toggle-thumb {
+        transform: translateX(19px);
+        background: var(--accent);
+        box-shadow: 0 0 8px rgba(230,57,70,0.5);
+    }
+
+    /* ============================================================
+       ACCOUNT LINKS
+       ============================================================ */
+    .account-links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .account-link-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.9rem 1rem;
+        border-radius: 0.85rem;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.05);
+        text-decoration: none;
+        transition: background 0.25s, border-color 0.25s, transform 0.2s;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        font-family: inherit;
+    }
+
+    .account-link-row:hover {
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(255,255,255,0.1);
+        transform: translateX(3px);
+    }
+
+    .acl-left {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .acl-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 0.55rem;
+        background: rgba(230,57,70,0.1);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .acl-icon-green {
+        background: rgba(34,197,94,0.1);
+        color: #22c55e;
+    }
+
+    .acl-icon-blue {
+        background: rgba(99,179,237,0.1);
+        color: #63b3ed;
+    }
+
+    .acl-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.1rem;
+    }
+
+    .acl-sub {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .acl-arrow {
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+        opacity: 0.5;
+        transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .account-link-row:hover .acl-arrow {
+        opacity: 1;
+        transform: translateX(2px);
+    }
+
+    /* ── DANGER ZONE ─────────────────────────────────────────── */
+    .danger-zone {
+        background: rgba(230,57,70,0.06);
+        border: 1px solid rgba(230,57,70,0.18);
+        border-radius: 1rem;
+        padding: 1.25rem;
+    }
+
+    .danger-zone-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        margin-bottom: 0.6rem;
+    }
+
+    .danger-warning {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        line-height: 1.55;
+        margin: 0 0 1rem;
+    }
+
+    .btn-delete-account {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.2rem;
+        border-radius: 0.65rem;
+        background: rgba(230,57,70,0.1);
+        border: 1px solid rgba(230,57,70,0.3);
+        color: var(--accent);
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.25s, border-color 0.25s, transform 0.2s;
+        font-family: inherit;
+    }
+
+    .btn-delete-account:hover {
+        background: rgba(230,57,70,0.2);
+        border-color: rgba(230,57,70,0.5);
+        transform: scale(1.02);
+    }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @@media (max-width: 900px) {
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+        .settings-col-left,
+        .settings-col-right {
+            width: 100%;
+        }
+    }
+
+    @@media (max-width: 640px) {
+        .profile-header-card { padding: 1.5rem; }
+        .profile-hero { flex-direction: column; align-items: center; text-align: center; }
+        .profile-name-row { justify-content: center; }
+        .profile-email, .profile-joindate { justify-content: center; }
+        .profile-badges-row { justify-content: center; }
+        .profile-actions { flex-direction: row; width: 100%; }
+        .btn-edit-profile { flex: 1; justify-content: center; }
+        .btn-share-profile { width: 44px; flex-shrink: 0; }
+        .avatar-circle { width: 80px; height: 80px; }
+        .avatar-letter { font-size: 1.9rem; }
+        .achievements-grid { grid-template-columns: 1fr; }
+        .goal-selector { gap: 0.25rem; }
+        .goal-day { padding: 0.45rem 0; font-size: 0.78rem; }
+    }
+</style>
