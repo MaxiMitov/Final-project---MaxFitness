@@ -14,6 +14,8 @@ namespace Final_project___MaxFitness.Data
         public DbSet<WorkoutSession> WorkoutSessions { get; set; }
         public DbSet<WorkoutExerciseLog> WorkoutExerciseLogs { get; set; }
         public DbSet<CommunityPost> CommunityPosts { get; set; }
+        public DbSet<PostComment> PostComments { get; set; }
+        public DbSet<PostLike> PostLikes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
