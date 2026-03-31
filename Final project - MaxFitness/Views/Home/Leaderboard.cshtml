@@ -2,6 +2,7 @@
     ViewData["Title"] = "Leaderboard";
     var currentUser = ViewBag.CurrentUser as string ?? "";
     var leaders = ViewBag.Leaders as System.Collections.IList ?? new List<object>();
+    var period = ViewBag.Period as string ?? "all";
 
     // Helper to safely read a property from an anonymous object via reflection
     T GetProp<T>(object obj, string prop, T fallback = default) {
@@ -59,15 +60,15 @@
 
         <!-- ── FILTER TABS ───────────────────────────────────────── -->
         <div class="lb-filters reveal-up">
-            <button class="lb-filter-btn active" onclick="setFilter(this)">
+            <a class="lb-filter-btn @(period == "week" ? "active" : "")" asp-action="Leaderboard" asp-route-period="week">
                 <i class="fa-solid fa-calendar-week"></i> This Week
-            </button>
-            <button class="lb-filter-btn" onclick="setFilter(this)">
+            </a>
+            <a class="lb-filter-btn @(period == "month" ? "active" : "")" asp-action="Leaderboard" asp-route-period="month">
                 <i class="fa-solid fa-calendar"></i> This Month
-            </button>
-            <button class="lb-filter-btn" onclick="setFilter(this)">
+            </a>
+            <a class="lb-filter-btn @(period == "all" ? "active" : "")" asp-action="Leaderboard" asp-route-period="all">
                 <i class="fa-solid fa-infinity"></i> All Time
-            </button>
+            </a>
         </div>
 
         <!-- ── TOP 3 PODIUM ──────────────────────────────────────── -->
