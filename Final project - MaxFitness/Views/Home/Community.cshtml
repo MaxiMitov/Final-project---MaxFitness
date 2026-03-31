@@ -32,6 +32,12 @@
         new { Name = "QuadKillerK", Workouts = 81, Rank = 2 },
         new { Name = "SarahLifts",  Workouts = 73, Rank = 3 }
     };
+
+    // User workouts for the workout picker
+    var userWorkouts = ViewBag.UserWorkouts as System.Collections.IList ?? new List<object>();
+
+    // User stats for progress snapshot
+    dynamic userStats = ViewBag.UserStats;
 }
 
 <!-- ============================================================
@@ -61,28 +67,81 @@
             <div class="cm-feed-col">
 
                 <!-- ── CREATE POST CARD ─────────────────────────── -->
-                <div class="cm-create-card reveal-up">
+                <div class="cm-create-card reveal-up" id="createPostCard">
                     <div class="cm-create-top">
                         <div class="cm-avatar cm-avatar-me">@currentLetter</div>
                         <textarea
+                            id="postTextarea"
                             class="cm-textarea"
                             placeholder="Share your workout or thoughts..."
                             rows="3"
-                            onclick="this.rows=5"
-                            onfocusout="if(!this.value)this.rows=3"
+                            onfocus="this.rows=5"
+                            onfocusout="if(!this.value && this.rows>3)this.rows=3"
                         ></textarea>
                     </div>
+
+                    <!-- ── ATTACHMENT PREVIEWS ─────────────────── -->
+                    <div id="attachmentPreviews" class="cm-attachment-previews"></div>
+
+                    <!-- ── WORKOUT PICKER DROPDOWN ────────────── -->
+                    <div id="workoutPicker" class="cm-workout-picker" style="display:none;">
+                        <div class="cm-workout-picker-header">
+                            <i class="fa-solid fa-dumbbell"></i> Select a Workout to Share
+                        </div>
+                        @if (userWorkouts.Count > 0)
+                        {
+                            <div class="cm-workout-picker-list">
+                                @foreach (var w in userWorkouts)
+                                {
+                                    var wId           = GetProp<int>(w, "Id", 0);
+                                    var wName         = GetProp<string>(w, "Name", "Workout");
+                                    var wDate         = GetProp<string>(w, "Date", "");
+                                    var wDuration     = GetProp<int>(w, "Duration", 0);
+                                    var wExercises    = GetProp<int>(w, "ExerciseCount", 0);
+                                    <button type="button"
+                                            class="cm-workout-picker-row"
+                                            data-workout-id="@wId"
+                                            data-workout-name="@wName"
+                                            data-workout-date="@wDate"
+                                            data-workout-duration="@wDuration"
+                                            data-workout-exercises="@wExercises"
+                                            onclick="selectWorkout(this)">
+                                        <div class="cm-wpr-icon">
+                                            <i class="fa-solid fa-dumbbell"></i>
+                                        </div>
+                                        <div class="cm-wpr-info">
+                                            <span class="cm-wpr-name">@wName</span>
+                                            <span class="cm-wpr-meta">
+                                                @if (!string.IsNullOrEmpty(wDate)) { <span>@wDate</span> }
+                                                @if (wDuration > 0)  { <span>· @wDuration min</span> }
+                                                @if (wExercises > 0) { <span>· @wExercises exercises</span> }
+                                            </span>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right cm-wpr-arrow"></i>
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="cm-workout-picker-empty">
+                                <i class="fa-solid fa-circle-info"></i> No past workouts found. Complete a workout first!
+                            </div>
+                        }
+                    </div>
+
                     <div class="cm-create-actions">
-                        <button class="cm-attach-btn" type="button">
+                        <button class="cm-attach-btn" id="btnLogWorkout" type="button" onclick="toggleWorkoutPicker()">
                             <i class="fa-solid fa-dumbbell"></i> Log Workout
                         </button>
-                        <button class="cm-attach-btn" type="button">
+                        <button class="cm-attach-btn" id="btnPhoto" type="button" onclick="triggerPhotoInput()">
                             <i class="fa-solid fa-image"></i> Photo
                         </button>
-                        <button class="cm-attach-btn" type="button">
+                        <button class="cm-attach-btn" id="btnProgress" type="button" onclick="attachProgress()">
                             <i class="fa-solid fa-chart-line"></i> Progress
                         </button>
-                        <button class="cm-post-btn" type="button">
+                        <input type="file" id="photoFileInput" accept="image/*" style="display:none" onchange="handlePhotoSelected(this)">
+                        <button class="cm-post-btn" type="button" onclick="submitPost()">
                             <i class="fa-solid fa-paper-plane"></i> Post
                         </button>
                     </div>
@@ -116,6 +175,8 @@
                         var intensity    = GetProp<string>(post, "Intensity",    "");
                         var likes        = GetProp<int>   (post, "Likes",        0);
                         var comments     = GetProp<int>   (post, "Comments",     0);
+                        var photoUrl     = GetProp<string>(post, "PhotoUrl",     "");
+                        var progressSnap = GetProp<string>(post, "ProgressSnapshot", "");
                         var isWorkout    = !string.IsNullOrEmpty(workoutName);
                         var postLetter   = userName.Length > 0 ? userName[0].ToString().ToUpper() : "?";
                         var isMe         = userName == currentUser;
@@ -205,6 +266,25 @@
                                             }
                                         </div>
                                     }
+                                </div>
+                            }
+
+                            <!-- Photo attachment display -->
+                            @if (!string.IsNullOrEmpty(photoUrl))
+                            {
+                                <div class="cm-post-photo-wrap">
+                                    <img src="@photoUrl" alt="Post photo" class="cm-post-photo" />
+                                </div>
+                            }
+
+                            <!-- Progress snapshot display -->
+                            @if (!string.IsNullOrEmpty(progressSnap))
+                            {
+                                <div class="cm-progress-snap-display">
+                                    <div class="cm-psd-header">
+                                        <i class="fa-solid fa-chart-line"></i> Progress Snapshot
+                                    </div>
+                                    <div class="cm-psd-text">@progressSnap</div>
                                 </div>
                             }
 
@@ -381,6 +461,11 @@
     0%   { opacity: 0; transform: translateY(0) scale(0.7); }
     40%  { opacity: 1; transform: translateY(-14px) scale(1.1); }
     100% { opacity: 0; transform: translateY(-28px) scale(0.9); }
+}
+
+@@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Page Shell ───────────────────────────────────────────────── */
@@ -579,6 +664,12 @@
     background: rgba(255,107,53,0.07);
 }
 
+.cm-attach-btn.active-attach {
+    border-color: rgba(230,57,70,0.5);
+    color: var(--accent);
+    background: rgba(230,57,70,0.1);
+}
+
 .cm-post-btn {
     margin-left: auto;
     background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
@@ -601,6 +692,269 @@
 .cm-post-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(230,57,70,0.45);
+}
+
+.cm-post-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ── Attachment Previews ──────────────────────────────────────── */
+.cm-attachment-previews {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+}
+
+.cm-attachment-previews:empty {
+    margin-bottom: 0;
+}
+
+.cm-preview-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    animation: slideDown 0.2s ease both;
+}
+
+.cm-preview-remove {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.45rem;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.65);
+    border: none;
+    color: #fff;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+    z-index: 2;
+}
+
+.cm-preview-remove:hover {
+    background: rgba(230,57,70,0.85);
+}
+
+/* Workout preview card */
+.cm-workout-preview {
+    background: linear-gradient(135deg, rgba(230,57,70,0.1) 0%, rgba(255,107,53,0.06) 100%);
+    border: 1px solid rgba(230,57,70,0.28);
+    padding: 0.85rem 1rem;
+}
+
+.cm-workout-preview-header {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 0.45rem;
+}
+
+.cm-workout-preview-header i {
+    color: var(--accent);
+    font-size: 0.9rem;
+}
+
+.cm-workout-preview-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.cm-workout-preview-meta {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 0.6rem;
+}
+
+.cm-workout-preview-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Photo preview */
+.cm-photo-preview img {
+    width: 100%;
+    max-height: 260px;
+    object-fit: cover;
+    border-radius: 12px;
+    display: block;
+}
+
+/* Progress snapshot preview */
+.cm-progress-preview {
+    background: linear-gradient(135deg, rgba(76,175,80,0.08) 0%, rgba(76,175,80,0.04) 100%);
+    border: 1px solid rgba(76,175,80,0.3);
+    padding: 0.85rem 1rem;
+}
+
+.cm-progress-preview-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #4caf50;
+}
+
+.cm-progress-stats-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.cm-ps-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    min-width: 60px;
+}
+
+.cm-ps-stat-val {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #4caf50;
+}
+
+.cm-ps-stat-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+}
+
+/* ── Workout Picker Dropdown ──────────────────────────────────── */
+.cm-workout-picker {
+    background: #1a1a28;
+    border: 1px solid rgba(230,57,70,0.25);
+    border-radius: 14px;
+    margin-bottom: 0.85rem;
+    overflow: hidden;
+    animation: slideDown 0.22s ease both;
+}
+
+.cm-workout-picker-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(230,57,70,0.06);
+}
+
+.cm-workout-picker-list {
+    max-height: 240px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.cm-workout-picker-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.cm-workout-picker-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cm-workout-picker-list::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 999px;
+}
+
+.cm-workout-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    background: none;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.18s ease;
+}
+
+.cm-workout-picker-row:last-child {
+    border-bottom: none;
+}
+
+.cm-workout-picker-row:hover {
+    background: rgba(230,57,70,0.08);
+}
+
+.cm-wpr-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(230,57,70,0.12);
+    border: 1px solid rgba(230,57,70,0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.cm-wpr-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.cm-wpr-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cm-wpr-meta {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 0.2rem;
+    flex-wrap: wrap;
+}
+
+.cm-wpr-arrow {
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    opacity: 0.5;
+}
+
+.cm-workout-picker-empty {
+    padding: 1.25rem 1rem;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 /* ── Feed Filter Tabs ─────────────────────────────────────────── */
@@ -789,6 +1143,47 @@
     padding: 0.18rem 0.6rem;
     border-radius: 999px;
     text-transform: capitalize;
+}
+
+/* ── Post Photo Display ───────────────────────────────────────── */
+.cm-post-photo-wrap {
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.cm-post-photo {
+    width: 100%;
+    max-height: 320px;
+    object-fit: cover;
+    display: block;
+}
+
+/* ── Progress Snapshot Display (in post feed) ─────────────────── */
+.cm-progress-snap-display {
+    background: linear-gradient(135deg, rgba(76,175,80,0.08) 0%, rgba(76,175,80,0.04) 100%);
+    border: 1px solid rgba(76,175,80,0.28);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.cm-psd-header {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #4caf50;
+    margin-bottom: 0.45rem;
+}
+
+.cm-psd-text {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
 }
 
 /* ── Post Action Row ──────────────────────────────────────────── */
@@ -1236,55 +1631,320 @@
 
 </style>
 
+@section Scripts {
 <script>
-// Like toggle with count increment
-function toggleLike(btn) {
-    var countEl = btn.querySelector('.cm-like-count');
-    var count   = parseInt(countEl.textContent, 10) || 0;
+(function () {
 
-    if (btn.classList.contains('liked')) {
-        btn.classList.remove('liked');
-        countEl.textContent = count - 1;
-    } else {
-        btn.classList.add('liked');
-        countEl.textContent = count + 1;
-    }
-}
+    /* ── State ─────────────────────────────────────────────────── */
+    var state = {
+        workoutId:   null,
+        workoutData: null,
+        photoUrl:    null,
+        progressSnap: null
+    };
 
-// Bookmark toggle
-function toggleBookmark(btn) {
-    btn.classList.toggle('saved');
-}
-
-// Feed filter tabs
-function setCmTab(btn) {
-    document.querySelectorAll('.cm-tab-btn').forEach(function(b) {
-        b.classList.remove('active');
-    });
-    btn.classList.add('active');
-}
-
-// Challenge join toggle
-function toggleJoin(btn) {
-    if (btn.classList.contains('joined')) {
-        btn.classList.remove('joined');
-        btn.textContent = 'Join';
-    } else {
-        btn.classList.add('joined');
-        btn.textContent = '\u2713 Joined';
-    }
-}
-
-// Follow toggle
-document.querySelectorAll('.cm-follow-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-        if (this.classList.contains('following')) {
-            this.classList.remove('following');
-            this.textContent = 'Follow';
+    /* ── Workout picker ────────────────────────────────────────── */
+    window.toggleWorkoutPicker = function () {
+        var picker = document.getElementById('workoutPicker');
+        var btn    = document.getElementById('btnLogWorkout');
+        if (picker.style.display === 'none' || picker.style.display === '') {
+            picker.style.display = 'block';
+            btn.classList.add('active-attach');
         } else {
-            this.classList.add('following');
-            this.textContent = 'Following';
+            picker.style.display = 'none';
+            btn.classList.remove('active-attach');
+        }
+    };
+
+    window.selectWorkout = function (row) {
+        state.workoutId   = parseInt(row.dataset.workoutId, 10) || null;
+        state.workoutData = {
+            name:      row.dataset.workoutName,
+            date:      row.dataset.workoutDate,
+            duration:  row.dataset.workoutDuration,
+            exercises: row.dataset.workoutExercises
+        };
+
+        // Close picker
+        document.getElementById('workoutPicker').style.display = 'none';
+        document.getElementById('btnLogWorkout').classList.remove('active-attach');
+        document.getElementById('btnLogWorkout').classList.add('active-attach');
+
+        renderPreviews();
+    };
+
+    /* ── Photo ─────────────────────────────────────────────────── */
+    window.triggerPhotoInput = function () {
+        document.getElementById('photoFileInput').click();
+    };
+
+    window.handlePhotoSelected = function (input) {
+        var file = input.files && input.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            state.photoUrl = e.target.result;
+            document.getElementById('btnPhoto').classList.add('active-attach');
+            renderPreviews();
+        };
+        reader.readAsDataURL(file);
+        // Reset so the same file can be re-selected if removed
+        input.value = '';
+    };
+
+    /* ── Progress ──────────────────────────────────────────────── */
+    window.attachProgress = function () {
+        if (state.progressSnap) {
+            // Already attached — toggle off
+            state.progressSnap = null;
+            document.getElementById('btnProgress').classList.remove('active-attach');
+            renderPreviews();
+            return;
+        }
+
+        // Read stats from server-rendered data attributes on the button
+        var btn = document.getElementById('btnProgress');
+        var weekly    = btn.dataset.weekly    || '0';
+        var streak    = btn.dataset.streak    || '0';
+        var calories  = btn.dataset.calories  || '0';
+        var intensity = btn.dataset.intensity || '0';
+
+        state.progressSnap = 'Weekly Workouts: ' + weekly +
+            ', Streak: ' + streak + ' days' +
+            ', Calories: ' + calories +
+            ', Intensity: ' + intensity + '%';
+
+        btn.classList.add('active-attach');
+        renderPreviews();
+    };
+
+    /* ── Remove helpers ────────────────────────────────────────── */
+    window.removeWorkoutAttach = function () {
+        state.workoutId   = null;
+        state.workoutData = null;
+        document.getElementById('btnLogWorkout').classList.remove('active-attach');
+        renderPreviews();
+    };
+
+    window.removePhotoAttach = function () {
+        state.photoUrl = null;
+        document.getElementById('btnPhoto').classList.remove('active-attach');
+        renderPreviews();
+    };
+
+    window.removeProgressAttach = function () {
+        state.progressSnap = null;
+        document.getElementById('btnProgress').classList.remove('active-attach');
+        renderPreviews();
+    };
+
+    /* ── Render preview cards ──────────────────────────────────── */
+    function renderPreviews() {
+        var container = document.getElementById('attachmentPreviews');
+        container.innerHTML = '';
+
+        // Workout
+        if (state.workoutData) {
+            var d = state.workoutData;
+            var metaParts = [];
+            if (d.date)      metaParts.push('<span><i class="fa-regular fa-calendar"></i> ' + escHtml(d.date) + '</span>');
+            if (d.duration && d.duration !== '0') metaParts.push('<span><i class="fa-regular fa-clock"></i> ' + escHtml(d.duration) + ' min</span>');
+            if (d.exercises && d.exercises !== '0') metaParts.push('<span><i class="fa-solid fa-list-check"></i> ' + escHtml(d.exercises) + ' exercises</span>');
+
+            var card = document.createElement('div');
+            card.className = 'cm-preview-card cm-workout-preview';
+            card.innerHTML =
+                '<button type="button" class="cm-preview-remove" onclick="removeWorkoutAttach()" title="Remove">' +
+                    '<i class="fa-solid fa-xmark"></i>' +
+                '</button>' +
+                '<div class="cm-workout-preview-header">' +
+                    '<i class="fa-solid fa-dumbbell"></i>' +
+                    '<span class="cm-workout-preview-name">' + escHtml(d.name) + '</span>' +
+                '</div>' +
+                (metaParts.length ? '<div class="cm-workout-preview-meta">' + metaParts.join('') + '</div>' : '');
+            container.appendChild(card);
+        }
+
+        // Photo
+        if (state.photoUrl) {
+            var photoCard = document.createElement('div');
+            photoCard.className = 'cm-preview-card cm-photo-preview';
+            photoCard.innerHTML =
+                '<button type="button" class="cm-preview-remove" onclick="removePhotoAttach()" title="Remove">' +
+                    '<i class="fa-solid fa-xmark"></i>' +
+                '</button>' +
+                '<img src="' + state.photoUrl + '" alt="Photo preview" />';
+            container.appendChild(photoCard);
+        }
+
+        // Progress
+        if (state.progressSnap) {
+            var parts = parseProgressSnap(state.progressSnap);
+            var progressCard = document.createElement('div');
+            progressCard.className = 'cm-preview-card cm-progress-preview';
+            progressCard.innerHTML =
+                '<button type="button" class="cm-preview-remove" onclick="removeProgressAttach()" title="Remove">' +
+                    '<i class="fa-solid fa-xmark"></i>' +
+                '</button>' +
+                '<div class="cm-progress-preview-header">' +
+                    '<i class="fa-solid fa-chart-line"></i> Progress Snapshot' +
+                '</div>' +
+                '<div class="cm-progress-stats-row">' +
+                    stat(parts.weekly,    'Weekly Workouts') +
+                    stat(parts.streak,    'Streak (days)')   +
+                    stat(parts.calories,  'Calories')        +
+                    stat(parts.intensity, 'Intensity %')     +
+                '</div>';
+            container.appendChild(progressCard);
+        }
+    }
+
+    function stat(val, label) {
+        return '<div class="cm-ps-stat">' +
+            '<span class="cm-ps-stat-val">' + escHtml(String(val)) + '</span>' +
+            '<span class="cm-ps-stat-label">' + escHtml(label) + '</span>' +
+            '</div>';
+    }
+
+    function parseProgressSnap(snap) {
+        var weekly = '', streak = '', calories = '', intensity = '';
+        var m;
+        m = snap.match(/Weekly Workouts:\s*([\d.]+)/i);   if (m) weekly    = m[1];
+        m = snap.match(/Streak:\s*([\d.]+)/i);            if (m) streak    = m[1];
+        m = snap.match(/Calories:\s*([\d.]+)/i);          if (m) calories  = m[1];
+        m = snap.match(/Intensity:\s*([\d.]+)/i);         if (m) intensity = m[1];
+        return { weekly: weekly, streak: streak, calories: calories, intensity: intensity };
+    }
+
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    /* ── Submit post ───────────────────────────────────────────── */
+    window.submitPost = function () {
+        var content = document.getElementById('postTextarea').value.trim();
+        if (!content && !state.workoutId && !state.photoUrl && !state.progressSnap) {
+            document.getElementById('postTextarea').focus();
+            return;
+        }
+
+        var btn = document.querySelector('.cm-post-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
+
+        var payload = {
+            content:           content,
+            workoutSessionId:  state.workoutId,
+            photoUrl:          state.photoUrl,
+            progressSnapshot:  state.progressSnap
+        };
+
+        fetch('/Home/CreatePost', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload)
+        })
+        .then(function (res) {
+            if (!res.ok) throw new Error('Server returned ' + res.status);
+            window.location.reload();
+        })
+        .catch(function (err) {
+            console.error('Post failed:', err);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Post';
+            alert('Failed to post. Please try again.');
+        });
+    };
+
+    /* ── Existing UI helpers ───────────────────────────────────── */
+    window.toggleLike = function (btn) {
+        var countEl = btn.querySelector('.cm-like-count');
+        var count   = parseInt(countEl.textContent, 10) || 0;
+        if (btn.classList.contains('liked')) {
+            btn.classList.remove('liked');
+            countEl.textContent = count - 1;
+        } else {
+            btn.classList.add('liked');
+            countEl.textContent = count + 1;
+        }
+    };
+
+    window.toggleBookmark = function (btn) {
+        btn.classList.toggle('saved');
+    };
+
+    window.setCmTab = function (btn) {
+        document.querySelectorAll('.cm-tab-btn').forEach(function (b) {
+            b.classList.remove('active');
+        });
+        btn.classList.add('active');
+    };
+
+    window.toggleJoin = function (btn) {
+        if (btn.classList.contains('joined')) {
+            btn.classList.remove('joined');
+            btn.textContent = 'Join';
+        } else {
+            btn.classList.add('joined');
+            btn.textContent = '\u2713 Joined';
+        }
+    };
+
+    document.querySelectorAll('.cm-follow-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (this.classList.contains('following')) {
+                this.classList.remove('following');
+                this.textContent = 'Follow';
+            } else {
+                this.classList.add('following');
+                this.textContent = 'Following';
+            }
+        });
+    });
+
+    /* ── Close workout picker on outside click ─────────────────── */
+    document.addEventListener('click', function (e) {
+        var picker  = document.getElementById('workoutPicker');
+        var logBtn  = document.getElementById('btnLogWorkout');
+        if (picker && picker.style.display === 'block') {
+            if (!picker.contains(e.target) && e.target !== logBtn && !logBtn.contains(e.target)) {
+                picker.style.display = 'none';
+                logBtn.classList.remove('active-attach');
+            }
         }
     });
-});
+
+}());
+</script>
+}
+
+<!-- Progress button data attributes (server-rendered stats) -->
+@{
+    int weeklyW  = 0;
+    int streakD  = 0;
+    int calsW    = 0;
+    int avgInt   = 0;
+    try {
+        if (userStats != null) {
+            weeklyW = (int)userStats.WeeklyWorkouts;
+            streakD = (int)userStats.Streak;
+            calsW   = (int)userStats.CaloriesThisWeek;
+            avgInt  = (int)userStats.AvgIntensity;
+        }
+    } catch { }
+}
+<script>
+(function () {
+    var btn = document.getElementById('btnProgress');
+    if (btn) {
+        btn.dataset.weekly    = '@weeklyW';
+        btn.dataset.streak    = '@streakD';
+        btn.dataset.calories  = '@calsW';
+        btn.dataset.intensity = '@avgInt';
+    }
+}());
 </script>
