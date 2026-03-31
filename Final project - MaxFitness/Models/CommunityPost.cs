@@ -10,13 +10,15 @@ namespace Final_project___MaxFitness.Models
         [Key]
         public int Id { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "User ID is required.")]
         public string UserId { get; set; } = string.Empty;
 
         [ForeignKey("UserId")]
         public virtual IdentityUser? User { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Post content cannot be empty.")]
+        [StringLength(5000, ErrorMessage = "Post content cannot exceed 5000 characters.")]
+        [MinLength(1, ErrorMessage = "Post content cannot be empty.")]
         public string Content { get; set; } = string.Empty;
 
         // Optional attached workout session

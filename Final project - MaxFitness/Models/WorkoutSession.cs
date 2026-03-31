@@ -10,7 +10,7 @@ namespace Final_project___MaxFitness.Models
         public int Id { get; set; }
 
         // Link to the Identity User
-        [Required]
+        [Required(ErrorMessage = "User ID is required for a workout session.")]
         public string UserId { get; set; }
 
         public virtual IdentityUser? User { get; set; }

@@ -7,10 +7,11 @@ namespace Final_project___MaxFitness.Models
         [Key]
         public int Id { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Exercise name is required.")]
+        [StringLength(100, ErrorMessage = "Exercise name cannot exceed 100 characters.")]
         public string Name { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Muscle group is required.")]
         public string MuscleGroup { get; set; } = string.Empty;
 
         public string Type { get; set; } = "Compound";

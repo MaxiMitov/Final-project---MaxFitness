@@ -9,9 +9,11 @@ namespace Final_project___MaxFitness.Models
         [Key]
         public int Id { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Challenge name is required.")]
+        [StringLength(200, ErrorMessage = "Challenge name cannot exceed 200 characters.")]
         public string Name { get; set; } = string.Empty;
 
+        [StringLength(2000, ErrorMessage = "Description cannot exceed 2000 characters.")]
         public string Description { get; set; } = string.Empty;
 
         public string Icon { get; set; } = "fa-fire"; // FontAwesome icon class
