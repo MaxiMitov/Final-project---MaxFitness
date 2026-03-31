@@ -1,0 +1,53 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: |
+        dotnet restore "Final project - MaxFitness/Final project - MaxFitness.csproj"
+        dotnet restore "MaxFitness.Tests/MaxFitness.Tests.csproj"
+
+    - name: Build main project
+      run: dotnet build "Final project - MaxFitness/Final project - MaxFitness.csproj" --no-restore --configuration Release
+
+    - name: Build test project
+      run: dotnet build "MaxFitness.Tests/MaxFitness.Tests.csproj" --no-restore --configuration Release
+
+    - name: Run unit tests
+      run: dotnet test "MaxFitness.Tests/MaxFitness.Tests.csproj" --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+    - name: Publish test results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Test Results
+        path: '**/test-results.trx'
+        reporter: dotnet-trx
+
+    - name: Publish application
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      run: dotnet publish "Final project - MaxFitness/Final project - MaxFitness.csproj" --configuration Release --output ./publish
+
+    - name: Upload build artifact
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      uses: actions/upload-artifact@v4
+      with:
+        name: maxfitness-app
+        path: ./publish
