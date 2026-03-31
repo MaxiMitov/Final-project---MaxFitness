@@ -72,13 +72,13 @@
         </nav>
     </header>
 
-    <main class="main-content" style="margin-top: 72px; min-height: 80vh; position: relative; z-index: 1;">
+    <main class="main-content" style="margin-top: 72px; min-height: 80vh; position: relative; z-index: 1; isolation: isolate;">
         <div class="container-fluid px-0">
             @RenderBody()
         </div>
     </main>
 
-    <footer class="footer-maxfit">
+    <footer class="footer-maxfit" style="position: relative; z-index: 1;">
         <div class="footer-gradient-line"></div>
         <div class="container">
             <div class="row gy-4 py-5">
