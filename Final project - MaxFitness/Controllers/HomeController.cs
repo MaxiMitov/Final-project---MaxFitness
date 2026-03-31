@@ -65,6 +65,26 @@ namespace Final_project___MaxFitness.Controllers
             return View("Chest");
         }
 
+        public async Task<IActionResult> Settings()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            var userId = user.Id;
+            var profileStats = await _workoutStatsService.GetUserProfileStatsAsync(userId);
+
+            ViewBag.UserName = user.UserName ?? "User";
+            ViewBag.UserEmail = user.Email ?? "";
+            ViewBag.JoinDate = user.LockoutEnd?.DateTime.ToString("MMMM yyyy") ?? "2024";
+            ViewBag.TotalWorkouts = profileStats.MuscleTrainingCounts.Sum(m => m.Count);
+            ViewBag.ProfileStats = profileStats;
+
+            return View();
+        }
+
         public IActionResult Privacy()
         {
             return View();
