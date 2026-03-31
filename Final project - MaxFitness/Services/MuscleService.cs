@@ -1,62 +1,75 @@
-﻿using Final_project___MaxFitness.Models;
+using Final_project___MaxFitness.Data;
+using Final_project___MaxFitness.Models;
 
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Final_project___MaxFitness.Services
 {
     public class MuscleService : IMuscleService
     {
-        public async Task<MuscleProgress> GetMuscleStatsAsync(string muscleName)
-        {
-            await Task.Delay(100); // Simulate DB Latency
+        private readonly AppDbContext _context;
 
-            // Logic to provide unique PRs for each muscle group
-            string pr = muscleName.ToLower() switch
-            {
-                "legs" => "315 lbs",
-                "back" => "275 lbs",
-                "chest" => "225 lbs",
-                "arms" => "95 lbs",
-                _ => "100 lbs"
-            };
+        private static readonly Dictionary<string, string[]> MuscleGroupMapping = new()
+        {
+            ["chest"] = new[] { "chest" },
+            ["back"] = new[] { "back" },
+            ["shoulders"] = new[] { "shoulders" },
+            ["biceps"] = new[] { "biceps" },
+            ["triceps"] = new[] { "triceps" },
+            ["arms"] = new[] { "biceps", "triceps" },
+            ["legs"] = new[] { "legs" },
+            ["abs"] = new[] { "abs" },
+            ["forearms"] = new[] { "forearms" }
+        };
+
+        public MuscleService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<MuscleProgress> GetMuscleStatsAsync(string muscleName, string userId)
+        {
+            var key = muscleName.ToLower();
+            var dbGroups = MuscleGroupMapping.GetValueOrDefault(key) ?? new[] { key };
+
+            var logs = await _context.WorkoutExerciseLogs
+                .Include(l => l.WorkoutSession)
+                .Where(l => l.WorkoutSession.UserId == userId && dbGroups.Contains(l.MuscleGroup.ToLower()))
+                .ToListAsync();
+
+            var totalVolume = logs.Sum(l => l.TotalVolume);
+            var maxVolume = logs.Count > 0 ? logs.Max(l => l.TotalVolume) : 0;
+            var totalSessions = logs.Select(l => l.WorkoutSessionId).Distinct().Count();
+
+            var pr = maxVolume > 0 ? $"{maxVolume:F0} kg" : "No data";
+
+            var progressPct = totalSessions > 0 ? Math.Min(100, totalSessions * 10) : 0;
 
             return new MuscleProgress
             {
                 Name = muscleName,
                 CurrentPR = pr,
-                ProgressPercentage = 85,
-                Icon = muscleName == "Legs" ? "🦵" : "⚡"
+                ProgressPercentage = progressPct,
+                Icon = muscleName.ToLower() == "legs" ? "🦵" : "💪"
             };
         }
 
         public async Task<List<ExerciseDetail>> GetExercisesAsync(string muscleName)
         {
-            await Task.Delay(100); // Simulate DB Latency
+            var key = muscleName.ToLower();
+            var dbGroups = MuscleGroupMapping.GetValueOrDefault(key) ?? new[] { key };
 
-            return muscleName.ToLower() switch
+            var exercises = await _context.Exercises
+                .Where(e => dbGroups.Contains(e.MuscleGroup.ToLower()))
+                .ToListAsync();
+
+            return exercises.Select(e => new ExerciseDetail
             {
-                "chest" => new List<ExerciseDetail> {
-                    new ExerciseDetail { Name = "Bench Press", TargetReps = "3 x 10", Intensity = "80% 1RM", Difficulty = "Intermediate" },
-                    new ExerciseDetail { Name = "Dips", TargetReps = "3 x 12", Intensity = "Bodyweight", Difficulty = "Advanced" },
-                    new ExerciseDetail { Name = "Push-ups", TargetReps = "4 x 20", Intensity = "Bodyweight", Difficulty = "Beginner" }
-                },
-                "back" => new List<ExerciseDetail> {
-                    new ExerciseDetail { Name = "Deadlifts", TargetReps = "5 x 5", Intensity = "85% 1RM", Difficulty = "Advanced" },
-                    new ExerciseDetail { Name = "Pull-ups", TargetReps = "3 x Max", Intensity = "Bodyweight", Difficulty = "Intermediate" }
-                },
-                "legs" => new List<ExerciseDetail> {
-                    new ExerciseDetail { Name = "Squats", TargetReps = "4 x 8", Intensity = "75% 1RM", Difficulty = "Intermediate" },
-                    new ExerciseDetail { Name = "Leg Press", TargetReps = "3 x 15", Intensity = "70% 1RM", Difficulty = "Beginner" }
-                },
-                "arms" => new List<ExerciseDetail> {
-                    new ExerciseDetail { Name = "Bicep Curls", TargetReps = "3 x 12", Intensity = "Moderate", Difficulty = "Beginner" },
-                    new ExerciseDetail { Name = "Tricep Dips", TargetReps = "3 x 15", Intensity = "Bodyweight", Difficulty = "Beginner" }
-                },
-                _ => new List<ExerciseDetail> {
-                    new ExerciseDetail { Name = "Standard Movement", TargetReps = "3 x 10", Intensity = "N/A", Difficulty = "Beginner" }
-                }
-            };
+                Name = e.Name,
+                TargetReps = e.Type == "Compound" ? "4 x 8" : e.Type == "Bodyweight" ? "3 x 15" : "3 x 12",
+                Intensity = e.Type == "Compound" ? "75% 1RM" : e.Type == "Bodyweight" ? "Bodyweight" : "Moderate",
+                Difficulty = e.Type == "Compound" ? "Intermediate" : e.Type == "Bodyweight" ? "Beginner" : "Beginner"
+            }).ToList();
         }
     }
 }
