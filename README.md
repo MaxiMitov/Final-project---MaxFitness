@@ -28,37 +28,39 @@ Track workouts, monitor muscle groups, compete on leaderboards, and connect with
 
 ## Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- Visual Studio 2022 (Community is fine) — includes SQL Server LocalDB
-- EF Core CLI tools: `dotnet tool install --global dotnet-ef --version 8.*`
+- Visual Studio 2022 (Community edition is fine) with the **ASP.NET and web development** workload — this includes the .NET 8 SDK and SQL Server LocalDB
 
-## Quick Setup (Windows)
+That's it. No Docker, no extra tools, no global installs.
+
+## Quick Setup (Windows + Visual Studio)
 
 ### 1. Clone the repository
 
 ```bash
 git clone https://github.com/MaxiMitov/Final-project---MaxFitness.git
-cd Final-project---MaxFitness
 ```
 
-### 2. Apply database migrations
+### 2. Open the solution
 
-```bash
-cd "Final project - MaxFitness"
-dotnet ef database update
+Double-click `Final project - MaxFitness.sln`. Visual Studio will auto-restore NuGet packages on first build.
+
+### 3. Create the database
+
+In Visual Studio: **Tools → NuGet Package Manager → Package Manager Console**, then run:
+
+```powershell
+Update-Database
 ```
 
 This creates the `MaxFitnessDb` database in LocalDB.
 
-### 3. Run the application
+### 4. Run the application
 
-```bash
-dotnet run
-```
+Press **F5** (or click the green ▶ button).
 
-The app will be available at **http://localhost:5105**
+The app will open in your browser automatically.
 
-### 4. Login
+### 5. Login
 
 - **Regular user**: Register a new account via the Sign Up page
 - **Admin account**: Username `admin` / Password `admin123`
