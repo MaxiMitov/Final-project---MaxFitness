@@ -271,8 +271,7 @@ namespace Final_project___MaxFitness.Migrations
                         name: "FK_CommunityPosts_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_CommunityPosts_WorkoutSessions_WorkoutSessionId",
                         column: x => x.WorkoutSessionId,
@@ -323,8 +322,7 @@ namespace Final_project___MaxFitness.Migrations
                         name: "FK_PostComments_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_PostComments_CommunityPosts_PostId",
                         column: x => x.PostId,
@@ -350,8 +348,7 @@ namespace Final_project___MaxFitness.Migrations
                         name: "FK_PostLikes_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_PostLikes_CommunityPosts_PostId",
                         column: x => x.PostId,

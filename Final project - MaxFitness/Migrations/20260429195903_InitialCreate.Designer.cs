@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Final_project___MaxFitness.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260429193651_InitialCreate")]
+    [Migration("20260429195903_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -893,7 +893,7 @@ namespace Final_project___MaxFitness.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Final_project___MaxFitness.Models.WorkoutSession", "WorkoutSession")
@@ -916,7 +916,7 @@ namespace Final_project___MaxFitness.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Post");
@@ -935,7 +935,7 @@ namespace Final_project___MaxFitness.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Post");
