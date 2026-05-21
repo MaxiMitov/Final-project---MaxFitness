@@ -37,15 +37,9 @@ namespace Final_project___MaxFitness.Controllers
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            var statsTask = _workoutStatsService.GetDashboardStatsAsync(userId);
-            var musclesTask = _workoutStatsService.GetMuscleStatusesAsync(userId);
-            var recentTask = _workoutStatsService.GetRecentWorkoutsAsync(userId, 5);
-
-            await Task.WhenAll(statsTask, musclesTask, recentTask);
-
-            ViewBag.Stats = await statsTask;
-            ViewBag.MuscleStatuses = await musclesTask;
-            ViewBag.RecentWorkouts = await recentTask;
+            ViewBag.Stats = await _workoutStatsService.GetDashboardStatsAsync(userId);
+            ViewBag.MuscleStatuses = await _workoutStatsService.GetMuscleStatusesAsync(userId);
+            ViewBag.RecentWorkouts = await _workoutStatsService.GetRecentWorkoutsAsync(userId, 5);
 
             return View();
         }
@@ -68,14 +62,9 @@ namespace Final_project___MaxFitness.Controllers
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            var statsTask = _muscleService.GetMuscleStatsAsync(muscleName, userId);
-            var exerciseTask = _muscleService.GetExercisesAsync(muscleName);
-
-            await Task.WhenAll(statsTask, exerciseTask);
-
             ViewBag.MuscleName = muscleName;
-            ViewBag.Muscle = await statsTask;
-            ViewBag.Exercises = await exerciseTask;
+            ViewBag.Muscle = await _muscleService.GetMuscleStatsAsync(muscleName, userId);
+            ViewBag.Exercises = await _muscleService.GetExercisesAsync(muscleName);
 
             return View("Chest");
         }
